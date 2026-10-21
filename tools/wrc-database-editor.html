@@ -1,0 +1,3246 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WRC Database — Live Editor</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#121722; --panel2:#0f1420; --edge:#26303f;
+    --edge2:#1a2230; --text:#e6eaf4; --dim:#8a97ac; --accent:#12b3c9;
+    --accent2:#0e8ea1; --good:#2fbf71; --warn:#e0a800; --bad:#e5484d;
+    --chip:#182233;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(1200px 700px at 20% -10%,#13202e 0%,var(--bg) 55%);
+    color:var(--text); font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  }
+  a{color:var(--accent)}
+  .topbar{
+    display:flex;align-items:center;gap:14px;padding:12px 18px;
+    background:linear-gradient(180deg,#101725,#0d131f);border-bottom:1px solid var(--edge);
+    position:sticky;top:0;z-index:50;
+  }
+  .brand{font-weight:700;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+  .brand small{color:var(--dim);font-weight:400;letter-spacing:0}
+  .spacer{flex:1}
+  .btn{
+    background:var(--chip);color:var(--text);border:1px solid var(--edge);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;
+    transition:.15s;white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--accent);color:#fff}
+  .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));border-color:transparent;color:#02141a}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent}
+  .btn.danger{border-color:#5a2327;color:#ffb4b6}
+  .btn.danger:hover{background:#2a1416;border-color:var(--bad)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .status{color:var(--dim);font-size:12px}
+  .status.ok{color:var(--good)} .status.err{color:var(--bad)}
+
+  .layout{display:flex;height:calc(100vh - 57px)}
+  .side{
+    width:210px;flex:none;background:var(--panel2);border-right:1px solid var(--edge);
+    padding:12px 8px;overflow:auto;
+  }
+  .navitem{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;
+    cursor:pointer;color:var(--dim);font-weight:600;margin-bottom:3px;
+  }
+  .navitem:hover{background:var(--edge2);color:var(--text)}
+  .navitem.active{background:linear-gradient(90deg,rgba(18,179,201,.18),transparent);color:#fff;box-shadow:inset 2px 0 0 var(--accent)}
+  .navitem .ic{width:18px;text-align:center;opacity:.9}
+  .main{flex:1;overflow:auto;padding:20px 24px}
+  .empty{max-width:640px;margin:8vh auto;text-align:center}
+  .empty h1{font-size:24px;margin:0 0 8px}
+  .drop{
+    margin-top:22px;border:2px dashed var(--edge);border-radius:16px;padding:44px 24px;
+    background:var(--panel2);transition:.15s;
+  }
+  .drop.drag{border-color:var(--accent);background:#0f1a24}
+  .drop p{color:var(--dim);margin:8px 0}
+
+  .panelhead{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .panelhead h2{margin:0;font-size:18px}
+  .panelhead .sub{color:var(--dim);font-size:13px}
+  .toolrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  select,input[type=text],input[type=number]{
+    background:var(--panel);border:1px solid var(--edge);color:var(--text);
+    padding:7px 10px;border-radius:8px;font:inherit;
+  }
+  select:focus,input:focus{outline:none;border-color:var(--accent)}
+  input[type=text],input[type=number]{width:100%}
+  label.fld{display:block;font-size:12px;color:var(--dim);margin:0 0 4px}
+  .grid{display:grid;gap:12px}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:14px}
+
+  table.data{border-collapse:collapse;width:100%;font-size:13px}
+  table.data th,table.data td{border:1px solid var(--edge2);padding:0;text-align:center}
+  table.data th{background:var(--panel2);color:var(--dim);padding:8px 6px;font-weight:600;position:sticky;top:0;z-index:2;white-space:nowrap}
+  table.data td.name,table.data th.name{text-align:left}
+  table.data input{border:none;background:transparent;color:var(--text);width:100%;padding:6px 7px;text-align:center;border-radius:0}
+  table.data input:focus{background:#0f1a24;box-shadow:inset 0 0 0 1px var(--accent)}
+  table.data td.name input{text-align:left}
+  table.data tr:hover td{background:rgba(255,255,255,.02)}
+  table.data td.rcell-sel{background:rgba(18,179,201,.22);box-shadow:inset 0 0 0 1px var(--accent)}
+  .tblwrap{overflow:auto;max-height:calc(100vh - 230px);border:1px solid var(--edge);border-radius:12px}
+  .rowbtns{display:flex;gap:4px;justify-content:center;padding:0 4px}
+  .swatch{width:22px;height:22px;border-radius:6px;border:1px solid rgba(255,255,255,.25);cursor:pointer;display:inline-block;vertical-align:middle}
+  .kv{display:grid;grid-template-columns:220px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--edge2)}
+  .kv:last-child{border-bottom:none}
+  .kv .kname{font-weight:600}
+  .muted{color:var(--dim)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--edge);font-size:12px;color:var(--dim)}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#0f1a24;border:1px solid var(--accent);color:#fff;padding:11px 18px;border-radius:10px;
+    opacity:0;pointer-events:none;transition:.25s;z-index:100;box-shadow:0 10px 40px rgba(0,0,0,.5)
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .modal-bg{position:fixed;inset:0;background:rgba(2,5,10,.7);display:none;align-items:center;justify-content:center;z-index:80}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:20px;width:min(680px,92vw);max-height:88vh;overflow:auto}
+  .modal h3{margin:0 0 14px}
+  .fldgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .fldgrid .f label{font-size:11px;color:var(--dim);display:block;margin-bottom:3px}
+  .hint{font-size:12px;color:var(--dim);margin:2px 0 0}
+  .tag{font-size:11px;padding:1px 7px;border-radius:6px;background:#13212c;color:var(--accent);border:1px solid var(--edge)}
+  .colorcell{display:flex;align-items:center;gap:8px}
+  .drivercount{color:var(--dim);font-size:12px}
+  .sectitle{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:18px 0 8px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#222d3c;border-radius:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  .modal label{font-size:12px;color:var(--dim);display:block;margin-bottom:4px}
+  .modal select, .modal input{width:100%;background:var(--chip);color:var(--text);border:1px solid var(--edge);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:8px}
+  .optrow{
+    display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid var(--edge);
+    border-radius:9px;background:var(--panel);cursor:pointer;font-size:13px;user-select:none;
+  }
+  .optrow:hover{border-color:var(--accent2)}
+  .optrow.on{border-color:var(--accent);background:#0f1a24}
+  .optrow .sub{color:var(--dim);font-size:11px;margin-left:auto}
+  input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;flex:none;cursor:pointer;margin:0}
+  .sizebar{height:8px;border-radius:5px;background:var(--edge2);overflow:hidden;margin-top:6px}
+  .sizebar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s}
+</style>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="topbar">
+<div class="brand"><span class="dot"></span>WRC Database <small>Live Editor</small></div>
+<div class="spacer"></div>
+<span class="status" id="status">No file loaded</span>
+<input accept=".html,.htm" id="fileInput" style="display:none" type="file"/>
+<button class="btn ghost" id="openBtn">Open file…</button>
+<input accept=".xlsx,.xls" id="xlsxInput" style="display:none" type="file"/>
+<button class="btn ghost" id="importXlsxBtn">Import season (Excel)</button>
+<button class="btn ghost" disabled="" id="buildBtn">Build export…</button>
+<button class="btn ghost" disabled="" id="previewBtn">Preview</button>
+<button class="btn primary" disabled="" id="exportBtn">Export HTML</button>
+</div>
+<div class="layout">
+<div class="side" id="side" style="display:none">
+<div class="sectitle" style="padding:0 12px;margin-top:0">Series</div>
+<select id="seriesPick" style="width:100%;margin-bottom:10px"></select>
+<div class="navitem" data-view="series"><span class="ic">🏆</span> Manage series</div>
+<div style="height:10px"></div>
+<div class="navitem active" data-view="seasons"><span class="ic">🗓️</span> Seasons</div>
+<div class="navitem" data-view="rallies"><span class="ic">📍</span> Rallies</div>
+<div class="navitem" data-view="drivers"><span class="ic">🏁</span> Drivers &amp; Stats</div>
+<div class="navitem" data-view="colors"><span class="ic">🎨</span> Driver Colours</div>
+<div class="navitem" data-view="liveries"><span class="ic">🚗</span> Car Liveries</div>
+<div class="navitem" data-view="flags"><span class="ic">🌐</span> Flags &amp; Nations</div>
+<div style="height:16px"></div>
+<div class="sectitle" style="padding:0 12px">Export</div>
+<div class="navitem" data-view="build"><span class="ic">📦</span> Export builder</div>
+<div class="navitem" data-view="raw"><span class="ic">📄</span> Raw JSON</div>
+</div>
+<div class="main" id="main">
+<div class="empty" id="emptyState">
+<h1>WRC Database Live Editor</h1>
+<p class="muted">Load your <code>wrc_*.html</code> file to edit seasons, rallies, drivers,
+      performances and colours — then export a new HTML that matches your site exactly.</p>
+<div class="drop" id="drop">
+<div style="font-size:40px">📂</div>
+<p><strong>Drag &amp; drop</strong> your database HTML here</p>
+<p>or</p>
+<button class="btn primary" id="openBtn2">Choose file</button>
+<p class="hint">Everything runs locally in your browser. Your file never leaves your device.</p>
+</div>
+</div>
+<div id="viewRoot"></div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
+<script>// core.js — Parse & re-serialize the WRC database HTML.
+// Works in both Node (for testing) and browser (window).
+(function (root) {
+  'use strict';
+
+  // Editable blocks. Each is located by a unique opening anchor; the literal object
+  // is then delimited by brace-matching (string-aware), so we don't depend on the
+  // exact punctuation that follows the closing brace.
+  const BLOCKS = [
+    { key: 'seasonsData',         open: '<script>const seasonsData = {' },
+    { key: 'driverFlagCodes',     open: 'const driverFlagCodes={' },
+    { key: 'rallyFlagCodes',      open: 'const rallyFlagCodes={', optional: true, insertAfter: 'driverFlagCodes' },
+    { key: 'flagUrls',            open: 'const flagUrls={' },
+    { key: 'flagColors',          open: 'const flagColors={' },
+    { key: 'carLiveries',         open: 'const carLiveries={' },
+    { key: 'driverYearColors',    open: 'const driverYearColors={' },
+    { key: 'driverRallyColors',   open: 'const driverRallyColors={' },
+    { key: 'driverSpecialColors', open: 'const driverSpecialColors={' },
+    // Rally character tags, and the year ranges that point a rally at a
+    // different tag set for part of its history. Optional and never created
+    // from scratch: a build without them has no code that reads them either.
+    { key: 'rallyMeta',           open: 'const rallyMeta={', optional: true },
+    { key: 'rallyMetaEras',       open: 'var RALLY_META_ERAS={', optional: true },
+    // Championships other than the file's own. The site never reads this, so a
+    // master file carrying ERC or WRC2 alongside WRC still opens as a working
+    // WRC database; the export builder swaps a series into the real blocks.
+    { key: 'seriesData',          open: 'const seriesData={', optional: true, insertAfter: 'driverRallyColors' },
+  ];
+
+  // Given an index pointing at an opening '{', return the index of its matching '}'.
+  // String-aware: skips braces inside '...', "...", and `...`. Handles escapes.
+  function matchBrace(str, openIdx) {
+    let depth = 0;
+    let quote = null; // current quote char or null
+    for (let i = openIdx; i < str.length; i++) {
+      const c = str[i];
+      if (quote) {
+        if (c === '\\') { i++; continue; }
+        if (c === quote) quote = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+      if (c === '{') depth++;
+      else if (c === '}') { depth--; if (depth === 0) return i; }
+    }
+    throw new Error('Unbalanced braces starting at ' + openIdx);
+  }
+
+  // Extract the literal text (the "{ ... }") for a block from the full html string.
+  function extractBlock(html, block) {
+    const startIdx = html.indexOf(block.open);
+    if (startIdx === -1) throw new Error('Missing open anchor for ' + block.key + ': ' + block.open);
+    const literalStart = startIdx + block.open.length - 1; // index of the leading '{'
+    const literalEnd = matchBrace(html, literalStart) + 1;  // one past the matching '}'
+    const literalText = html.slice(literalStart, literalEnd);
+    return { startIdx, literalStart, literalEnd, literalText };
+  }
+
+  // Safely evaluate a JS object/literal string into a real JS value.
+  // The literals here are plain object/dict literals with string/number/null values.
+  function evalLiteral(text) {
+    // Wrap in parens so it's treated as an expression.
+    // eslint-disable-next-line no-new-func
+    return (new Function('return (' + text + ');'))();
+  }
+
+  // Parse the whole HTML into { template, data, meta }.
+  // data is a map key->parsed JS value. meta records byte offsets for re-injection.
+  function parse(html) {
+    const data = {};
+    const meta = {};
+    for (const block of BLOCKS) {
+      if (block.optional && html.indexOf(block.open) === -1) {
+        data[block.key] = {};
+        meta[block.key] = { open: block.open, literalText: null, missing: true };
+        continue;
+      }
+      const ext = extractBlock(html, block);
+      data[block.key] = evalLiteral(ext.literalText);
+      meta[block.key] = { open: block.open, literalText: ext.literalText };
+    }
+    // Densify driver arrays: the source contains occasional sparse holes
+    // (accidental double-commas). Drop empty slots so editing is clean.
+    const sd = data.seasonsData;
+    Object.keys(sd).filter(k => /^\d+$/.test(k)).forEach(y => {
+      if (Array.isArray(sd[y].drivers)) {
+        sd[y].drivers = sd[y].drivers.filter(d => d != null);
+      }
+    });
+    // Same tidy-up for seasons parked in a secondary series.
+    Object.keys(data.seriesData || {}).forEach(id => {
+      const seasons = (data.seriesData[id] || {}).seasons || {};
+      Object.keys(seasons).forEach(y => {
+        if (Array.isArray(seasons[y].drivers)) seasons[y].drivers = seasons[y].drivers.filter(d => d != null);
+      });
+    });
+    // Also grab currentSeason default
+    // Rally key canonicalisation, read-only: 'monte' and 'mc' both mean
+    // 'monte_carlo', which is the key rallyMeta is filed under.
+    data.__rhNorm = {};
+    const rhIdx = html.indexOf('var RH_NORM={');
+    if (rhIdx !== -1) {
+      try {
+        const st = rhIdx + 'var RH_NORM='.length;
+        data.__rhNorm = evalLiteral(html.slice(st, matchBrace(html, st) + 1));
+      } catch (e) { /* different build; tags UI falls back to the raw key */ }
+    }
+    const csMatch = html.match(/let currentSeason=(\d+);/);
+    data.__currentSeasonDefault = csMatch ? Number(csMatch[1]) : null;
+    return { html, data, meta };
+  }
+
+  // --- Serialization: turn a JS value back into source text matching the file's style ---
+
+  // Serialize seasonsData in the compact, readable style used by the file:
+  // year: { rallies:[...], rallyNames:[...], drivers:[ {...}, {...} ] }
+  function serializeSeasonsData(seasons) {
+    const years = Object.keys(seasons)
+      .filter(k => /^\d+$/.test(k))
+      .map(Number)
+      .sort((a, b) => a - b);
+    let out = '{\n';
+    years.forEach((yr, yi) => {
+      const s = seasons[yr];
+      out += '        ' + yr + ': {\n';
+      out += '            rallies: ' + jsArr(s.rallies) + ',\n';
+      out += '            rallyNames: ' + jsArr(s.rallyNames) + ',\n';
+      // Preserve any extra season-level scalar fields (data quirks like germany_s: 20)
+      const extraKeys = Object.keys(s).filter(k => k !== 'rallies' && k !== 'rallyNames' && k !== 'drivers');
+      extraKeys.forEach(k => {
+        out += '            ' + k + ': ' + jsVal(s[k]) + ',\n';
+      });
+      out += '            drivers: [\n';
+      (s.drivers || []).forEach((d, di) => {
+        out += '                ' + serializeDriver(d) + (di < s.drivers.length - 1 ? ',' : '') + '\n';
+      });
+      out += '            ]\n';
+      out += '        }' + (yi < years.length - 1 ? ',' : '') + '\n';
+    });
+    out += '    }';
+    return out;
+  }
+
+  // Serialize a single driver object preserving key order as inserted.
+  function serializeDriver(d) {
+    const parts = [];
+    for (const k of Object.keys(d)) {
+      parts.push(k + ': ' + jsVal(d[k]));
+    }
+    return '{ ' + parts.join(', ') + ' }';
+  }
+
+  // Serialize a flat string->value map as {"k":v,...} compact (matches file style).
+  function serializeFlatMap(obj) {
+    const parts = [];
+    for (const k of Object.keys(obj)) {
+      parts.push(JSON.stringify(k) + ':' + jsVal(obj[k]));
+    }
+    return '{' + parts.join(',') + '}';
+  }
+
+  // Serialize nested map (driverYearColors: { year: { name: color } })
+  function serializeNestedMap(obj) {
+    const parts = [];
+    for (const k of Object.keys(obj)) {
+      const inner = obj[k];
+      if (inner && typeof inner === 'object') {
+        parts.push(JSON.stringify(k) + ':' + serializeFlatMap(inner));
+      } else {
+        parts.push(JSON.stringify(k) + ':' + jsVal(inner));
+      }
+    }
+    return '{' + parts.join(',') + '}';
+  }
+
+  function jsVal(v) {
+    if (v === null || v === undefined) return 'null';
+    if (typeof v === 'number') return String(v);
+    if (typeof v === 'boolean') return String(v);
+    if (typeof v === 'string') return JSON.stringify(v);
+    if (Array.isArray(v)) return jsArr(v);
+    if (typeof v === 'object') return serializeFlatMap(v);
+    return JSON.stringify(v);
+  }
+
+  function jsArr(a) {
+    return '[' + a.map(x => (typeof x === 'string' ? "'" + x.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'" : jsVal(x))).join(', ') + ']';
+  }
+
+  const SERIALIZERS = {
+    seasonsData: serializeSeasonsData,
+    driverFlagCodes: serializeFlatMap,
+    rallyFlagCodes: serializeFlatMap,
+    flagUrls: serializeFlatMap,
+    flagColors: serializeFlatMap,
+    carLiveries: serializeFlatMap,
+    driverYearColors: serializeNestedMap,
+    driverSpecialColors: serializeFlatMap,
+    driverRallyColors: serializeNestedMap,
+    seriesData: v => JSON.stringify(v || {}),
+    rallyMeta: v => JSON.stringify(v || {}),
+    rallyMetaEras: v => JSON.stringify(v || {}),
+  };
+
+  // Rebuild the HTML by replacing each block's literal text with a freshly serialized version.
+  // Replaces from the RIGHT (last block first) so earlier offsets stay valid — but since we
+  // re-find anchors each time with indexOf on the mutated string, order doesn't matter as long
+  // as anchors remain unique. We rebuild by string search/replace on the ORIGINAL literalText.
+  // Insert a brand-new "const KEY={...};" declaration right after another block's
+  // existing declaration in the html — used for optional blocks that didn't exist
+  // in the source file yet (e.g. an older export with no rallyFlagCodes).
+  function insertAfterBlock(html, afterKey, newKey, newLiteral) {
+    const afterBlock = BLOCKS.find(b => b.key === afterKey);
+    const ext = extractBlock(html, afterBlock);
+    let insertAt = ext.literalEnd;
+    if (html[insertAt] === ';') insertAt++;
+    const insertion = '\nconst ' + newKey + '=' + newLiteral + ';';
+    return html.slice(0, insertAt) + insertion + html.slice(insertAt);
+  }
+
+  // Some site builds render a rally's flag via a hardcoded lookup table baked
+  // into their own script (RALLY_FLAGS/RALLY_CC), keyed by a fixed list of
+  // known rally keys. That table has no idea about rallies added or flagged
+  // through this editor, so their flag silently never renders (e.g. on the
+  // driver profile sidebar's "Rally Breakdown" list). If we recognize one of
+  // these functions in the exported html, patch it to fall back to
+  // rallyFlagCodes so newly-mapped rallies actually show up. No-ops if the
+  // function text isn't found (different site build) or already patched —
+  // safe to run unconditionally on every export.
+  const SITE_PATCHES = [
+    {
+      // getRallyFlagImg(canonKey) — used by driver profile "Rally Breakdown" rows, etc.
+      find: "var code=canonKey==='cer'?'EU':(RALLY_FLAGS[canonKey]||'');",
+      replace: "var code=canonKey==='cer'?'EU':(RALLY_FLAGS[canonKey]||(typeof rallyFlagCodes!=='undefined'&&rallyFlagCodes[canonKey])||'');",
+    },
+    {
+      // rallyFlag(key,px) — used within the #pwProfile module.
+      find: 'function rallyFlag(key,px){var cc=RALLY_CC[key];',
+      replace: "function rallyFlag(key,px){var cc=RALLY_CC[key]||((typeof rallyFlagCodes!=='undefined'&&rallyFlagCodes[key])?rallyFlagCodes[key].toLowerCase():'');",
+    },
+    {
+      // renderSeasonSelector() prints the raw seasonsData key on each button.
+      // Seasons can carry a `label`, so 1986 can read "Group B 1986" and a
+      // WRC2 build can say so; the key itself stays numeric, which is what
+      // every year range, era rule and points table in the site relies on.
+      find: 'onclick="setSeason(${season})">${season}</div>',
+      replace: 'onclick="setSeason(${season})">${(seasonsData[season]&&seasonsData[season].label)||season}</div>',
+    },
+    {
+      // Result rows on a driver profile, and in the season overlay, print a
+      // hardcoded "WRC" as the class badge -- so an ERC profile claimed WRC.
+      find: "'<div class=\"cat\">WRC'",
+      replace: "'<div class=\"cat\">'+PW_SERIES_LABEL()",
+    },
+    {
+      // ...and again as the championship position under the overall one.
+      find: "'. WRC</div>'",
+      replace: "'. '+PW_SERIES_LABEL()+'</div>'",
+    },
+    {
+      // The coverage note in the profile hero. Its wording ("figures") differs
+      // from the All-Time one ("rankings"), which keeps this unique to the
+      // JS-built version; the static one is handled by the runtime instead.
+      find: "These figures cover only top-class (WRC) entries",
+      replace: "These figures cover only top-class ('+PW_SERIES_LABEL()+') entries",
+    },
+    {
+      // eWRC season URLs are championship-specific, and rally-maps only carries
+      // what is in RM_SLUG, so both become per-series settings. A series with no
+      // template gets no eWRC link rather than one pointing at the WRC season.
+      find: "var out={ewrc:'https://www.ewrc-results.com/season/'+y+'/1-wrc/'};",
+      replace: "var _pl=(typeof PW_SERIES_LINKS==='function')?PW_SERIES_LINKS():null;var out={};" +
+               "if(!_pl||_pl.ewrc===undefined||_pl.ewrc)out.ewrc=((_pl&&_pl.ewrc)||'https://www.ewrc-results.com/season/{year}/1-wrc/')" +
+               ".replace(/\\{year\\}/g,y).replace(/\\{rally\\}/g,ck);",
+    },
+    {
+      find: "if(rmHasMap(ck,y))out.maps='https://www.rally-maps.com/'+rmSlug(ck,y)+'-'+y;",
+      replace: "if((!_pl||_pl.maps)&&rmHasMap(ck,y))out.maps='https://www.rally-maps.com/'+rmSlug(ck,y)+'-'+y;",
+    },
+    {
+      // Both eWRC anchors were emitted unconditionally; they now follow ext.ewrc.
+      find: "+ '<a class=\"pw-ext-link\" href=\"'+ext.ewrc+'\" target=\"_blank\" rel=\"noopener\">eWRC &#8599;</a>'",
+      replace: "+ (ext.ewrc?'<a class=\"pw-ext-link\" href=\"'+ext.ewrc+'\" target=\"_blank\" rel=\"noopener\">eWRC &#8599;</a>':'')",
+    },
+    {
+      find: "+ '<a class=\"pw-ext-link\" href=\"'+ext.ewrc+'\" target=\"_blank\" rel=\"noopener\"><img class=\"pw-ext-ico\" src=\"https://www.google.com/s2/favicons?domain=ewrc-results.com&sz=64\" onerror=\"this.classList.add(\\'fallback-ewrc\\');this.removeAttribute(\\'src\\')\" alt=\"\">eWRC</a>'",
+      replace: "+ (ext.ewrc?'<a class=\"pw-ext-link\" href=\"'+ext.ewrc+'\" target=\"_blank\" rel=\"noopener\"><img class=\"pw-ext-ico\" src=\"https://www.google.com/s2/favicons?domain=ewrc-results.com&sz=64\" onerror=\"this.classList.add(\\'fallback-ewrc\\');this.removeAttribute(\\'src\\')\" alt=\"\">eWRC</a>':'')",
+    },
+  ];
+  function patchSiteBuild(html) {
+    SITE_PATCHES.forEach(p => {
+      if (html.indexOf(p.replace) !== -1) return; // already patched
+      if (html.indexOf(p.find) !== -1) html = html.split(p.find).join(p.replace);
+    });
+    return html;
+  }
+
+  function serialize(parsed, editedData) {
+    let html = parsed.html;
+    for (const block of BLOCKS) {
+      const key = block.key;
+      const value = editedData[key] !== undefined ? editedData[key] : parsed.data[key];
+      const newLiteral = SERIALIZERS[key](value);
+      const metaEntry = parsed.meta[key];
+      if (metaEntry && metaEntry.missing && !block.insertAfter) {
+        // Nothing to graft it onto, and no site code would read it. Skip.
+        continue;
+      }
+      if (metaEntry && metaEntry.missing) {
+        // Never existed in the source file. Only write it in if there's actually
+        // something to save, so files that don't use this feature stay untouched.
+        if (value && Object.keys(value).length > 0) {
+          html = insertAfterBlock(html, block.insertAfter, key, newLiteral);
+        }
+        continue;
+      }
+      const originalLiteral = metaEntry.literalText;
+      const at = html.indexOf(originalLiteral);
+      if (at === -1) {
+        // Fall back to anchor-based extraction on current html (in case a prior replace changed things)
+        const ext = extractBlock(html, block);
+        html = html.slice(0, ext.literalStart) + newLiteral + html.slice(ext.literalEnd);
+      } else {
+        html = html.slice(0, at) + newLiteral + html.slice(at + originalLiteral.length);
+      }
+    }
+    // Update default currentSeason if provided
+    if (editedData.__currentSeasonDefault) {
+      html = html.replace(/let currentSeason=\d+;/, 'let currentSeason=' + editedData.__currentSeasonDefault + ';');
+    }
+    html = patchSiteBuild(html);
+    html = injectSeriesRuntime(
+      html,
+      editedData.seriesData !== undefined ? editedData.seriesData : parsed.data.seriesData,
+      editedData.__primaryName || 'WRC');
+    return html;
+  }
+
+  // ---------------------------------------------------------------------
+  // Variant builds — a reduced copy of the database: fewer seasons, and some
+  // of the site's own download features switched off. These transforms run on
+  // the already-serialized html, so they also reach data the editor doesn't
+  // model (stage-by-stage times) and markup it doesn't own (download buttons).
+  // ---------------------------------------------------------------------
+
+  // Markers and tags are assembled from pieces so that neither an HTML comment
+  // opener nor a closing script tag ever appears literally in this file - either
+  // one would end the script element the editor itself lives in.
+  const LT = '<';
+  const VARIANT_START = LT + '!--wrc-variant-options-->';
+  const VARIANT_END = LT + '!--/wrc-variant-options-->';
+
+  // Drop the options block a previous variant export left behind, so
+  // re-exporting an already-exported file doesn't stack them up.
+  function stripVariantBlock(html) {
+    for (;;) {
+      const i = html.indexOf(VARIANT_START);
+      if (i === -1) return html;
+      const j = html.indexOf(VARIANT_END, i);
+      if (j === -1) return html;
+      html = html.slice(0, i) + html.slice(j + VARIANT_END.length);
+    }
+  }
+
+  // Year-keyed blocks that live outside BLOCKS (stageData holds the per-stage
+  // times behind the rally detail views — easily the second-largest object in
+  // the file). Filtered by brace matching on the raw text; a build that has no
+  // such block is left alone.
+  const EXTRA_YEAR_BLOCKS = ['stageData'];
+
+  function filterRawYearBlock(html, name, keepYear) {
+    const m = new RegExp('(?:const|let|var)\\s+' + name + '\\s*=\\s*\\{').exec(html);
+    if (!m) return html;
+    const start = m.index + m[0].length - 1;
+    let end, obj;
+    try {
+      end = matchBrace(html, start) + 1;
+      obj = evalLiteral(html.slice(start, end));
+    } catch (e) { return html; }
+    const kept = {};
+    Object.keys(obj).forEach(k => { if (!/^\d{4}$/.test(k) || keepYear(k)) kept[k] = obj[k]; });
+    return html.slice(0, start) + JSON.stringify(kept) + html.slice(end);
+  }
+
+  // Download features the site exposes. Each is implemented by a global whose
+  // name starts with "download" and carries the format in it — downloadScatterCSV,
+  // downloadChartPNG, downloadSeasonXLSX — which is what we match on.
+  const DOWNLOAD_FEATURES = [
+    { key: 'csv',  match: 'csv',  label: 'CSV downloads',   note: 'table / chart data export buttons' },
+    { key: 'png',  match: 'png',  label: 'Chart PNG saves', note: 'the image download on each chart' },
+    { key: 'xlsx', match: 'xlsx', label: 'Excel downloads', note: 'the "download season as Excel" button' },
+  ];
+
+  // The injected block. CSS hides the buttons — attribute selectors also catch
+  // the ones the site renders later (driver cards, modals) — and the script
+  // no-ops the globals so no other call path can reach them either.
+  function buildVariantBlock(disabled) {
+    const on = DOWNLOAD_FEATURES.filter(f => disabled && disabled[f.key]);
+    if (!on.length) return '';
+    const css = on.map(f => '[onclick*="download" i][onclick*="' + f.match + '" i]').join(',') +
+                '{display:none!important}';
+    const js =
+      '(function(){var m=' + JSON.stringify(on.map(f => f.match)) + ';' +
+      'Object.getOwnPropertyNames(window).forEach(function(k){' +
+      'if(k.slice(0,8)!=="download"||typeof window[k]!=="function")return;' +
+      'var l=k.toLowerCase();' +
+      'if(m.some(function(p){return l.indexOf(p)>=0;}))window[k]=function(){};' +
+      '});})();';
+    return VARIANT_START + '\n' +
+           LT + 'style>' + css + LT + '/style>\n' +
+           LT + 'script>' + js + LT + '/script>\n' +
+           VARIANT_END;
+  }
+
+  // opts: { keepYears: array of years to keep in the extra blocks, or null to
+  //         leave them untouched; disable: { csv, png, xlsx } }
+  function applyVariant(html, opts) {
+    opts = opts || {};
+    html = stripVariantBlock(html);
+    if (opts.keepYears) {
+      const keep = {};
+      opts.keepYears.forEach(y => { keep[String(y)] = 1; });
+      EXTRA_YEAR_BLOCKS.forEach(name => {
+        html = filterRawYearBlock(html, name, y => !!keep[y]);
+      });
+    }
+    const block = buildVariantBlock(opts.disable);
+    if (block) {
+      const at = html.lastIndexOf('</body' + '>');
+      html = at === -1 ? html + block : html.slice(0, at) + block + '\n' + html.slice(at);
+    }
+    return html;
+  }
+
+  // ---------------------------------------------------------------------
+  // Series switcher for the exported page.
+  //
+  // A file carrying more than one championship gets a small runtime: a row of
+  // series pills above the mode nav, and a block that swaps the chosen series
+  // into seasonsData / driverYearColors / driverRallyColors *before* the site's
+  // own init() runs. Switching reloads the page rather than re-rendering in
+  // place -- the site memoises per-year (fastest-on-event, season pace ranks,
+  // chart instances), and those caches would be silently wrong once the same
+  // year key meant a different championship. Because only ever one series is
+  // live, every cross-season view -- all-time stats, hall of fame, duels --
+  // stays correct without the site knowing series exist at all.
+  // ---------------------------------------------------------------------
+
+  const SWAP_OPEN = '/*wrc-series-swap*/';
+  const SWAP_CLOSE = '/*end-wrc-series-swap*/';
+  const UI_OPEN = LT + '!--wrc-series-ui-->';
+  const UI_CLOSE = LT + '!--/wrc-series-ui-->';
+
+  function stripBetween(html, open, close) {
+    for (;;) {
+      const i = html.indexOf(open);
+      if (i === -1) return html;
+      const j = html.indexOf(close, i);
+      if (j === -1) return html;
+      html = html.slice(0, i) + html.slice(j + close.length);
+    }
+  }
+
+  // Runs inside the site's own script, right after the seriesData literal, so
+  // seasonsData / driverYearColors / driverRallyColors / currentSeason are all
+  // declared and nothing has read them yet.
+  function seriesSwapJs(primaryName) {
+    return SWAP_OPEN + '(function(){try{' +
+      // Carried three ways so it survives however the file is opened: the query
+      // string is the primary, the hash covers browsers that drop a query from a
+      // file:// URL, and sessionStorage covers a hash the site has since rewritten.
+      'var W=window,q=(location.search||"").match(/[?&]series=([^&]*)/)' +
+      '||(location.hash||"").match(/[#&]series=([^&]*)/),want=null;' +
+      'if(q)want=decodeURIComponent(q[1]);' +
+      'else{var nm=/(?:^|;)pwSeries=([^;]*)/.exec(W.name||"");' +
+      'if(nm)want=decodeURIComponent(nm[1]);' +
+      'else{try{want=sessionStorage.getItem("pwSeries")||"";}catch(e){want="";}}}' +
+      'W.__pwPrimaryName=' + JSON.stringify(primaryName) + ';' +
+      // Defined before the site's own code runs, because the profile module and
+      // extLinks() reach for them. The primary series keeps the built-in links.
+      'W.PW_SERIES_LABEL=function(){var i=W.__pwSeries;' +
+      'return (i&&seriesData[i]&&(seriesData[i].name||i))||W.__pwPrimaryName||"WRC";};' +
+      'W.PW_SERIES_LINKS=function(){var i=W.__pwSeries;' +
+      // No ewrc key at all means "no opinion", so the primary series keeps the
+      // built-in WRC link; an empty string means "this series has none".
+      'if(!i||!seriesData[i])return {maps:true};' +
+      'return {ewrc:seriesData[i].ewrc||"",maps:!!seriesData[i].maps};};' +
+      'W.__pwSeries=(want&&seriesData[want])?want:"";' +
+      'if(!W.__pwSeries)return;' +
+      'var rec=seriesData[W.__pwSeries];' +
+      'function swap(t,src){if(!t)return;Object.keys(t).forEach(function(k){delete t[k];});' +
+      'Object.keys(src||{}).forEach(function(k){t[k]=src[k];});}' +
+      'swap(seasonsData,rec.seasons);' +
+      'swap(driverYearColors,rec.driverYearColors);' +
+      'swap(driverRallyColors,rec.driverRallyColors);' +
+      'var ys=Object.keys(seasonsData).map(Number).sort(function(a,b){return a-b;});' +
+      'if(ys.length)currentSeason=ys[ys.length-1];' +
+      '}catch(e){}})();' + SWAP_CLOSE;
+  }
+
+  // Runs at the end of the body: draws the pills, and clears stage times when a
+  // secondary series is live (stageData is keyed by year with no series in it,
+  // so its splits belong to the primary championship only).
+  function seriesUiBlock() {
+    const js =
+      '(function(){try{' +
+      'if(typeof seriesData==="undefined")return;' +
+      'var ids=Object.keys(seriesData||{});if(!ids.length)return;' +
+      // Framed pages keep a copy of their own markup for in-place series switches.
+      // Taken here, at the end of the body and before DOMContentLoaded, so nothing
+      // has rendered into it yet and the data literals are still as shipped.
+      'if(window.self!==window.top&&!window.__pwSrc){try{' +
+      'window.__pwSrc="<!DOCTYPE html>\\n"+document.documentElement.outerHTML;}catch(e){}}' +
+      'var cur=window.__pwSeries||"";' +
+      'if(cur&&typeof stageData!=="undefined"){Object.keys(stageData).forEach(function(k){delete stageData[k];});}' +
+      // The Hall of Fame world map, its hover cards and its per-rally stats are
+      // all driven by RALLY_FLAGS -- a fixed table of WRC events that owes
+      // nothing to seasonsData, which is why a secondary series was still
+      // showing the WRC map. Rebuild it from the rallies this series actually
+      // ran, then drop the caches derived from it. Only for a secondary series:
+      // the primary one keeps the full historical table it shipped with.
+      // The All-Time view carries the same "top-class (WRC)" note in static
+      // markup, where no helper can reach it. Swap that text once on load.
+      // The Season View button carries a fixed WRC logo in static markup. A series
+      // with its own logo link swaps the image in. Tinted, it keeps the button's
+      // white filter; otherwise (an opaque image would turn into a white block)
+      // it is shown in its own colours as a small round badge.
+      'if(cur&&seriesData[cur]&&seriesData[cur].logo){try{' +
+      'var sr=seriesData[cur],lg=document.querySelector("#seasonModeBtn img");' +
+      'if(lg){lg.style.display="";lg.src=sr.logo;lg.alt=sr.name||cur;' +
+      'if(!sr.logoTint){lg.style.filter="none";lg.style.opacity="1";lg.style.height="28px";' +
+      'lg.style.width="28px";lg.style.objectFit="cover";lg.style.borderRadius="50%";}}' +
+      '}catch(e){}}' +
+      'if(cur){try{var lbl=(seriesData[cur]&&seriesData[cur].name)||cur;' +
+
+      'var wk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),tn;' +
+      'while((tn=wk.nextNode())){if(tn.nodeValue.indexOf("top-class (WRC)")!==-1)' +
+      'tn.nodeValue=tn.nodeValue.split("top-class (WRC)").join("top-class ("+lbl+")");}' +
+      '}catch(e){}}' +
+      'if(cur&&typeof RALLY_FLAGS!=="undefined"){try{' +
+      'var rf={};' +
+      'Object.keys(seasonsData).forEach(function(y){' +
+      '(seasonsData[y].rallies||[]).forEach(function(rk){' +
+      'var canon=(typeof rhNormKey==="function")?rhNormKey(rk):rk;' +
+      'var cc=(typeof rallyFlagCodes!=="undefined"&&(rallyFlagCodes[rk]||rallyFlagCodes[canon]))' +
+      '||RALLY_FLAGS[canon]||RALLY_FLAGS[rk]||"";' +
+      'if(cc)rf[canon]=String(cc).toUpperCase();});});' +
+      'Object.keys(RALLY_FLAGS).forEach(function(k){delete RALLY_FLAGS[k];});' +
+      'Object.keys(rf).forEach(function(k){RALLY_FLAGS[k]=rf[k];});' +
+      'HOF_COUNTRY_RALLIES=null;_hofRallyDataSkm=null;_hofRallyDataPaceRank=null;' +
+      '}catch(e){}}' +
+      'function esc(t){return String(t).replace(/[&<>"]/g,function(c){' +
+      'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
+      'function go(id){try{sessionStorage.setItem("pwSeries",id);}catch(e){}' +
+      // Embeds (Google Sites and the like) inject the page into a frame that has
+      // no address of its own: navigating or even reloading it leaves a blank
+      // frame. When framed, the page never leaves: the chosen series opens as a
+      // full-size copy of this page layered on top (see host), and a click from
+      // inside that copy is handed back up to the page that owns it.
+      'if(window.self!==window.top){' +
+      'try{if(window.parent.__pwHost){window.parent.__pwHost(id);return;}}catch(e){}' +
+      'host(id);return;}' +
+      'var base=location.href.split("#")[0].split("?")[0];' +
+      'var e2=encodeURIComponent(id);' +
+      'location.href=base+(id?"?series="+e2+"#series="+e2:"");}' +
+      // The copy reads its series from window.name, which the swap block checks.
+      'function host(id){var old=document.getElementById("pwSeriesFrame"),de=document.documentElement;' +
+      'if(old)old.parentNode.removeChild(old);' +
+      'if(id===cur||!window.__pwSrc){de.style.overflow="";return;}' +
+      'var fr=document.createElement("iframe");fr.id="pwSeriesFrame";' +
+      'fr.name=";pwSeries="+encodeURIComponent(id);' +
+      'fr.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;border:0;margin:0;' +
+      'z-index:2147483647;background:#000";' +
+      'document.body.appendChild(fr);de.style.overflow="hidden";fr.srcdoc=window.__pwSrc;}' +
+      'window.__pwHost=host;' +
+      'function build(){' +
+      'if(document.getElementById("pwSeriesBar"))return;' +
+      'var host=document.querySelector(".mode-selector");if(!host)return;' +
+      'var items=[{id:"",name:window.__pwPrimaryName||"WRC"}].concat(ids.map(function(i){' +
+      'return {id:i,name:(seriesData[i]&&seriesData[i].name)||i};}));' +
+      'var bar=document.createElement("div");bar.id="pwSeriesBar";' +
+      'bar.className="season-selector";bar.style.marginBottom="1rem";' +
+      'bar.innerHTML=\'<span style="align-self:center;font-size:0.72rem;letter-spacing:.08em;' +
+      'text-transform:uppercase;color:var(--color-text-light);margin-right:.35rem">Series</span>\'+' +
+      'items.map(function(it){return \'<div class="season-btn\'+(it.id===cur?" active":"")+' +
+      '\'" data-pwseries="\'+esc(it.id)+\'">\'+esc(it.name)+\'</div>\';}).join("");' +
+      'host.parentNode.insertBefore(bar,host);' +
+      'bar.addEventListener("click",function(e){var t=e.target;' +
+      'while(t&&t!==bar&&!t.hasAttribute("data-pwseries"))t=t.parentNode;' +
+      'if(!t||t===bar)return;var id=t.getAttribute("data-pwseries");if(id!==cur)go(id);});}' +
+      'if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",build);else build();' +
+      '}catch(e){}})();';
+    return UI_OPEN + '\n' + LT + 'script>' + js + LT + '/script>\n' + UI_CLOSE;
+  }
+
+  function injectSeriesRuntime(html, series, primaryName) {
+    // Always clear a previous run's blocks first, so re-exporting an exported
+    // file replaces the runtime instead of stacking copies of it.
+    html = stripBetween(html, SWAP_OPEN, SWAP_CLOSE);
+    html = stripBetween(html, UI_OPEN, UI_CLOSE);
+    if (!series || !Object.keys(series).length) return html;
+
+    const anchor = 'const seriesData=';
+    const at = html.indexOf(anchor);
+    if (at === -1) return html;
+    let end = matchBrace(html, at + anchor.length) + 1;
+    if (html[end] === ';') end++;
+    html = html.slice(0, end) + seriesSwapJs(primaryName) + html.slice(end);
+
+    const body = html.lastIndexOf('</body' + '>');
+    const ui = seriesUiBlock();
+    return body === -1 ? html + ui : html.slice(0, body) + ui + '\n' + html.slice(body);
+  }
+
+  const api = { BLOCKS, parse, serialize, extractBlock, evalLiteral, applyVariant, DOWNLOAD_FEATURES,
+                injectSeriesRuntime,
+                serializeSeasonsData, serializeFlatMap, serializeNestedMap, jsVal, jsArr };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.WRCCore = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* editor.js — WRC Database Live Editor UI */
+(function () {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  const State = {
+    parsed: null,        // { html, data, meta }
+    data: null,          // live editable copy of parsed.data
+    fileName: 'wrc_database.html',
+    view: 'seasons',
+    curYear: null,
+    series: '',          // id of the series being edited; '' = the primary one
+    dirty: false,
+  };
+
+  // ---- series ----------------------------------------------------------
+  // The primary series lives in the three blocks the site actually reads
+  // (seasonsData, driverYearColors, driverRallyColors). Every other series
+  // keeps its own copy of those inside seriesData, which the site ignores --
+  // so the master file still opens as a working database, and the export
+  // builder swaps the chosen series into the real blocks when you build it.
+  // Season keys stay plain years inside every series, because that is what
+  // the site's year ranges, era rules and points tables all read.
+  const PRIMARY_NAME = 'WRC';
+
+  function allSeries() {
+    const sd = (State.data && State.data.seriesData) || {};
+    return [{ id: '', name: PRIMARY_NAME, label: 'the file\'s own championship', primary: true }]
+      .concat(Object.keys(sd).sort().map(id => ({
+        id: id, name: sd[id].name || id, label: sd[id].label || '', primary: false,
+      })));
+  }
+  function seriesRec(id) { return ((State.data && State.data.seriesData) || {})[id] || null; }
+  function activeSeries() { return State.series ? seriesRec(State.series) : null; }
+  function seriesName(id) { return id ? ((seriesRec(id) || {}).name || id) : PRIMARY_NAME; }
+
+  // Containers for a given series id. undefined means "whichever series is open
+  // for editing"; '' explicitly means the primary one.
+  function pick(id) { return id === undefined ? activeSeries() : (id ? seriesRec(id) : null); }
+  function SD(id)  { const r = pick(id); return r ? r.seasons : State.data.seasonsData; }
+  function DYC(id) { const r = pick(id); return r ? r.driverYearColors : State.data.driverYearColors; }
+  function DRC(id) { const r = pick(id); return r ? r.driverRallyColors : State.data.driverRallyColors; }
+  function yearsOf(id) {
+    return Object.keys(SD(id) || {}).filter(k => /^\d+$/.test(k)).map(Number).sort((a, b) => a - b);
+  }
+
+  // Export-builder settings. Seasons are tracked as the ones being DROPPED so a
+  // season imported after the picker was last touched is included by default.
+  const Build = {
+    include: new Set(['']), // series this build ships; '' = the primary one
+    series: '',          // whose seasons the season picker is showing
+    drops: {},           // series id -> Set of dropped years
+    pruneYearColors: true,
+    pruneUnusedNames: false,
+    dropStageData: false,
+    disable: { csv: false, png: false, xlsx: false },
+    suffix: '_lite',
+    size: null,          // { full, variant } byte counts of the last estimate
+  };
+
+  // Driver "meta" fields shown separately from per-rally fields.
+  const META_FIELDS = ['rank','number','name','car','average','consistency','points','wins','podiums','stageWins','totalStages'];
+  // Per-rally suffixes: '' = reliability/speed metric, '_s' = stage count, '_r' = rank
+  const RALLY_SUFFIXES = [
+    { sfx: '',   label: 'Perf',   title: 'Performance metric (e.g. s/km deficit or %)' },
+    { sfx: '_s', label: 'Stages', title: 'Stages counted' },
+    { sfx: '_r', label: 'Rank',   title: 'Finishing position' },
+  ];
+
+  /* ---------- toast / status ---------- */
+  let toastT;
+  function toast(msg, kind) {
+    const t = $('#toast'); t.textContent = msg;
+    t.style.borderColor = kind === 'err' ? 'var(--bad)' : kind === 'ok' ? 'var(--good)' : 'var(--accent)';
+    t.classList.add('show'); clearTimeout(toastT);
+    toastT = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+  function setStatus(msg, cls) {
+    const s = $('#status'); s.textContent = msg; s.className = 'status ' + (cls || '');
+  }
+  function markDirty() { State.dirty = true; setStatus('Unsaved edits — ' + driverTotal() + ' driver rows', 'ok'); }
+
+  function driverTotal() {
+    const sd = SD(); let n = 0;
+    years().forEach(y => n += (sd[y].drivers || []).length);
+    return n;
+  }
+  function years() { return yearsOf(); }
+
+  /* ---------- file loading ---------- */
+  function loadFile(file) {
+    State.fileName = file.name.replace(/\.html?$/i, '') + '_edited.html';
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const parsed = WRCCore.parse(rd.result);
+        State.parsed = parsed;
+        State.data = JSON.parse(JSON.stringify(parsed.data)); // deep clone (all plain JSON-safe)
+        State.curYear = parsed.data.__currentSeasonDefault || years()[years().length - 1];
+        State.dirty = false;
+        State.series = ''; Build.series = ''; Build.include = new Set(['']); Build.drops = {}; Build.size = null;
+        $('#emptyState').style.display = 'none';
+        $('#side').style.display = 'block';
+        $('#exportBtn').disabled = false; $('#previewBtn').disabled = false; $('#buildBtn').disabled = false;
+        setStatus(years().length + ' seasons · ' + driverTotal() + ' drivers loaded', 'ok');
+        render();
+        toast('Loaded ' + file.name, 'ok');
+      } catch (e) {
+        console.error(e);
+        setStatus('Parse error', 'err');
+        toast('Could not parse this file: ' + e.message, 'err');
+      }
+    };
+    rd.readAsText(file);
+  }
+
+  /* ---------- navigation ---------- */
+  function render() {
+    $$('.navitem').forEach(n => n.classList.toggle('active', n.dataset.view === State.view));
+    renderSeriesPicker();
+    const root = $('#viewRoot'); root.innerHTML = '';
+    ({
+      seasons: viewSeasons, rallies: viewRallies, drivers: viewDrivers,
+      colors: viewColors, liveries: viewLiveries, flags: viewFlags,
+      series: viewSeries, build: viewBuild, raw: viewRaw,
+    }[State.view] || viewSeasons)(root);
+  }
+
+  // The sidebar picker decides which series every other view edits.
+  function renderSeriesPicker() {
+    const sel = $('#seriesPick'); if (!sel || !State.data) return;
+    sel.innerHTML = allSeries().map(sr =>
+      `<option value="${esc(sr.id)}" ${sr.id === State.series ? 'selected' : ''}>` +
+      `${esc(sr.name)}${sr.primary ? ' (primary)' : ''} \u00b7 ${yearsOf(sr.id).length} seasons</option>`).join('');
+    sel.onchange = e => { useSeries(e.target.value); render(); };
+  }
+  function useSeries(id) {
+    State.series = id;
+    const ys = years();
+    State.curYear = ys.length ? ys[ys.length - 1] : null;
+  }
+
+  /* ================= SERIES ================= */
+  function viewSeries(root) {
+    const list = allSeries();
+    root.innerHTML =
+      `<div class="panelhead"><h2>Series</h2>
+        <span class="sub">${list.length} championship${list.length === 1 ? '' : 's'} in this file</span>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn sm" id="addSeries">+ Add series</button></div>
+      <p class="hint">The primary series is the one the exported page reads directly. Anything else is parked in a
+         block the site ignores, so this master file still opens as a working ${esc(PRIMARY_NAME)} database \u2014 use
+         the <span class="tag">Export builder</span> to build a standalone file with just the series you pick.</p>
+      <p class="hint">A series' name is what driver profiles print as the class badge and beside each finishing
+         position. eWRC's season URLs are per championship and Rally-Maps only covers the events the database
+         already knows, so both links are set here — leave the box empty and results simply show no eWRC link
+         rather than one pointing at the WRC season.</p>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))" id="seriesGrid"></div>`;
+    const grid = $('#seriesGrid');
+    list.forEach(sr => {
+      const ys = yearsOf(sr.id);
+      const div = document.createElement('div'); div.className = 'card';
+      div.innerHTML =
+        `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+           <strong style="font-size:16px">${esc(sr.name)}</strong>
+           ${sr.primary ? '<span class="tag">primary</span>' : ''}
+           ${sr.id === State.series ? '<span class="pill">editing</span>' : ''}
+         </div>
+         <div class="drivercount" style="margin-top:4px">${esc(sr.label || '')}</div>
+         <div class="drivercount" style="margin-top:6px">${ys.length} season${ys.length === 1 ? '' : 's'}${
+           ys.length ? ' \u00b7 ' + ys[0] + '\u2013' + ys[ys.length - 1] : ''}</div>
+         ${sr.primary ? '' : `
+         <div style="margin-top:10px">
+           <label class="fld">eWRC season link — <code>{year}</code> and <code>{rally}</code> are filled in</label>
+           <input value="${esc(seriesRec(sr.id).ewrc || '')}" data-slink="${esc(sr.id)}"
+                  placeholder="blank = no eWRC link on results">
+           <label class="optrow" style="border:none;background:none;padding:6px 0 0;gap:8px">
+             <input type="checkbox" data-smaps="${esc(sr.id)}" ${seriesRec(sr.id).maps ? 'checked' : ''}>
+             <span style="font-size:12px">Show Rally-Maps links</span>
+           </label>
+           <label class="fld" style="margin-top:8px">Season View logo — image link</label>
+           <input value="${esc(seriesRec(sr.id).logo || '')}" data-slogo="${esc(sr.id)}"
+                  placeholder="blank = keep the WRC logo">
+           <label class="optrow" style="border:none;background:none;padding:6px 0 0;gap:8px">
+             <input type="checkbox" data-stint="${esc(sr.id)}" ${seriesRec(sr.id).logoTint ? 'checked' : ''}>
+             <span style="font-size:12px">Tint white like the WRC logo (only for transparent images; otherwise shown as a round badge)</span>
+           </label>
+         </div>`}
+         <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+           <button class="btn sm" data-use="${esc(sr.id)}">Edit this series</button>
+           ${sr.primary ? '' : `<button class="btn sm" data-ren="${esc(sr.id)}">Rename</button>
+           <button class="btn sm danger" data-dels="${esc(sr.id)}">Delete</button>`}
+         </div>`;
+      grid.appendChild(div);
+    });
+    grid.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { useSeries(b.dataset.use); go('seasons'); });
+    grid.querySelectorAll('[data-slink]').forEach(inp => inp.onchange = () => {
+      const r = seriesRec(inp.dataset.slink); if (!r) return;
+      const v = inp.value.trim();
+      if (v) r.ewrc = v; else delete r.ewrc;
+      markDirty();
+    });
+    grid.querySelectorAll('[data-slogo]').forEach(inp => inp.onchange = () => {
+      const r = seriesRec(inp.dataset.slogo); if (!r) return;
+      const v = inp.value.trim();
+      if (v) r.logo = v; else delete r.logo;
+      markDirty();
+    });
+    grid.querySelectorAll('[data-stint]').forEach(cb => cb.onchange = () => {
+      const r = seriesRec(cb.dataset.stint); if (!r) return;
+      if (cb.checked) r.logoTint = true; else delete r.logoTint;
+      markDirty();
+    });
+    grid.querySelectorAll('[data-smaps]').forEach(cb => cb.onchange = () => {
+      const r = seriesRec(cb.dataset.smaps); if (!r) return;
+      if (cb.checked) r.maps = true; else delete r.maps;
+      markDirty();
+    });
+    grid.querySelectorAll('[data-ren]').forEach(b => b.onclick = () => {
+      const r = seriesRec(b.dataset.ren); if (!r) return;
+      const n = prompt('Series name (e.g. ERC):', r.name); if (!n || !n.trim()) return;
+      r.name = n.trim();
+      r.label = (prompt('Full name (optional):', r.label || '') || '').trim();
+      markDirty(); render();
+    });
+    grid.querySelectorAll('[data-dels]').forEach(b => b.onclick = () => {
+      const id = b.dataset.dels, ys = yearsOf(id);
+      if (!confirm('Delete the ' + seriesName(id) + ' series and its ' + ys.length + ' season(s)?')) return;
+      delete State.data.seriesData[id];
+      if (State.series === id) useSeries('');
+      Build.include.delete(id); delete Build.drops[id]; Build.size = null;
+      if (Build.series === id) Build.series = '';
+      markDirty(); render();
+    });
+    $('#addSeries').onclick = addSeries;
+  }
+
+  function addSeries() {
+    const name = prompt('Series name (e.g. ERC, WRC2, Group B):');
+    if (!name || !name.trim()) return;
+    const id = seriesId(name);
+    if (!State.data.seriesData) State.data.seriesData = {};
+    if (State.data.seriesData[id]) { toast('That series already exists', 'err'); return; }
+    State.data.seriesData[id] = {
+      name: name.trim(),
+      label: (prompt('Full name (optional):', '') || '').trim(),
+      seasons: {}, driverYearColors: {}, driverRallyColors: {},
+    };
+    useSeries(id);
+    markDirty(); go('seasons');
+    toast('Added ' + name.trim() + ' \u2014 now add its seasons', 'ok');
+  }
+  function seriesId(name) {
+    return (name || '').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 16) ||
+           ('s' + Math.random().toString(36).slice(2, 6));
+  }
+
+  /* ================= SEASONS ================= */
+  function viewSeasons(root) {
+    const ys = years();
+    root.innerHTML =
+      `<div class="panelhead"><h2>Seasons</h2>
+        <span class="sub">${esc(seriesName(State.series))} · ${ys.length} seasons${
+          ys.length ? ' (' + ys[0] + '–' + ys[ys.length-1] + ')' : ''}</span>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn sm" id="addSeason">+ Add season</button>
+      </div>
+      <div class="toolrow"><span class="muted">Default season shown when the exported page opens:</span>
+        <select id="defSeason">${ys.map(y=>`<option value="${y}" ${y===State.data.__currentSeasonDefault?'selected':''}>${y}</option>`).join('')}</select>
+      </div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr))" id="seasonGrid"></div>`;
+    const grid = $('#seasonGrid');
+    ys.forEach(y => {
+      const s = SD()[y];
+      const div = document.createElement('div'); div.className = 'card';
+      div.innerHTML =
+        `<div style="display:flex;align-items:center;gap:8px">
+           <strong style="font-size:16px">${y}</strong>
+           <span class="drivercount">${(s.drivers||[]).length} drivers · ${(s.rallies||[]).length} rallies</span>
+         </div>
+         <div style="margin-top:9px">
+           <label class="fld">Shown on the season button</label>
+           <input value="${esc(s.label || '')}" placeholder="${y}" data-lab="${y}">
+         </div>
+         <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+           <button class="btn sm" data-edit="${y}">Edit drivers</button>
+           <button class="btn sm" data-rallies="${y}">Rallies</button>
+           <button class="btn sm danger" data-del="${y}">Delete</button>
+         </div>`;
+      grid.appendChild(div);
+    });
+    $('#defSeason').onchange = e => { State.data.__currentSeasonDefault = Number(e.target.value); markDirty(); };
+    $('#addSeason').onclick = addSeason;
+    grid.querySelectorAll('[data-lab]').forEach(inp => inp.onchange = () => {
+      const season = SD()[inp.dataset.lab], v = inp.value.trim();
+      if (v) season.label = v; else delete season.label;
+      markDirty();
+    });
+    grid.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { State.curYear = Number(b.dataset.edit); go('drivers'); });
+    grid.querySelectorAll('[data-rallies]').forEach(b => b.onclick = () => { State.curYear = Number(b.dataset.rallies); go('rallies'); });
+    grid.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+      const y = b.dataset.del;
+      if (confirm('Delete the entire ' + y + ' season? This removes all its drivers.')) {
+        delete SD()[y]; markDirty(); render();
+      }
+    });
+  }
+  function addSeason() {
+    const y = prompt('New season year (e.g. 2027):');
+    if (!y || !/^\d{4}$/.test(y)) return;
+    if (SD()[y]) { toast('Season already exists', 'err'); return; }
+    SD()[y] = { rallies: [], rallyNames: [], drivers: [] };
+    markDirty(); State.curYear = Number(y); go('rallies');
+  }
+
+  /* ================= RALLIES ================= */
+  // Rally -> country/flag mapping. Global (not per-season) since the same rally
+  // key (e.g. "monte") represents the same real-world location every year —
+  // mirrors how driverFlagCodes is a flat, non-per-season map too.
+  function rallyFlagCode(key) { return (State.data.rallyFlagCodes || {})[key] || ''; }
+  function setRallyFlag(key, code) {
+    if (!State.data.rallyFlagCodes) State.data.rallyFlagCodes = {};
+    if (code) State.data.rallyFlagCodes[key] = code; else delete State.data.rallyFlagCodes[key];
+  }
+  function allFlagCodes() {
+    const set = new Set();
+    Object.keys(State.data.flagUrls || {}).forEach(c => set.add(c));
+    Object.keys(State.data.flagColors || {}).forEach(c => set.add(c));
+    Object.values(State.data.driverFlagCodes || {}).forEach(c => c && set.add(c));
+    Object.values(State.data.rallyFlagCodes || {}).forEach(c => c && set.add(c));
+    return Array.from(set).sort();
+  }
+  function flagPreviewHtml(code, size) {
+    size = size || 22;
+    const h = Math.round(size * 0.7);
+    if (!code) return `<span class="swatch" style="background:#1c2532;width:${size}px;height:${h}px" title="No flag"></span>`;
+    const url = (State.data.flagUrls || {})[code];
+    if (url) return `<img src="${esc(url)}" alt="${esc(code)}" title="${esc(code)}" style="width:${size}px;height:${h}px;object-fit:cover;border-radius:4px;border:1px solid rgba(255,255,255,.25);vertical-align:middle">`;
+    const col = (State.data.flagColors || {})[code] || '#334';
+    return `<span class="swatch" style="background:${col};width:${size}px;height:${h}px" title="${esc(code)}"></span>`;
+  }
+  function flagOptionsHtml(selected) {
+    let html = '<option value="">— none —</option>';
+    allFlagCodes().forEach(c => { html += `<option value="${esc(c)}" ${c === selected ? 'selected' : ''}>${esc(c)}</option>`; });
+    html += '<option value="__new__">+ New flag…</option>';
+    return html;
+  }
+  // Prompts for a brand-new country code + image URL/colour, stores it in the
+  // global flag tables, and returns the new code (or null if cancelled).
+  function promptNewFlag() {
+    const raw = prompt('Country code for the new flag (e.g. FI):');
+    if (!raw) return null;
+    const code = raw.trim().toUpperCase();
+    if (!code) return null;
+    const url = prompt('Flag image URL (optional — leave blank to use a colour swatch instead):', State.data.flagUrls[code] || '') || '';
+    const color = prompt('Flag colour (hex, used if no image URL):', State.data.flagColors[code] || '#0097b2') || '';
+    if (url) State.data.flagUrls[code] = url; else delete State.data.flagUrls[code];
+    if (color) State.data.flagColors[code] = color;
+    markDirty();
+    return code;
+  }
+  /* ---------- rally character tags ---------- */
+  // rallyMeta is keyed by a canonical rally key; RALLY_META_ERAS lets a rally
+  // point at a different tag set for a span of years (the site takes the FIRST
+  // era that covers the year, so a single-season override goes at the front).
+  const TAG_FIELDS = [
+    { key: 'surface',   label: 'Surface',
+      opts: ['Gravel', 'Tarmac', 'Snow', 'Gravel/Tarmac', 'Tarmac/Snow'] },
+    { key: 'roughness', label: 'Roughness',
+      opts: ['Smooth', 'Medium', 'Rough', 'Very Rough', 'Dirty', 'Muddy', 'Soft', 'Varying', 'Snow'] },
+    { key: 'speed',     label: 'Speed',
+      opts: ['Very Slow', 'Slow', 'Medium', 'Fast', 'Very Fast'] },
+  ];
+  function tagsSupported() { return !!State.data.rallyMeta; }
+  function canonRally(key) { return (State.data.__rhNorm || {})[key] || key; }
+  function eraList(canon) { return (State.data.rallyMetaEras || {})[canon] || []; }
+  function metaKeyFor(key, year) {
+    const canon = canonRally(key), y = Number(year);
+    const hit = eraList(canon).find(e =>
+      y >= e.from && y <= e.to && !((e.except || []).indexOf(y) !== -1));
+    return hit ? hit.key : canon;
+  }
+  // What the site would actually show for this rally in this season.
+  function metaFor(key, year) {
+    const rm = State.data.rallyMeta || {};
+    return rm[metaKeyFor(key, year)] || rm[key] || rm[canonRally(key)] || null;
+  }
+  function seasonOnlyKey(key, year) { return canonRally(key) + '_' + year; }
+  function isSeasonOnly(key, year) {
+    const canon = canonRally(key), y = Number(year);
+    return eraList(canon).some(e => e.from === y && e.to === y && e.key === seasonOnlyKey(key, year));
+  }
+
+  // Move this rally's tags for this one season onto their own key, seeded from
+  // whatever is in effect now, so editing them can't disturb other seasons.
+  function splitSeasonTags(key, year) {
+    const canon = canonRally(key), y = Number(year), want = seasonOnlyKey(key, year);
+    if (!State.data.rallyMeta) State.data.rallyMeta = {};
+    if (!State.data.rallyMetaEras) State.data.rallyMetaEras = {};
+    State.data.rallyMeta[want] = Object.assign({}, metaFor(key, y) || {});
+    const eras = State.data.rallyMetaEras[canon] = eraList(canon).slice();
+    eras.unshift({ from: y, to: y, key: want });
+    return want;
+  }
+  // Undo that: drop the one-season era and the key it pointed at.
+  function mergeSeasonTags(key, year) {
+    const canon = canonRally(key), y = Number(year), want = seasonOnlyKey(key, year);
+    const eras = eraList(canon).filter(e => !(e.from === y && e.to === y && e.key === want));
+    if (eras.length) State.data.rallyMetaEras[canon] = eras;
+    else delete State.data.rallyMetaEras[canon];
+    const stillUsed = Object.keys(State.data.rallyMetaEras || {})
+      .some(c => (State.data.rallyMetaEras[c] || []).some(e => e.key === want));
+    if (!stillUsed) delete State.data.rallyMeta[want];
+  }
+  function setRallyTag(key, year, field, value) {
+    if (!State.data.rallyMeta) State.data.rallyMeta = {};
+    const mk = metaKeyFor(key, year);
+    const m = State.data.rallyMeta[mk] = State.data.rallyMeta[mk] || {};
+    if (value) m[field] = value; else delete m[field];
+  }
+  function tagSelectHtml(field, value, idx) {
+    const known = field.opts.slice();
+    if (value && known.indexOf(value) === -1) known.push(value);
+    return `<select data-tag="${field.key}" data-tagrow="${idx}" title="${esc(field.label)}"
+              style="width:100%;padding:4px 6px;font-size:12px">
+              <option value="">—</option>
+              ${known.map(o => `<option value="${esc(o)}" ${o === value ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+            </select>`;
+  }
+
+  function viewRallies(root) {
+    const y = State.curYear;
+    const s = SD()[y];
+    root.innerHTML =
+      `<div class="panelhead"><h2>Rallies</h2><span class="sub">${y} season</span>
+        <div class="spacer" style="flex:1"></div>${seasonPicker()}
+        <button class="btn sm" id="addRally">+ Add rally</button></div>
+      <p class="hint">The <span class="tag">key</span> is the internal id used in driver data (e.g. <code>monte</code>). The <span class="tag">display name</span> is what shows on your site. Renaming a key updates every driver's data for this season. The <span class="tag">flag</span> is shared across seasons for the same rally key.
+         ${tagsSupported() ? 'Tags drive the surface / roughness / speed filters on your site and are shared across seasons too, unless you tick <span class="tag">season only</span>.' : ''}</p>
+      <div class="tblwrap"><table class="data" id="rallyTbl">
+        <thead><tr><th style="width:40px">#</th><th class="name">Display name</th><th class="name">Key (id)</th><th style="width:150px">Flag</th>
+          ${tagsSupported() ? TAG_FIELDS.map(f => `<th style="width:120px">${f.label}</th>`).join('') +
+            '<th style="width:96px" title="Tick to give this rally its own tags for this season only">Season only</th>' : ''}
+          <th style="width:90px">Move</th><th style="width:60px"></th></tr></thead>
+        <tbody></tbody></table></div>`;
+    hookSeasonPicker();
+    const tb = $('#rallyTbl tbody');
+    (s.rallies || []).forEach((key, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        `<td>${i+1}</td>
+         <td class="name"><input value="${esc(s.rallyNames[i]||'')}" data-nm="${i}"></td>
+         <td class="name"><input value="${esc(key)}" data-key="${i}"></td>
+         <td><div class="colorcell">${flagPreviewHtml(rallyFlagCode(key), 22)}<select data-flagsel="${i}">${flagOptionsHtml(rallyFlagCode(key))}</select></div></td>
+         ${tagsSupported() ? (() => {
+             const m = metaFor(key, y) || {};
+             return TAG_FIELDS.map(f => `<td>${tagSelectHtml(f, m[f.key] || '', i)}</td>`).join('') +
+               `<td><label class="optrow" style="border:none;background:none;padding:4px;justify-content:center;gap:6px">
+                  <input type="checkbox" data-scope="${i}" ${isSeasonOnly(key, y) ? 'checked' : ''}>
+                  <span class="muted" style="font-size:11px" title="Tag key in effect">${esc(metaKeyFor(key, y))}</span>
+                </label></td>`;
+           })() : ''}
+         <td><div class="rowbtns"><button class="btn sm" data-up="${i}">↑</button><button class="btn sm" data-down="${i}">↓</button></div></td>
+         <td><button class="btn sm danger" data-delr="${i}">✕</button></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('[data-nm]').forEach(inp => inp.onchange = () => { s.rallyNames[+inp.dataset.nm] = inp.value; markDirty(); });
+    tb.querySelectorAll('[data-key]').forEach(inp => inp.onchange = () => {
+      const i = +inp.dataset.key, oldK = s.rallies[i], newK = inp.value.trim();
+      if (!newK || newK === oldK) { inp.value = oldK; return; }
+      if (s.rallies.includes(newK)) { toast('Key already used', 'err'); inp.value = oldK; return; }
+      renameRallyKey(y, oldK, newK); s.rallies[i] = newK; markDirty(); render();
+    });
+    tb.querySelectorAll('[data-tag]').forEach(sel => sel.onchange = () => {
+      setRallyTag(s.rallies[+sel.dataset.tagrow], y, sel.dataset.tag, sel.value);
+      markDirty();
+    });
+    tb.querySelectorAll('[data-scope]').forEach(cb => cb.onchange = () => {
+      const key = s.rallies[+cb.dataset.scope];
+      if (cb.checked) splitSeasonTags(key, y); else mergeSeasonTags(key, y);
+      markDirty(); render();
+    });
+    tb.querySelectorAll('[data-flagsel]').forEach(sel => sel.onchange = () => {
+      const i = +sel.dataset.flagsel, key = s.rallies[i];
+      if (sel.value === '__new__') {
+        const c = promptNewFlag();
+        if (!c) { sel.value = rallyFlagCode(key); return; }
+        setRallyFlag(key, c); markDirty(); render(); return;
+      }
+      setRallyFlag(key, sel.value || null); markDirty(); render();
+    });
+    tb.querySelectorAll('[data-up]').forEach(b => b.onclick = () => moveRally(y, +b.dataset.up, -1));
+    tb.querySelectorAll('[data-down]').forEach(b => b.onclick = () => moveRally(y, +b.dataset.down, 1));
+    tb.querySelectorAll('[data-delr]').forEach(b => b.onclick = () => {
+      const i = +b.dataset.delr, key = s.rallies[i];
+      if (!confirm('Remove rally "' + (s.rallyNames[i]||key) + '"? Driver values for this rally will be removed too.')) return;
+      s.rallies.splice(i, 1); s.rallyNames.splice(i, 1);
+      (s.drivers||[]).forEach(d => { delete d[key]; delete d[key+'_s']; delete d[key+'_r']; });
+      markDirty(); render();
+    });
+    $('#addRally').onclick = () => openAddRallyModal(y);
+  }
+  function openAddRallyModal(y) {
+    const s = SD()[y];
+    modal(`
+      <h3>Add rally — ${esc(y)}</h3>
+      <label>Key (id)</label>
+      <input id="arKey" placeholder="e.g. monte">
+      <label>Display name</label>
+      <input id="arName" placeholder="e.g. Monte Carlo">
+      <label>Flag</label>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span id="arFlagPrev">${flagPreviewHtml('', 24)}</span>
+        <select id="arFlag" style="margin:0">${flagOptionsHtml('')}</select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button class="btn ghost" id="arCancel">Cancel</button>
+        <button class="btn primary" id="arAdd">Add rally</button>
+      </div>
+    `);
+    const flagSel = $('#arFlag');
+    flagSel.onchange = () => {
+      if (flagSel.value === '__new__') {
+        const c = promptNewFlag();
+        flagSel.innerHTML = flagOptionsHtml(c || '');
+        flagSel.value = c || '';
+      }
+      $('#arFlagPrev').innerHTML = flagPreviewHtml(flagSel.value, 24);
+    };
+    $('#arCancel').onclick = closeModal;
+    $('#arAdd').onclick = () => {
+      const key = $('#arKey').value.trim();
+      const nm = $('#arName').value.trim() || key;
+      const flagCode = flagSel.value === '__new__' ? '' : flagSel.value;
+      if (!key) { toast('Enter a key', 'err'); return; }
+      if (s.rallies.includes(key)) { toast('Key already exists', 'err'); return; }
+      s.rallies.push(key); s.rallyNames.push(nm);
+      if (flagCode) setRallyFlag(key, flagCode);
+      markDirty(); closeModal(); render();
+    };
+  }
+  function moveRally(y, i, dir) {
+    const s = SD()[y], j = i + dir;
+    if (j < 0 || j >= s.rallies.length) return;
+    [s.rallies[i], s.rallies[j]] = [s.rallies[j], s.rallies[i]];
+    [s.rallyNames[i], s.rallyNames[j]] = [s.rallyNames[j], s.rallyNames[i]];
+    markDirty(); render();
+  }
+  function renameRallyKey(y, oldK, newK) {
+    (SD()[y].drivers||[]).forEach(d => {
+      ['','_s','_r'].forEach(sfx => {
+        const ok = oldK+sfx;
+        if (Object.prototype.hasOwnProperty.call(d, ok)) { d[newK+sfx] = d[ok]; delete d[ok]; }
+      });
+    });
+    const rf = State.data.rallyFlagCodes;
+    if (rf && Object.prototype.hasOwnProperty.call(rf, oldK)) { rf[newK] = rf[oldK]; delete rf[oldK]; }
+  }
+
+  /* ================= DRIVERS ================= */
+  // A championship that doesn't publish competition numbers ends up with the
+  // number simply mirroring the finishing order. WRC's are real entry numbers,
+  // though, so a number already on a driver is left alone unless overwriting is
+  // asked for outright.
+  function numbersFromRank(season, overwrite) {
+    let changed = 0;
+    ((season || {}).drivers || []).forEach(d => {
+      if (!overwrite && d.number != null && d.number !== '') return;
+      const r = Number(d.rank);
+      if (d.rank == null || d.rank === '' || !isFinite(r)) return;
+      if (d.number !== r) { d.number = r; changed++; }
+    });
+    return changed;
+  }
+  function blankNumbers(season) {
+    return ((season || {}).drivers || []).filter(d => d.number == null || d.number === '').length;
+  }
+
+  function viewDrivers(root) {
+    const y = State.curYear;
+    const s = SD()[y];
+    root.innerHTML =
+      `<div class="panelhead"><h2>Drivers &amp; Stats</h2><span class="sub">${y} · ${(s.drivers||[]).length} drivers</span>
+        <div class="spacer" style="flex:1"></div>${seasonPicker()}
+        <input type="text" id="drvSearch" placeholder="Filter by name/car…" style="width:200px">
+        <button class="btn sm" id="numFromRank" title="Give every driver without a number the one matching their rank"># from rank</button>
+        <button class="btn sm" id="addDrv">+ Add driver</button></div>
+      <p class="hint">Click any cell to edit. Blank = no data (null). Use <strong>Details</strong> for every per-rally value (perf / stages / rank) and career totals.
+         <span class="tag">Country</span> is the driver's flag — two letters, shared across every season and series.
+         <span class="tag"># from rank</span> numbers anyone still blank after their finishing position; edit any of them afterwards.</p>
+      <datalist id="flagCodeList">${allFlagCodes().map(c => `<option value="${esc(c)}">`).join('')}</datalist>
+      <div class="tblwrap"><table class="data" id="drvTbl">
+        <thead><tr>
+          <th style="width:46px">Rank</th><th style="width:52px">No.</th>
+          <th class="name" style="min-width:170px">Driver</th>
+          <th style="width:104px" title="Country code — start typing, or pick from the list">Country</th>
+          <th class="name" style="min-width:180px">Car</th>
+          <th style="width:70px" title="Season average">Avg</th>
+          <th style="width:80px" title="Consistency">Consist.</th>
+          <th style="width:60px">Pts</th>
+          <th style="width:120px">Colour</th>
+          <th style="width:120px"></th>
+        </tr></thead><tbody></tbody></table></div>`;
+    hookSeasonPicker();
+    const tb = $('#drvTbl tbody');
+    function draw(filter) {
+      tb.innerHTML = '';
+      (s.drivers || []).forEach((d, idx) => {
+        if (filter) { const f = filter.toLowerCase(); if (!((d.name||'').toLowerCase().includes(f) || (d.car||'').toLowerCase().includes(f))) return; }
+        const col = effectiveColor(y, d);
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          `<td><input value="${d.rank==null?'':d.rank}" data-f="rank" data-i="${idx}" style="width:44px"></td>
+           <td><input value="${d.number==null?'':d.number}" data-f="number" data-i="${idx}"></td>
+           <td class="name"><input value="${esc(d.name)}" data-f="name" data-i="${idx}"></td>
+           <td><div class="colorcell" style="gap:5px">${flagPreviewHtml(driverFlag(d.name), 20)}
+               <input value="${esc(driverFlag(d.name))}" data-cc="${idx}" list="flagCodeList" maxlength="3"
+                      placeholder="—" title="${esc(flagOrigin(d.name))}"
+                      style="width:52px;padding-left:4px;padding-right:4px;text-transform:uppercase"></div></td>
+           <td class="name"><input value="${esc(d.car)}" data-f="car" data-i="${idx}"></td>
+           <td><input value="${d.average==null?'':d.average}" data-f="average" data-i="${idx}"></td>
+           <td><input value="${d.consistency==null?'':d.consistency}" data-f="consistency" data-i="${idx}"></td>
+           <td><input value="${d.points==null?'':d.points}" data-f="points" data-i="${idx}"></td>
+           <td><div class="colorcell"><span class="swatch" style="background:${col}" data-col="${idx}"></span>
+               <input value="${esc(driverColorRaw(y,d.name)||'')}" placeholder="auto" data-colin="${idx}" style="width:70px"></div></td>
+           <td><div class="rowbtns">
+               <button class="btn sm" data-det="${idx}">Details</button>
+               <button class="btn sm danger" data-deld="${idx}">✕</button></div></td>`;
+        tb.appendChild(tr);
+      });
+      bindDriverRows(tb, s, y, draw);
+    }
+    draw('');
+    $('#drvSearch').oninput = e => draw(e.target.value);
+    $('#numFromRank').onclick = () => {
+      const filled = numbersFromRank(s, false);
+      if (filled) {
+        markDirty(); draw($('#drvSearch').value);
+        toast('Numbered ' + filled + ' driver' + (filled === 1 ? '' : 's') + ' from rank', 'ok');
+        return;
+      }
+      const total = (s.drivers || []).length;
+      if (!total) { toast('No drivers in this season', 'err'); return; }
+      if (!confirm('Every driver in ' + y + ' already has a number.\n\nRenumber all ' + total +
+                   ' to match their rank? Any number you set by hand will be replaced.')) return;
+      const done = numbersFromRank(s, true);
+      markDirty(); draw($('#drvSearch').value);
+      toast(done ? 'Renumbered ' + done + ' driver' + (done === 1 ? '' : 's')
+                 : 'Every number already matches the ranking', done ? 'ok' : '');
+    };
+    $('#addDrv').onclick = () => {
+      const next = s.drivers.length + 1;
+      const d = { rank: next, number: next, name: 'New Driver', car: '', average: null, consistency: null, points: 0, wins:0, podiums:0, stageWins:0 };
+      s.rallies.forEach(k => { d[k]=null; d[k+'_s']=null; d[k+'_r']=null; });
+      s.drivers.push(d); markDirty(); draw($('#drvSearch').value);
+    };
+  }
+
+  function driverFlag(name) { return (State.data.driverFlagCodes || {})[name] || ''; }
+  function flagOrigin(name) {
+    const c = driverFlag(name);
+    if (!c) return 'No flag yet — the site will fall back to FR';
+    return Guessed[name] ? 'Guessed from ' + Guessed[name] + ' — worth checking' : c;
+  }
+  // One driver's country, set from wherever in the editor you happen to be.
+  function setDriverFlag(name, raw) {
+    const codes = State.data.driverFlagCodes || (State.data.driverFlagCodes = {});
+    const code = String(raw || '').trim().toUpperCase();
+    if (!code) { delete codes[name]; delete Guessed[name]; return ''; }
+    codes[name] = code; ensureFlagUrl(code);
+    delete Guessed[name];          // typed by hand, so no longer an inference
+    return code;
+  }
+
+  function bindDriverRows(tb, s, y, redraw) {
+    // Enter moves to the same field on the next visible row (Shift+Enter moves up).
+    // Uses actual DOM order so it correctly skips rows hidden by the search filter.
+    function enterNav(e, inp, selector) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const before = Array.from(tb.querySelectorAll(selector));
+      const pos = before.indexOf(inp);
+      inp.blur(); // commits the pending edit via onchange — may rebuild the table (e.g. colour field)
+      const after = Array.from(tb.querySelectorAll(selector)); // re-query in case blur triggered a redraw
+      const next = after[pos + (e.shiftKey ? -1 : 1)];
+      if (next) { next.focus(); next.select(); }
+    }
+    tb.querySelectorAll('input[data-f]').forEach(inp => {
+      inp.onchange = () => {
+        const d = s.drivers[+inp.dataset.i], f = inp.dataset.f, v = inp.value.trim();
+        d[f] = (f==='name'||f==='car') ? v : numOrNull(v);
+        // Someone this file already knows keeps their flag without being asked.
+        if (f === 'name') {
+          const got = autoFlagDriver(v);
+          if (got) toast(v + ' → ' + got.replace('?', '') +
+            (got.slice(-1) === '?' ? ' (guessed from the name — check it)' : ''), got.slice(-1) === '?' ? '' : 'ok');
+        }
+        markDirty();
+      };
+      inp.addEventListener('keydown', e => enterNav(e, inp, 'input[data-f="'+inp.dataset.f+'"]'));
+    });
+    tb.querySelectorAll('input[data-cc]').forEach(inp => {
+      inp.onchange = () => {
+        const d = s.drivers[+inp.dataset.cc];
+        inp.value = setDriverFlag(d.name, inp.value);
+        markDirty(); redraw($('#drvSearch') ? $('#drvSearch').value : '');
+      };
+      inp.addEventListener('keydown', e => enterNav(e, inp, 'input[data-cc]'));
+    });
+    tb.querySelectorAll('[data-colin]').forEach(inp => {
+      inp.onchange = () => {
+        const d = s.drivers[+inp.dataset.colin], v = inp.value.trim();
+        setDriverColor(y, d.name, v || null); markDirty(); redraw($('#drvSearch') ? $('#drvSearch').value : '');
+      };
+      inp.addEventListener('keydown', e => enterNav(e, inp, '[data-colin]'));
+    });
+    tb.querySelectorAll('[data-col]').forEach(sw => {
+      sw.onclick = () => {
+        const d = s.drivers[+sw.dataset.col];
+        const inp = document.createElement('input'); inp.type = 'color';
+        inp.value = toHex(effectiveColor(y, d));
+        inp.style.position='fixed'; inp.style.opacity='0';
+        document.body.appendChild(inp);
+        inp.oninput = () => { setDriverColor(y, d.name, inp.value); markDirty(); redraw($('#drvSearch')?$('#drvSearch').value:''); };
+        inp.onblur = () => inp.remove();
+        inp.click();
+      };
+    });
+    tb.querySelectorAll('[data-det]').forEach(b => b.onclick = () => openDriverModal(y, +b.dataset.det));
+    tb.querySelectorAll('[data-deld]').forEach(b => b.onclick = () => {
+      const i = +b.dataset.deld, d = s.drivers[i];
+      if (confirm('Delete driver "' + d.name + '"?')) { s.drivers.splice(i,1); markDirty(); redraw($('#drvSearch')?$('#drvSearch').value:''); }
+    });
+  }
+
+  // Range-select + paste for the per-rally grid inside the driver Details modal.
+  // Click a cell to anchor a single-cell selection; shift+click another cell in the
+  // SAME column to extend it to a contiguous range of rally rows. Pasting fills the
+  // selection column-by-column, row-by-row from clipboard text (tab/newline separated,
+  // matching what Excel puts on the clipboard). A plain click resets to a 1-row range,
+  // so paste with no deliberate selection just spills from that single anchor cell to
+  // the end of the table.
+  const RALLY_SFX_ORDER = RALLY_SUFFIXES.map(rs => rs.sfx);
+  function bindRallyGrid(box, s) {
+    let selRange = null; // { sfx, from, to }
+    function clearSelVisual() {
+      box.querySelectorAll('td.rcell-sel').forEach(td => td.classList.remove('rcell-sel'));
+    }
+    function applySelVisual() {
+      clearSelVisual();
+      if (!selRange) return;
+      for (let r = selRange.from; r <= selRange.to; r++) {
+        const inp = box.querySelector('input[data-row="'+r+'"][data-sfx="'+cssEsc(selRange.sfx)+'"]');
+        if (inp) inp.closest('td').classList.add('rcell-sel');
+      }
+    }
+    box.querySelectorAll('input[data-r]').forEach(inp => {
+      inp.addEventListener('mousedown', e => {
+        const row = +inp.dataset.row, sfx = inp.dataset.sfx;
+        if (e.shiftKey && selRange && selRange.sfx === sfx) {
+          selRange = { sfx, from: Math.min(selRange.from, row), to: Math.max(selRange.from, row) };
+        } else {
+          selRange = { sfx, from: row, to: row };
+        }
+        applySelVisual();
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const row = +inp.dataset.row, sfx = inp.dataset.sfx, dir = e.shiftKey ? -1 : 1;
+        const nextRow = row + dir;
+        const nextKey = (s.rallies[nextRow] || '') + sfx;
+        const next = box.querySelector('input[data-r="'+cssEsc(nextKey)+'"]');
+        if (next) { next.focus(); next.select(); selRange = { sfx, from: nextRow, to: nextRow }; applySelVisual(); }
+      });
+      inp.addEventListener('paste', e => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        if (!text) return;
+        const lines = text.replace(/\r/g, '').split('\n');
+        while (lines.length && lines[lines.length - 1] === '') lines.pop(); // trailing newline from copy
+        const grid = lines.map(line => line.split('\t'));
+        const sfx = inp.dataset.sfx;
+        const useRange = selRange && selRange.sfx === sfx;
+        const anchorRow = useRange ? selRange.from : +inp.dataset.row;
+        const maxRow = useRange ? selRange.to : (s.rallies.length - 1);
+        const anchorCol = RALLY_SFX_ORDER.indexOf(sfx);
+        let filled = 0;
+        grid.forEach((cols, ri) => {
+          const targetRow = anchorRow + ri;
+          if (targetRow > maxRow || targetRow >= s.rallies.length) return;
+          cols.forEach((val, ci) => {
+            const colIdx = anchorCol + ci;
+            if (colIdx >= RALLY_SFX_ORDER.length) return;
+            const key = s.rallies[targetRow] + RALLY_SFX_ORDER[colIdx];
+            const target = box.querySelector('input[data-r="'+cssEsc(key)+'"]');
+            if (target) target.value = val.trim();
+          });
+          filled++;
+        });
+        toast('Pasted into ' + filled + ' rally row' + (filled === 1 ? '' : 's'), 'ok');
+      });
+    });
+  }
+  function cssEsc(s) { return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/(["\\\]])/g, '\\$1'); }
+
+  function openDriverModal(y, idx) {
+    const s = SD()[y], d = s.drivers[idx];
+    const box = $('#modalBox');
+    let html = `<h3>${esc(d.name)} — ${y}</h3>`;
+    // Meta section
+    html += `<div class="sectitle">Identity &amp; career</div><div class="fldgrid">`;
+    [['rank','Rank'],['number','Number'],['name','Name'],['car','Car'],
+     ['average','Season avg'],['consistency','Consistency'],['points','Points'],
+     ['wins','Wins'],['podiums','Podiums'],['stageWins','Stage wins'],['totalStages','Total stages']].forEach(([k,lab])=>{
+      if (k!=='name' && k!=='car' && !(k in d) && !META_FIELDS.includes(k)) return;
+      html += `<div class="f"><label>${lab}</label><input data-m="${k}" value="${esc(d[k]==null?'':d[k])}"></div>`;
+    });
+    html += `</div>`;
+    // Per-rally section
+    html += `<div class="sectitle">Per-rally values</div>
+      <p class="hint">Click a cell, shift+click another in the same column to select a range of rallies, then paste (Ctrl+V) to fill them from your clipboard — handy for pasting a column (or block) of results straight from Excel. Enter commits a cell and jumps to the next rally in that column.</p>
+      <div class="tblwrap" style="max-height:340px"><table class="data"><thead><tr>
+        <th class="name">Rally</th><th title="performance metric">Perf</th><th>Stages</th><th>Rank</th></tr></thead><tbody>`;
+    s.rallies.forEach((key, i) => {
+      html += `<tr><td class="name" style="padding:6px 8px">${esc(s.rallyNames[i]||key)}</td>`;
+      RALLY_SUFFIXES.forEach(rs => {
+        const fk = key + rs.sfx;
+        html += `<td><input data-r="${fk}" data-row="${i}" data-sfx="${esc(rs.sfx)}" value="${d[fk]==null?'':esc(d[fk])}"></td>`;
+      });
+      html += `</tr>`;
+    });
+    html += `</tbody></table></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn ghost" id="mCancel">Close</button>
+        <button class="btn primary" id="mSave">Save</button></div>`;
+    box.innerHTML = html;
+    $('#modalBg').classList.add('show');
+    bindRallyGrid(box, s);
+    $('#mCancel').onclick = closeModal;
+    $('#mSave').onclick = () => {
+      box.querySelectorAll('[data-m]').forEach(inp => {
+        const k = inp.dataset.m, v = inp.value.trim();
+        d[k] = (k==='name'||k==='car') ? v : numOrNull(v);
+      });
+      box.querySelectorAll('[data-r]').forEach(inp => {
+        const k = inp.dataset.r, v = inp.value.trim();
+        // rank fields can be strings like "RET"; keep string if non-numeric & non-empty
+        d[k] = v === '' ? null : (isNaN(Number(v)) ? v : Number(v));
+      });
+      markDirty(); closeModal(); render();
+      toast('Driver updated', 'ok');
+    };
+  }
+  function closeModal(){ $('#modalBg').classList.remove('show'); $('#modalBox').innerHTML=''; }
+
+  /* ================= DRIVER COLOURS ================= */
+  // Color precedence used by the site: driverYearColors[year][name] > driverSpecialColors[name] > carLiveries[car]
+  function driverColorRaw(y, name){
+    const yc = DYC()[y];
+    if (yc && yc[name] != null) return yc[name];
+    if (State.data.driverSpecialColors[name] != null) return State.data.driverSpecialColors[name];
+    return null;
+  }
+  function effectiveColor(y, d){
+    return driverColorRaw(y, d.name) || State.data.carLiveries[d.car] || '#0097b2';
+  }
+  function setDriverColor(y, name, hex){
+    if (!DYC()[y]) DYC()[y] = {};
+    if (hex == null || hex === '') delete DYC()[y][name];
+    else DYC()[y][name] = hex;
+  }
+
+  function viewColors(root){
+    const y = State.curYear, s = SD()[y];
+    root.innerHTML =
+      `<div class="panelhead"><h2>Driver Colours</h2><span class="sub">${y}</span>
+        <div class="spacer" style="flex:1"></div>${seasonPicker()}</div>
+      <p class="hint">Per-season colour overrides. If blank, the driver falls back to the global special colour, then the car livery. Precedence: <span class="tag">season colour</span> → <span class="tag">special colour</span> → <span class="tag">car livery</span>.</p>
+      <div class="tblwrap"><table class="data"><thead><tr>
+        <th class="name">Driver</th><th class="name">Car</th>
+        <th style="width:70px">Colour</th><th style="width:130px">Season override</th>
+        <th style="width:150px">Global special</th></tr></thead><tbody id="colBody"></tbody></table></div>`;
+    hookSeasonPicker();
+    const tb = $('#colBody');
+    (s.drivers||[]).forEach((d,idx)=>{
+      const eff = effectiveColor(y,d);
+      const yover = (DYC()[y]||{})[d.name] || '';
+      const spec = State.data.driverSpecialColors[d.name] || '';
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        `<td class="name" style="padding:6px 8px">${esc(d.name)}</td>
+         <td class="name" style="padding:6px 8px" class="muted">${esc(d.car)}</td>
+         <td><span class="swatch" style="background:${eff}" data-sw="${idx}"></span></td>
+         <td><input value="${esc(yover)}" placeholder="auto" data-yc="${idx}"></td>
+         <td><input value="${esc(spec)}" placeholder="none" data-sc="${idx}"></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('[data-yc]').forEach(inp=>inp.onchange=()=>{ const d=s.drivers[+inp.dataset.yc]; setDriverColor(y,d.name,inp.value.trim()||null); markDirty(); viewColors(root); });
+    tb.querySelectorAll('[data-sc]').forEach(inp=>inp.onchange=()=>{ const d=s.drivers[+inp.dataset.sc]; const v=inp.value.trim(); if(v)State.data.driverSpecialColors[d.name]=v; else delete State.data.driverSpecialColors[d.name]; markDirty(); viewColors(root); });
+    tb.querySelectorAll('[data-sw]').forEach(sw=>sw.onclick=()=>{
+      const d=s.drivers[+sw.dataset.sw];
+      const inp=document.createElement('input'); inp.type='color'; inp.value=toHex(effectiveColor(y,d));
+      inp.style.position='fixed'; inp.style.opacity='0'; document.body.appendChild(inp);
+      inp.oninput=()=>{ setDriverColor(y,d.name,inp.value); markDirty(); viewColors(root); };
+      inp.onblur=()=>inp.remove(); inp.click();
+    });
+  }
+
+  /* ================= CAR LIVERIES ================= */
+  function viewLiveries(root){
+    root.innerHTML =
+      `<div class="panelhead"><h2>Car Liveries</h2><span class="sub">${Object.keys(State.data.carLiveries).length} cars</span>
+        <div class="spacer" style="flex:1"></div><button class="btn sm" id="addLiv">+ Add car</button></div>
+      <p class="hint">Default colour for a car model — used when a driver has no season or special colour override.</p>
+      <div class="tblwrap"><table class="data"><thead><tr>
+        <th class="name">Car model</th><th style="width:70px">Colour</th><th style="width:140px">Hex</th><th style="width:60px"></th></tr></thead>
+        <tbody id="livBody"></tbody></table></div>`;
+    const tb = $('#livBody');
+    Object.keys(State.data.carLiveries).sort().forEach(car=>{
+      const col = State.data.carLiveries[car];
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="name" style="padding:6px 8px">${esc(car)}</td>
+        <td><span class="swatch" style="background:${col}" data-sw="${esc(car)}"></span></td>
+        <td><input value="${esc(col)}" data-hex="${esc(car)}"></td>
+        <td><button class="btn sm danger" data-del="${esc(car)}">✕</button></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('[data-hex]').forEach(inp=>inp.onchange=()=>{ State.data.carLiveries[inp.dataset.hex]=inp.value.trim(); markDirty(); viewLiveries(root); });
+    tb.querySelectorAll('[data-sw]').forEach(sw=>sw.onclick=()=>{
+      const car=sw.dataset.sw; const inp=document.createElement('input'); inp.type='color'; inp.value=toHex(State.data.carLiveries[car]);
+      inp.style.position='fixed';inp.style.opacity='0';document.body.appendChild(inp);
+      inp.oninput=()=>{State.data.carLiveries[car]=inp.value;markDirty();viewLiveries(root);};
+      inp.onblur=()=>inp.remove();inp.click();
+    });
+    tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ if(confirm('Remove livery for "'+b.dataset.del+'"?')){delete State.data.carLiveries[b.dataset.del];markDirty();viewLiveries(root);} });
+    $('#addLiv').onclick=()=>{ const c=prompt('Car model name:'); if(!c)return; State.data.carLiveries[c]=State.data.carLiveries[c]||'#0097b2'; markDirty(); viewLiveries(root); };
+  }
+
+  /* ================= AUTOMATIC DRIVER FLAGS ================= */
+  // The site resolves a driver's flag as flagUrls[driverFlagCodes[name]] and
+  // falls back to FRANCE when the code has no flagUrls entry -- so every code
+  // we assign has to be registered here too, or it silently shows a tricolour.
+  function ensureFlagUrl(code) {
+    if (!code) return;
+    if (!State.data.flagUrls) State.data.flagUrls = {};
+    if (!State.data.flagUrls[code]) {
+      State.data.flagUrls[code] = 'https://flagcdn.com/w40/' + code.toLowerCase() + '.png';
+    }
+  }
+
+  // Name matching. eWRC writes "Solberg Oliver" and "Ogier S."; the database
+  // writes "Oliver Solberg" and "Sebastien Ogier". Compare on a folded form,
+  // and index each name under a few shapes so either order matches.
+  function normName(n) {
+    return String(n == null ? '' : n).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  // A full name, in either word order.
+  function fullKeys(n) {
+    const norm = normName(n);
+    if (!norm) return [];
+    const w = norm.split(' ');
+    const keys = new Set([norm]);
+    if (w.length > 1) {
+      keys.add(w.slice(1).join(' ') + ' ' + w[0]);            // "solberg oliver" -> "oliver solberg"
+      keys.add(w[w.length - 1] + ' ' + w.slice(0, -1).join(' '));
+    }
+    return Array.from(keys);
+  }
+  // "Ogier S." / "S. Ogier" -> "ogier|s". Empty unless one token really is an
+  // initial: matching on an initial alone would put "Martin S." on Martin
+  // Stenberg, which is a different person entirely.
+  function abbrevKey(n) {
+    const w = normName(n).split(' ').filter(Boolean);
+    if (w.length !== 2) return '';
+    if (w[0].length === 1 && w[1].length > 1) return w[1] + '|' + w[0];
+    if (w[1].length === 1 && w[0].length > 1) return w[0] + '|' + w[1];
+    return '';
+  }
+  // Index a list of names. An abbreviated key claimed by two different people
+  // is dropped rather than guessed at.
+  function buildNameIndex(names) {
+    const full = {}, abbr = {};
+    names.forEach(n => {
+      fullKeys(n).forEach(k => { if (!(k in full)) full[k] = n; });
+      const w = normName(n).split(' ').filter(Boolean);
+      if (w.length < 2) return;
+      [[w[w.length - 1], w[0][0]], [w[0], w[w.length - 1][0]]].forEach(pair => {
+        const k = pair[0] + '|' + pair[1];
+        if (!(k in abbr)) abbr[k] = n;
+        else if (abbr[k] !== n) abbr[k] = null;
+      });
+    });
+    return { full: full, abbr: abbr };
+  }
+  function matchName(query, idx) {
+    const keys = fullKeys(query);
+    for (let i = 0; i < keys.length; i++) if (idx.full[keys[i]]) return idx.full[keys[i]];
+    const ak = abbrevKey(query);
+    return (ak && idx.abbr[ak]) || null;
+  }
+  // Index over just the names this file already has a country for.
+  function knownFlagIndex() {
+    const codes = State.data.driverFlagCodes || {};
+    const idx = buildNameIndex(Object.keys(codes).filter(n => codes[n]));
+    idx.codeOf = n => codes[n];
+    return idx;
+  }
+  function lookupFlag(name, idx) {
+    const hit = matchName(name, idx);
+    return hit ? idx.codeOf(hit) : '';
+  }
+  // Every driver name in the file, primary series and secondary ones alike.
+  function allDriverNames() {
+    const names = new Set();
+    const eat = seasons => Object.keys(seasons || {}).forEach(y =>
+      (seasons[y].drivers || []).forEach(d => { if (d && d.name) names.add(d.name); }));
+    eat(State.data.seasonsData);
+    Object.keys(State.data.seriesData || {}).forEach(id => eat(State.data.seriesData[id].seasons));
+    return Array.from(names);
+  }
+
+  // Called whenever a driver's name is entered or changed: if the file already
+  // knows that person, their flag comes across without anyone asking for it.
+  function autoFlagDriver(name) {
+    if (!name) return '';
+    const codes = State.data.driverFlagCodes || (State.data.driverFlagCodes = {});
+    if (codes[name]) return '';
+    const hit = lookupFlag(name, knownFlagIndex());
+    if (hit) { codes[name] = hit; ensureFlagUrl(hit); return hit; }
+    // Nobody by that name in the file; fall back to the surname rule, but only
+    // where it is the strong one, and say out loud that it was a guess.
+    const g = guessFlag(name);
+    if (!g || g.tier !== 'strong') return '';
+    codes[name] = g.code; ensureFlagUrl(g.code); Guessed[name] = g.why;
+    return g.code + '?';
+  }
+
+  /* ---- pasted-page import ---- */
+  // Results and entry lists put a flag image immediately before the name it
+  // belongs to. Walk the pasted markup in document order and pair them up.
+  function flagCodeFromEl(el) {
+    if (el.tagName !== 'IMG') return '';
+    const src = el.getAttribute('src') || '';
+    let m = /\/flags?\/([a-z]{2})\.(?:svg|png|gif|webp)/i.exec(src) ||
+            /flagcdn\.com\/[^/]+\/([a-z]{2})\.png/i.exec(src) ||
+            /\/([a-z]{2})\.(?:svg|png)(?:[?#]|$)/i.exec(src);
+    if (m) return m[1].toUpperCase();
+    const title = (el.getAttribute('title') || '').trim();
+    if (/^[a-z]{2}$/i.test(title)) return title.toUpperCase();
+    m = /^flag of ([a-z]{2})$/i.exec((el.getAttribute('alt') || '').trim());
+    return m ? m[1].toUpperCase() : '';
+  }
+  function parseFlagPaste(html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const pairs = [];
+    const walk = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    let pending = null, node;
+    while ((node = walk.nextNode())) {
+      if (node.nodeType === 1) {
+        const code = flagCodeFromEl(node);
+        if (code) pending = code;
+      } else if (pending) {
+        const t = node.nodeValue.replace(/\s+/g, ' ').trim();
+        // Skip the numbers and times that sit between cells.
+        if (t && /[a-z]/i.test(t) && t.length > 2) { pairs.push({ name: t, code: pending }); pending = null; }
+      }
+    }
+    // The same crew is often rendered twice (mobile + desktop spans).
+    const seen = {};
+    return pairs.filter(p => {
+      const k = normName(p.name) + '|' + p.code;
+      if (seen[k]) return false;
+      seen[k] = 1; return true;
+    });
+  }
+
+  /* ---- guessing a country from the name ---- */
+  // Rules are mined from the mappings this file already holds -- nothing is
+  // fetched, and nothing is invented from outside knowledge.
+  //
+  // Measured by leave-one-out over the 290 drivers already mapped in the v600
+  // database: a surname ending shared by three or more drivers who all have the
+  // same country is right 96% of the time, but only 10% of names qualify.
+  // Loosening it to two drivers and bringing first names and accented letters
+  // in reaches 18% of names at 75% -- so those only ever appear as suggestions
+  // to tick. The one miss at the strict setting is instructive: four Norwegian
+  // "-olberg" drivers make the rule call Oliver Solberg Norwegian, and he races
+  // under a Swedish licence. Names are evidence, not proof.
+  const GUESS_MIN_STRONG = 3;     // supporting drivers needed to apply unasked
+  const GUESS_MIN_WEAK = 2;       // enough to suggest, never to apply
+  const SUFFIX_LENGTHS = [6, 5, 4, 3];
+  const NAME_SUFFIXES = /^(jr|sr|ii|iii|jnr|snr)$/;
+
+  function nameTokens(n) {
+    return String(n == null ? '' : n).toLowerCase()
+      .replace(/[^\p{L}\p{N}' -]/gu, ' ').split(/[\s-]+/)
+      .filter(t => t && !NAME_SUFFIXES.test(t.replace(/\./g, '')));
+  }
+  function surnameOf(n) { const t = nameTokens(n); return t.length ? strip(t[t.length - 1]) : ''; }
+  function givenOf(n)   { const t = nameTokens(n); return t.length ? strip(t[0]) : ''; }
+  function strip(t) { return t.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function accentedLetters(n) {
+    const out = [];
+    String(n || '').toLowerCase().split('').forEach(c => {
+      if (c.charCodeAt(0) > 127 && /\p{L}/u.test(c) && out.indexOf(c) === -1) out.push(c);
+    });
+    return out;
+  }
+
+  // Count country per piece of evidence across every mapped driver.
+  function mineFlagRules() {
+    const codes = State.data.driverFlagCodes || {};
+    const suf = {}, giv = {}, dia = {};
+    const bump = (tbl, key, cc) => {
+      const t = tbl[key] = tbl[key] || { total: 0, by: {} };
+      t.total++; t.by[cc] = (t.by[cc] || 0) + 1;
+    };
+    Object.keys(codes).forEach(n => {
+      const cc = codes[n];
+      if (!cc) return;
+      const sur = surnameOf(n);
+      SUFFIX_LENGTHS.forEach(L => { if (sur.length > L) bump(suf, L + ':' + sur.slice(-L), cc); });
+      const g = givenOf(n);
+      if (g.length > 2) bump(giv, g, cc);
+      accentedLetters(n).forEach(c => bump(dia, c, cc));
+    });
+    return { suf: suf, giv: giv, dia: dia };
+  }
+  // Unanimous and big enough? Return the country, else null.
+  function ruleVerdict(entry, min) {
+    if (!entry || entry.total < min) return null;
+    const ccs = Object.keys(entry.by);
+    return ccs.length === 1 ? ccs[0] : null;
+  }
+  // Exclude the driver themselves, so a name already mapped isn't "predicted"
+  // by its own entry.
+  function withoutSelf(entry, ownCode) {
+    if (!entry || !ownCode || !entry.by[ownCode]) return entry;
+    const by = Object.assign({}, entry.by);
+    by[ownCode]--;
+    if (!by[ownCode]) delete by[ownCode];
+    return { total: entry.total - 1, by: by };
+  }
+
+  // tier 'strong' is safe to apply on its own; 'weak' has to be ticked.
+  function guessFlag(name, rules) {
+    rules = rules || mineFlagRules();
+    const own = (State.data.driverFlagCodes || {})[name] || '';
+    const sur = surnameOf(name);
+    for (let i = 0; i < SUFFIX_LENGTHS.length; i++) {
+      const L = SUFFIX_LENGTHS[i];
+      if (sur.length <= L) continue;
+      const e = withoutSelf(rules.suf[L + ':' + sur.slice(-L)], own);
+      const strong = ruleVerdict(e, GUESS_MIN_STRONG);
+      if (strong) return { code: strong, tier: 'strong', why: '-' + sur.slice(-L) + ' · ' + e.total + ' in file' };
+      const weak = ruleVerdict(e, GUESS_MIN_WEAK);
+      if (weak) return { code: weak, tier: 'weak', why: '-' + sur.slice(-L) + ' · only ' + e.total + ' in file' };
+    }
+    const g = givenOf(name);
+    if (g.length > 2) {
+      const e = withoutSelf(rules.giv[g], own);
+      const v = ruleVerdict(e, GUESS_MIN_WEAK);
+      if (v) return { code: v, tier: 'weak', why: 'first name · ' + e.total + ' in file' };
+    }
+    const acc = accentedLetters(name);
+    for (let i = 0; i < acc.length; i++) {
+      const e = withoutSelf(rules.dia[acc[i]], own);
+      const v = ruleVerdict(e, GUESS_MIN_WEAK);
+      if (v) return { code: v, tier: 'weak', why: 'letter "' + acc[i] + '" · ' + e.total + ' in file' };
+    }
+    return null;
+  }
+
+  // Names the editor filled in by inference this session, so they can be told
+  // apart from the ones that came out of the file or a results page.
+  const Guessed = Object.create(null);
+
+  function openGuessModal() {
+    const rules = mineFlagRules();
+    const codes = State.data.driverFlagCodes || {};
+    const rows = allDriverNames().filter(n => !codes[n])
+      .map(n => ({ name: n, g: guessFlag(n, rules) }))
+      .sort((a, b) => (b.g ? (b.g.tier === 'strong' ? 2 : 1) : 0) - (a.g ? (a.g.tier === 'strong' ? 2 : 1) : 0));
+    const strong = rows.filter(r => r.g && r.g.tier === 'strong').length;
+    const weak = rows.filter(r => r.g && r.g.tier === 'weak').length;
+    modal(`
+      <h3>Guess flags from names</h3>
+      <p class="hint" style="margin:0 0 4px">Worked out from the ${Object.keys(codes).length} drivers this file
+        already maps — no lookup, no outside data.</p>
+      <p class="hint" style="margin:0 0 10px">On this file's own mappings the strong rule is right about
+        <strong>96%</strong> of the time, the weak ones about <strong>75%</strong>. A name is evidence, not proof:
+        four Norwegian “-olberg” drivers would have this call Oliver Solberg Norwegian, and he races Swedish.
+        Check them.</p>
+      <div class="toolrow" style="margin:0 0 8px">
+        <span class="pill">${rows.length} without a flag</span>
+        <span class="pill" style="color:var(--good)">${strong} confident</span>
+        <span class="pill" style="color:var(--warn)">${weak} shaky</span>
+        <span class="pill">${rows.length - strong - weak} no idea</span>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn sm" id="gsAll">Tick all</button>
+        <button class="btn sm" id="gsStrong">Only confident</button>
+        <button class="btn sm" id="gsNone">Untick all</button>
+      </div>
+      <div class="tblwrap" style="max-height:300px"><table class="data"><thead><tr>
+        <th style="width:30px"></th><th class="name">Driver</th><th style="width:60px">Guess</th>
+        <th style="width:80px">Confidence</th><th class="name">Because</th></tr></thead><tbody>
+        ${rows.map((r, i) => `<tr>
+          <td>${r.g ? `<input type="checkbox" data-gs="${i}" ${r.g.tier === 'strong' ? 'checked' : ''}>` : ''}</td>
+          <td class="name" style="padding:4px 8px">${esc(r.name)}</td>
+          <td>${r.g ? '<strong>' + esc(r.g.code) + '</strong>' : '<span class="muted">—</span>'}</td>
+          <td><span class="muted" style="color:${r.g ? (r.g.tier === 'strong' ? 'var(--good)' : 'var(--warn)') : ''}">
+            ${r.g ? (r.g.tier === 'strong' ? 'confident' : 'shaky') : ''}</span></td>
+          <td class="name muted" style="padding:4px 8px;font-size:11px">${r.g ? esc(r.g.why) : 'nothing in this file resembles this name'}</td>
+        </tr>`).join('')}
+      </tbody></table></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button class="btn ghost" id="gsCancel">Cancel</button>
+        <button class="btn primary" id="gsApply">Apply ticked</button>
+      </div>
+    `);
+    const boxes = () => $$('[data-gs]');
+    $('#gsAll').onclick = () => boxes().forEach(b => b.checked = true);
+    $('#gsNone').onclick = () => boxes().forEach(b => b.checked = false);
+    $('#gsStrong').onclick = () => boxes().forEach(b => {
+      b.checked = rows[+b.dataset.gs].g.tier === 'strong';
+    });
+    $('#gsCancel').onclick = closeModal;
+    $('#gsApply').onclick = () => {
+      const cs = State.data.driverFlagCodes || (State.data.driverFlagCodes = {});
+      let n = 0;
+      boxes().forEach(b => {
+        if (!b.checked) return;
+        const r = rows[+b.dataset.gs];
+        cs[r.name] = r.g.code; ensureFlagUrl(r.g.code); Guessed[r.name] = r.g.why; n++;
+      });
+      markDirty(); closeModal(); render();
+      toast(n ? 'Guessed ' + n + ' flag' + (n === 1 ? '' : 's') + ' — worth a check' : 'Nothing ticked', n ? 'ok' : 'err');
+    };
+  }
+
+  function openFlagImportModal() {
+    modal(`
+      <h3>Import driver flags from a results page</h3>
+      <p class="hint" style="margin:0 0 10px">Open the event on <strong>eWRC-results</strong> (or any results or
+        entry list that shows a flag beside each name), select the classification, copy it, and paste it below.
+        Copy the <em>rendered page</em>, not the text — the flags are images, and plain text loses them.</p>
+      <div class="toolrow" style="margin:0 0 8px">
+        <span class="muted">…or pick a page you saved with Ctrl+S:</span>
+        <input type="file" id="fiFile" accept=".html,.htm,.mhtml" style="font-size:12px">
+      </div>
+      <div id="fiDrop" contenteditable="true"
+           style="min-height:110px;max-height:200px;overflow:auto;background:var(--chip);border:1px dashed var(--edge);
+                  border-radius:8px;padding:10px;font-size:12px;color:var(--dim)">Paste here…</div>
+      <div id="fiResult" style="margin-top:12px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button class="btn ghost" id="fiCancel">Close</button>
+        <button class="btn primary" id="fiApply" disabled>Apply</button>
+      </div>
+    `);
+    let matches = [];
+    const box = $('#fiDrop');
+    // Same treatment whether the markup arrived on the clipboard or as a saved file.
+    function fiShow(html) {
+      if (!html) {
+        box.textContent = 'That paste had no formatting, so it carries no flags.';
+        $('#fiResult').innerHTML = ''; $('#fiApply').disabled = true; return;
+      }
+      const pairs = parseFlagPaste(html);
+      const idx = buildNameIndex(allDriverNames());
+      const codes = State.data.driverFlagCodes || {};
+      const seen = {};
+      matches = [];
+      const unmatched = [];
+      pairs.forEach(p => {
+        const hit = matchName(p.name, idx);
+        if (!hit) { unmatched.push(p.name); return; }
+        if (seen[hit]) return;
+        seen[hit] = 1;
+        matches.push({ driver: hit, from: p.name, code: p.code, old: codes[hit] || '' });
+      });
+      box.textContent = 'Read ' + pairs.length + ' name/flag pairs.';
+      const changing = matches.filter(m => m.old !== m.code);
+      $('#fiApply').disabled = !changing.length;
+      $('#fiResult').innerHTML = matches.length
+        ? `<div class="muted" style="margin-bottom:6px">${changing.length} to set or change,
+             ${matches.length - changing.length} already correct,
+             ${unmatched.length} name${unmatched.length === 1 ? '' : 's'} not in this file.</div>
+           <div class="tblwrap" style="max-height:230px"><table class="data"><thead><tr>
+             <th style="width:30px"></th><th class="name">Driver</th><th style="width:70px">Now</th>
+             <th style="width:70px">New</th><th class="name">Read as</th></tr></thead><tbody>
+             ${matches.map((m, i) => `<tr>
+               <td><input type="checkbox" data-fi="${i}" ${m.old !== m.code ? 'checked' : ''}></td>
+               <td class="name" style="padding:4px 8px">${esc(m.driver)}</td>
+               <td>${m.old ? esc(m.old) : '<span class="muted">—</span>'}</td>
+               <td><strong>${esc(m.code)}</strong></td>
+               <td class="name muted" style="padding:4px 8px;font-size:11px">${esc(m.from)}</td>
+             </tr>`).join('')}
+           </tbody></table></div>`
+        : '<p class="muted">No names in that page matched drivers in this file.</p>';
+    }
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      box.textContent = 'Reading pasted page…';
+      fiShow(e.clipboardData.getData('text/html'));
+    });
+    $('#fiFile').onchange = e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      box.textContent = 'Reading ' + f.name + '…';
+      const rd = new FileReader();
+      rd.onload = () => fiShow(String(rd.result || ''));
+      rd.readAsText(f);
+    };
+    $('#fiCancel').onclick = closeModal;
+    $('#fiApply').onclick = () => {
+      const codes = State.data.driverFlagCodes || (State.data.driverFlagCodes = {});
+      let n = 0;
+      $$('[data-fi]').forEach(cb => {
+        if (!cb.checked) return;
+        const m = matches[+cb.dataset.fi];
+        codes[m.driver] = m.code; ensureFlagUrl(m.code); n++;
+      });
+      markDirty(); closeModal(); render();
+      toast('Set ' + n + ' flag' + (n === 1 ? '' : 's'), 'ok');
+    };
+  }
+
+  /* ---- bulk actions ---- */
+  function autoFillFlags() {
+    const idx = knownFlagIndex();
+    const codes = State.data.driverFlagCodes || (State.data.driverFlagCodes = {});
+    let filled = 0; const missed = [];
+    allDriverNames().forEach(n => {
+      if (codes[n]) return;
+      const hit = lookupFlag(n, idx);
+      if (hit) { codes[n] = hit; ensureFlagUrl(hit); filled++; } else missed.push(n);
+    });
+    markDirty(); render();
+    toast(filled ? 'Filled ' + filled + ' flag' + (filled === 1 ? '' : 's') +
+                   (missed.length ? ' — ' + missed.length + ' still unknown' : '')
+                 : 'Nothing to fill from names already in this file', filled ? 'ok' : 'err');
+  }
+  // Codes in use with no flagUrls entry render as France on the site.
+  function repairFlagUrls() {
+    const used = new Set();
+    Object.values(State.data.driverFlagCodes || {}).forEach(c => c && used.add(c));
+    let n = 0;
+    used.forEach(c => { if (!(State.data.flagUrls || {})[c]) { ensureFlagUrl(c); n++; } });
+    if (n) { markDirty(); render(); }
+    toast(n ? 'Added image URLs for ' + n + ' code' + (n === 1 ? '' : 's') : 'Every code already has an image', n ? 'ok' : '');
+  }
+
+  /* ================= FLAGS ================= */
+  function viewFlags(root){
+    const codes = State.data.driverFlagCodes, names = Object.keys(codes).sort();
+    root.innerHTML =
+      `<div class="panelhead"><h2>Flags &amp; Nations</h2><span class="sub">${names.length} driver mappings</span>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn sm" id="importFlags">Import from results page…</button>
+        <button class="btn sm" id="autoFlags">Auto-fill from this file</button>
+        <button class="btn sm" id="guessFlagsBtn">Guess from names…</button>
+        <button class="btn sm ghost" id="fixFlagUrls">Fix missing images</button>
+        <button class="btn sm" id="addFlag">+ Map driver</button></div>
+      <p class="hint">Assign each driver a country code (used to show their flag). Falls back to FR if unmapped —
+         which is also what happens to a code with no image, so <span class="tag">Fix missing images</span> points
+         any such code at flagcdn. New drivers pick up a flag on their own when the name is already in this file;
+         for anyone new, paste an eWRC classification into <span class="tag">Import from results page</span>.</p>
+      <div class="toolrow" id="flagStats"></div>
+      <div class="tblwrap"><table class="data"><thead><tr>
+        <th class="name">Driver</th><th style="width:90px">Code</th><th style="width:60px"></th></tr></thead>
+        <tbody id="flagBody"></tbody></table></div>`;
+    const tb=$('#flagBody');
+    names.forEach(n=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="name" style="padding:6px 8px">${esc(n)}${Guessed[n]
+          ? ` <span class="tag" style="color:var(--warn);border-color:#5a4a15" title="Guessed from ${esc(Guessed[n])} — not looked up">guess</span>` : ''}</td>
+        <td><input value="${esc(codes[n])}" data-fc="${esc(n)}" style="text-transform:uppercase"></td>
+        <td><button class="btn sm danger" data-df="${esc(n)}">✕</button></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('[data-fc]').forEach(inp=>inp.onchange=()=>{ codes[inp.dataset.fc]=inp.value.trim().toUpperCase(); markDirty(); });
+    tb.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{ delete codes[b.dataset.df]; markDirty(); viewFlags(root); });
+    $('#addFlag').onclick=()=>{ const n=prompt('Driver name:'); if(!n)return; const c=prompt('Country code (e.g. FI):')||'FR'; codes[n]=c.toUpperCase(); ensureFlagUrl(codes[n]); markDirty(); viewFlags(root); };
+    $('#importFlags').onclick = openFlagImportModal;
+    $('#autoFlags').onclick = autoFillFlags;
+    $('#guessFlagsBtn').onclick = openGuessModal;
+    $('#fixFlagUrls').onclick = repairFlagUrls;
+    const all = allDriverNames(), unmapped = all.filter(n => !codes[n]);
+    const noImg = Array.from(new Set(Object.values(codes).filter(Boolean)))
+      .filter(c => !(State.data.flagUrls || {})[c]);
+    $('#flagStats').innerHTML =
+      `<span class="pill">${all.length} drivers in file</span>
+       <span class="pill" style="${unmapped.length ? 'color:var(--warn)' : ''}">${unmapped.length} without a flag</span>
+       ${noImg.length ? `<span class="pill" style="color:var(--bad)">${noImg.length} code${noImg.length === 1 ? '' : 's'} with no image (${esc(noImg.slice(0, 6).join(', '))})</span>` : ''}`;
+  }
+
+  /* ================= EXPORT BUILDER ================= */
+  const DL_FEATURES = WRCCore.DOWNLOAD_FEATURES;
+  const TRIM_OPTS = [
+    { key: 'pruneYearColors', label: 'Drop colour overrides for removed seasons',
+      note: 'driverYearColors / driverRallyColors entries keyed by a year that is gone' },
+    { key: 'dropStageData', label: 'Drop all stage-by-stage times',
+      note: 'removes stageData entirely \u2014 rally detail split times stop working' },
+    { key: 'pruneUnusedNames', label: 'Drop flags, liveries and special colours nobody uses',
+      note: 'keeps only the drivers, cars and rallies still present in the kept seasons' },
+  ];
+  // The builder works on the series being BUILT, which needn't be the one
+  // currently open for editing. A build can ship several series: the first
+  // ticked one (the primary, whenever it is ticked) becomes the page's own data
+  // and the rest ride along in seriesData, where the site's Series bar finds them.
+  function bIds() { return allSeries().map(sr => sr.id).filter(id => Build.include.has(id)); }
+  function dropOf(id) { return Build.drops[id] || (Build.drops[id] = new Set()); }
+  function bYears(id) { return yearsOf(id === undefined ? Build.series : id); }
+  function keptYears(id) {
+    if (id === undefined) id = Build.series;
+    const drop = dropOf(id);
+    return yearsOf(id).filter(y => !drop.has(y));
+  }
+  // Why the current build can't be exported, or '' when it can.
+  function buildProblem() {
+    const ids = bIds();
+    if (!ids.length) return 'Tick at least one series';
+    const empty = ids.find(id => !keptYears(id).length);
+    return empty === undefined ? '' : 'Keep at least one ' + seriesName(empty) + ' season';
+  }
+  function fmtBytes(n) {
+    return n >= 1048576 ? (n / 1048576).toFixed(2) + ' MB' : Math.round(n / 1024) + ' KB';
+  }
+
+  function viewBuild(root) {
+    if (!State.parsed) {
+      root.innerHTML = '<div class="panelhead"><h2>Export builder</h2></div>' +
+        '<div class="card"><p class="muted">Open a database HTML file first \u2014 the builder trims a copy of that ' +
+        'file, so there is nothing to build from an Excel import on its own.</p></div>';
+      return;
+    }
+    const ids = bIds(), list = allSeries();
+    if (ids.length && !ids.includes(Build.series)) Build.series = ids[0];
+    const ys = bYears(), kept = keptYears();
+    root.innerHTML =
+      `<div class="panelhead"><h2>Export builder</h2>
+        <span class="sub">build a standalone file \u2014 chosen series, fewer seasons, features switched off</span></div>
+
+      <div class="card">
+        <div class="panelhead" style="margin-bottom:10px">
+          <strong>Series</strong>
+          <span class="pill">${ids.length} of ${list.length} included</span>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))" id="bSeriesGrid"></div>
+        <p class="hint" style="margin:10px 0 0">Every series goes out as plain years. The first ticked one is what the
+           page opens on; any others appear as Series buttons at the top of the page. Unticked series are left out.</p>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="panelhead" style="margin-bottom:10px">
+          <strong>Seasons</strong>
+          ${ids.length > 1 ? ids.map(id => `<button class="btn sm${id === Build.series ? ' primary' : ''}" data-bfocus="${
+            esc(id)}">${esc(seriesName(id))}</button>`).join('') :
+            `<span class="muted">${ids.length ? esc(seriesName(ids[0])) : 'tick a series first'}</span>`}
+          <span class="pill" id="bSeasonCount">${kept.length} of ${ys.length} kept</span>
+          <div class="spacer" style="flex:1"></div>
+          <button class="btn sm" data-pick="all">All</button>
+          <button class="btn sm" data-pick="none">None</button>
+          <button class="btn sm" data-pick="invert">Invert</button>
+        </div>
+        <div class="toolrow">
+          <span class="muted">Keep the last</span>
+          <input type="number" id="bLastN" min="1" max="${ys.length}" value="10" style="width:70px">
+          <span class="muted">seasons</span>
+          <button class="btn sm" id="bApplyLast">Apply</button>
+          <span style="width:14px"></span>
+          <span class="muted">or from</span>
+          <input type="number" id="bFrom" value="${ys[0] || ''}" style="width:80px">
+          <span class="muted">to</span>
+          <input type="number" id="bTo" value="${ys[ys.length-1] || ''}" style="width:80px">
+          <button class="btn sm" id="bApplyRange">Apply</button>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))" id="bSeasonGrid"></div>
+      </div>
+
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr));margin-top:12px">
+        <div class="card">
+          <div class="sectitle" style="margin-top:0">Trim leftover data</div>
+          <div class="grid" id="bTrim"></div>
+        </div>
+        <div class="card">
+          <div class="sectitle" style="margin-top:0">Site features</div>
+          <p class="hint" style="margin:0 0 8px">Switched off in the exported page: the buttons are hidden and the
+             functions behind them are neutralised. Nothing else is touched.</p>
+          <div class="grid" id="bFeat"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="sectitle" style="margin-top:0">Output</div>
+        <div class="toolrow">
+          <span class="muted">Filename suffix</span>
+          <input type="text" id="bSuffix" value="${esc(Build.suffix)}" style="width:150px">
+          <span class="muted" id="bFileName"></span>
+        </div>
+        <div id="bSize" class="muted" style="margin:10px 0 2px">Estimating\u2026</div>
+        <div class="sizebar"><i id="bSizeBar" style="width:100%"></i></div>
+        <div class="toolrow" style="margin:14px 0 0">
+          <button class="btn primary" id="bExport">Export this build</button>
+          <button class="btn" id="bPreview">Preview</button>
+          <button class="btn ghost" id="bRecalc">Recalculate size</button>
+        </div>
+      </div>`;
+
+    /* seasons */
+    const drop = dropOf(Build.series), grid = $('#bSeasonGrid');
+    if (ids.length) ys.forEach(y => {
+      const s = SD(Build.series)[y], on = !drop.has(y);
+      const lab = document.createElement('label');
+      lab.className = 'optrow' + (on ? ' on' : '');
+      lab.innerHTML = `<input type="checkbox" data-yr="${y}" ${on ? 'checked' : ''}>
+        <strong>${esc(s.label || y)}</strong><span class="sub">${(s.drivers||[]).length} drivers</span>`;
+      grid.appendChild(lab);
+    });
+    grid.querySelectorAll('[data-yr]').forEach(cb => cb.onchange = () => {
+      const y = Number(cb.dataset.yr);
+      if (cb.checked) drop.delete(y); else drop.add(y);
+      cb.parentNode.classList.toggle('on', cb.checked);
+      afterBuildChange();
+    });
+    $$('[data-pick]').forEach(b => b.onclick = () => {
+      const mode = b.dataset.pick;
+      bYears().forEach(y => {
+        if (mode === 'all') drop.delete(y);
+        else if (mode === 'none') drop.add(y);
+        else if (drop.has(y)) drop.delete(y); else drop.add(y);
+      });
+      render(); scheduleSize();
+    });
+    $('#bApplyLast').onclick = () => {
+      const n = Math.max(1, Number($('#bLastN').value) || 1);
+      const all = bYears(), keep = new Set(all.slice(-n));
+      Build.drops[Build.series] = new Set(all.filter(y => !keep.has(y)));
+      render(); scheduleSize();
+    };
+    $('#bApplyRange').onclick = () => {
+      const a = Number($('#bFrom').value), b = Number($('#bTo').value);
+      const lo = Math.min(a, b), hi = Math.max(a, b);
+      Build.drops[Build.series] = new Set(bYears().filter(y => y < lo || y > hi));
+      render(); scheduleSize();
+    };
+
+    /* trim + feature toggles */
+    optionList($('#bTrim'), TRIM_OPTS, o => Build[o.key], (o, v) => { Build[o.key] = v; });
+    optionList($('#bFeat'),
+      DL_FEATURES.map(f => ({ key: f.key, label: 'Remove ' + f.label.toLowerCase(), note: f.note })),
+      o => Build.disable[o.key], (o, v) => { Build.disable[o.key] = v; });
+
+    /* series */
+    const sgrid = $('#bSeriesGrid');
+    list.forEach(sr => {
+      const on = Build.include.has(sr.id), n = yearsOf(sr.id).length;
+      const lab = document.createElement('label');
+      lab.className = 'optrow' + (on ? ' on' : '');
+      lab.innerHTML = `<input type="checkbox" ${on ? 'checked' : ''}>
+        <strong>${esc(sr.name)}</strong>${sr.primary ? '<span class="tag">primary</span>' : ''}
+        <span class="sub">${n} season${n === 1 ? '' : 's'}</span>`;
+      lab.querySelector('input').onchange = e => {
+        if (e.target.checked) { Build.include.add(sr.id); Build.series = sr.id; }
+        else Build.include.delete(sr.id);
+        render(); scheduleSize();
+      };
+      sgrid.appendChild(lab);
+    });
+    $$('[data-bfocus]').forEach(b => b.onclick = () => { Build.series = b.dataset.bfocus; render(); });
+
+    /* output */
+    $('#bSuffix').oninput = e => { Build.suffix = e.target.value; showFileName(); };
+    $('#bExport').onclick = () => doExport(true);
+    $('#bPreview').onclick = () => doPreview(true);
+    $('#bRecalc').onclick = () => estimateSize();
+    showFileName();
+    if (Build.size) paintSize(); else scheduleSize();
+  }
+
+  // Render a list of checkbox rows sharing the .optrow look.
+  function optionList(box, opts, get, set) {
+    opts.forEach(o => {
+      const on = !!get(o);
+      const lab = document.createElement('label');
+      lab.className = 'optrow' + (on ? ' on' : '');
+      lab.style.alignItems = 'flex-start';
+      lab.innerHTML = `<input type="checkbox" ${on ? 'checked' : ''} style="margin-top:2px">
+        <span><span style="font-weight:600">${esc(o.label)}</span><br>
+        <span class="muted" style="font-size:11px">${esc(o.note)}</span></span>`;
+      const cb = lab.querySelector('input');
+      cb.onchange = () => { set(o, cb.checked); lab.classList.toggle('on', cb.checked); afterBuildChange(); };
+      box.appendChild(lab);
+    });
+  }
+
+  function afterBuildChange() {
+    const c = $('#bSeasonCount');
+    if (c) c.textContent = keptYears().length + ' of ' + bYears().length + ' kept';
+    showFileName();
+    scheduleSize();
+  }
+
+  function variantFileName() {
+    const base = State.fileName.replace(/\.html?$/i, '').replace(/_edited$/, '');
+    const ids = bIds();
+    // Several series are tagged by name: ids are made once from whatever was typed
+    // when the series was added, so they can be long or misleading.
+    const tag = ids.length > 1 ? ids.map(id => '_' + seriesId(seriesName(id))).join('')
+              : (ids[0] ? '_' + ids[0] : '');
+    return base + tag + (Build.suffix || '') + '.html';
+  }
+  function showFileName() {
+    const el = $('#bFileName');
+    if (el) el.textContent = '\u2192 ' + variantFileName();
+  }
+
+  let sizeT;
+  function scheduleSize() {
+    Build.size = null;
+    const el = $('#bSize'); if (el) el.textContent = 'Estimating\u2026';
+    clearTimeout(sizeT); sizeT = setTimeout(estimateSize, 400);
+  }
+  function estimateSize() {
+    if (!State.parsed) return;
+    if (buildProblem()) { Build.size = null; paintSize(); return; }
+    try {
+      Build.size = { full: buildExport(false).length, variant: buildExport(true).length };
+    } catch (e) { console.error(e); Build.size = null; }
+    paintSize();
+  }
+  function paintSize() {
+    const el = $('#bSize'), bar = $('#bSizeBar');
+    if (!el) return;
+    const problem = buildProblem();
+    if (problem) { el.textContent = problem + ' to build a file.'; if (bar) bar.style.width = '0%'; return; }
+    if (!Build.size) { el.textContent = 'Could not estimate size.'; return; }
+    const full = Build.size.full, variant = Build.size.variant;
+    const pct = full ? Math.max(1, Math.round(variant / full * 100)) : 100;
+    const ids = bIds();
+    const parts = ids.map(id => {
+      const kept = keptYears(id);
+      return (ids.length > 1 ? esc(seriesName(id)) + ' ' : '') +
+        `${kept.length} season${kept.length === 1 ? '' : 's'}` +
+        (kept.length ? ' (' + kept[0] + '\u2013' + kept[kept.length - 1] + ')' : '');
+    });
+    el.innerHTML = `<strong style="color:var(--text)">${fmtBytes(variant)}</strong> ` +
+      `<span class="muted">\u2014 ${pct}% of the full ${fmtBytes(full)} file, ${parts.join(', ')}</span>`;
+    if (bar) bar.style.width = pct + '%';
+  }
+
+  // Deep copy of the live data holding only the ticked series, each with its
+  // unselected seasons - and, where asked, whatever only existed for them - removed.
+  function reduceData() {
+    const out = JSON.parse(JSON.stringify(State.data));
+    const ids = bIds(), main = ids[0] || '', all = out.seriesData || {};
+
+    // The first series goes into the three blocks the site reads directly; the
+    // others stay in seriesData, which no longer carries any unticked series.
+    if (main) {
+      const src = all[main] || {};
+      out.seasonsData = src.seasons || {};
+      out.driverYearColors = src.driverYearColors || {};
+      out.driverRallyColors = src.driverRallyColors || {};
+      out.__primaryName = seriesName(main);
+    }
+    out.seriesData = {};
+    ids.slice(1).forEach(id => { if (all[id]) out.seriesData[id] = all[id]; });
+
+    // Each series in the build as its three containers plus the years it keeps.
+    const parts = [{ id: main, seasons: out.seasonsData, dyc: out.driverYearColors, drc: out.driverRallyColors }]
+      .concat(Object.keys(out.seriesData).map(id => {
+        const r = out.seriesData[id]; r.seasons = r.seasons || {};
+        return { id: id, seasons: r.seasons, dyc: r.driverYearColors, drc: r.driverRallyColors };
+      }))
+      .map(p => Object.assign(p, { keep: new Set(keptYears(p.id).map(String)) }));
+
+    parts.forEach(p => {
+      Object.keys(p.seasons).forEach(k => {
+        if (/^\d+$/.test(k) && !p.keep.has(k)) delete p.seasons[k];
+      });
+      if (Build.pruneYearColors) {
+        [p.dyc, p.drc].forEach(obj => Object.keys(obj || {}).forEach(y => {
+          if (/^\d{4}$/.test(y) && !p.keep.has(y)) delete obj[y];
+        }));
+      }
+    });
+    if (Build.pruneUnusedNames) {
+      const names = new Set(), cars = new Set(), rallies = new Set();
+      parts.forEach(p => p.keep.forEach(y => {
+        const s = p.seasons[y]; if (!s) return;
+        (s.drivers || []).forEach(d => { if (d.name) names.add(d.name); if (d.car) cars.add(d.car); });
+        (s.rallies || []).forEach(r => rallies.add(r));
+      }));
+      const trim = (obj, has) => Object.keys(obj || {}).forEach(k => { if (!has(k)) delete obj[k]; });
+      trim(out.driverFlagCodes, n => names.has(n));
+      trim(out.driverSpecialColors, n => names.has(n));
+      trim(out.carLiveries, c => cars.has(c));
+      trim(out.rallyFlagCodes, r => rallies.has(r));
+      parts.forEach(p => Object.keys(p.dyc || {}).forEach(y => {
+        const inner = p.dyc[y];
+        if (inner && typeof inner === 'object') trim(inner, n => names.has(n));
+      }));
+    }
+    const keep = keptYears(main).map(String);
+    if (keep.length && !keep.includes(String(out.__currentSeasonDefault))) {
+      out.__currentSeasonDefault = Number(keep[keep.length - 1]);
+    }
+    return out;
+  }
+
+  /* ================= RAW ================= */
+  function viewRaw(root){
+    root.innerHTML =
+      `<div class="panelhead"><h2>Raw data</h2><span class="sub">read-only preview of the current edited data</span></div>
+       <div class="card"><pre id="rawPre" style="white-space:pre-wrap;max-height:60vh;overflow:auto;font-size:12px;margin:0"></pre></div>`;
+    const safe = JSON.parse(JSON.stringify(State.data)); delete safe.__currentSeasonDefault;
+    $('#rawPre').textContent = JSON.stringify(safe, null, 1).slice(0, 200000);
+  }
+
+  /* ---------- season picker helper ---------- */
+  function seasonPicker(){
+    return `<select id="seasonPick">${years().map(y=>`<option value="${y}" ${y===State.curYear?'selected':''}>${y}</option>`).join('')}</select>`;
+  }
+  function hookSeasonPicker(){ const sp=$('#seasonPick'); if(sp) sp.onchange=e=>{ State.curYear=Number(e.target.value); render(); }; }
+
+  /* ---------- helpers ---------- */
+  function numOrNull(v){ if(v==='')return null; const n=Number(v); return isNaN(n)?v:n; }
+  function toHex(c){
+    if(!c) return '#0097b2';
+    if(/^#[0-9a-f]{6}$/i.test(c)) return c;
+    if(/^#[0-9a-f]{3}$/i.test(c)) return '#'+c.slice(1).split('').map(x=>x+x).join('');
+    // named or rgb: draw to canvas
+    const ctx=document.createElement('canvas').getContext('2d'); ctx.fillStyle='#000'; ctx.fillStyle=c;
+    return /^#[0-9a-f]{6}$/i.test(ctx.fillStyle)?ctx.fillStyle:'#0097b2';
+  }
+  function go(view){ State.view=view; render(); }
+
+  /* ---------- export ---------- */
+  // variant=false is the plain full export; variant=true applies the export
+  // builder's season selection and feature switches.
+  function buildExport(variant){
+    if (!variant) return WRCCore.serialize(State.parsed, State.data);   // master: keeps seriesData
+    const html = WRCCore.serialize(State.parsed, reduceData());
+    const main = bIds()[0] || '';
+    return WRCCore.applyVariant(html, {
+      // Stage times are keyed by year with no notion of series, so they follow
+      // the series the page opens on (the site clears them for the others).
+      keepYears: Build.dropStageData ? [] : ((main || dropOf(main).size) ? keptYears(main) : null),
+      disable: Build.disable,
+    });
+  }
+  function saveHtml(html, name){
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  }
+  function doExport(variant){
+    const problem = variant && buildProblem();
+    if (problem) { toast(problem, 'err'); return; }
+    const name = variant ? variantFileName() : State.fileName;
+    saveHtml(buildExport(variant), name);
+    toast('Exported ' + name, 'ok');
+    if (!variant) State.dirty = false;
+  }
+  function doPreview(variant){
+    const problem = variant && buildProblem();
+    if (problem) { toast(problem, 'err'); return; }
+    const blob = new Blob([buildExport(variant)], { type: 'text/html' });
+    window.open(URL.createObjectURL(blob), '_blank');
+  }
+
+  /* ---------- wire up ---------- */
+  function init(){
+    $('#openBtn').onclick = $('#openBtn2').onclick = () => $('#fileInput').click();
+    $('#importXlsxBtn').onclick = openImportModal;
+    $('#fileInput').onchange = e => { if(e.target.files[0]) loadFile(e.target.files[0]); };
+    const drop = $('#drop');
+    ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');}));
+    ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
+    drop.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) loadFile(f); });
+    ['dragenter','dragover'].forEach(ev=>window.addEventListener(ev,e=>{ e.preventDefault(); }));
+    window.addEventListener('drop', e=>{
+      e.preventDefault();
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) loadFile(f);
+    });
+    $$('.navitem').forEach(n=>n.onclick=()=>go(n.dataset.view));
+    $('#exportBtn').onclick = () => doExport(false);
+    $('#previewBtn').onclick = () => doPreview(false);
+    $('#buildBtn').onclick = () => go('build');
+    $('#modalBg').onclick = e => { if(e.target.id==='modalBg') closeModal(); };
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+    window.addEventListener('beforeunload',e=>{ if(State.dirty){ e.preventDefault(); e.returnValue=''; } });
+  }
+  init();
+
+  /* ================= EXCEL IMPORT ================= */
+  const SLUG_MAP = { 'great britain':'gb','united kingdom':'gb','new zealand':'nz','ivory coast':'civ' };
+  function slugify(name) {
+    const n = (name || '').toString().trim().toLowerCase();
+    if (SLUG_MAP[n]) return SLUG_MAP[n];
+    return n.replace(/[^a-z0-9]+/g, '').slice(0, 12) || ('r' + Math.random().toString(36).slice(2,6));
+  }
+  function numOrNull2(v) {
+    if (v === undefined || v === null || v === '') return null;
+    if (typeof v === 'number') return v;
+    const s = String(v).trim();
+    if (/^ret\.?$/i.test(s) || /^dnf$/i.test(s) || /^dns$/i.test(s) || /^dsq$/i.test(s)) return null;
+    const n = Number(s.replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  }
+  const META_HEADER_ALIASES = {
+    ranking: 'rank', rank: 'rank', pos: 'rank', 'pos.': 'rank',
+    number: 'number', no: 'number', '#': 'number',
+    driver: 'name', name: 'name',
+    car: 'car',
+    average: 'average', avg: 'average',
+    consistency: 'consistency',
+    points: 'points', pts: 'points',
+    wins: 'wins',
+    podiums: 'podiums',
+    stagewins: 'stageWins', 'stage wins': 'stageWins',
+    totalstages: 'totalStages', 'total stages': 'totalStages',
+  };
+  function openImportModal() {
+    $('#xlsxInput').value = '';
+    $('#xlsxInput').onchange = e => { if (e.target.files[0]) handleXlsxFile(e.target.files[0]); };
+    $('#xlsxInput').click();
+  }
+  function handleXlsxFile(file) {
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const wb = XLSX.read(rd.result, { type: 'array' });
+        showSheetPicker(wb, file.name);
+      } catch (e) {
+        console.error(e);
+        toast('Could not read Excel file: ' + e.message, 'err');
+      }
+    };
+    rd.readAsArrayBuffer(file);
+  }
+  function showSheetPicker(wb, fileName) {
+    const names = wb.SheetNames;
+    modal(`
+      <h3>Import season from "${esc(fileName)}"</h3>
+      <label>Sheet with driver standings</label>
+      <select id="impSheet">${names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select>
+      <label style="margin-top:10px;display:block">Season year</label>
+      <input id="impYear" placeholder="e.g. 1992" value="${(names.find(n=>/^\d{4}$/.test(n)) || '')}">
+      <label style="margin-top:10px;display:block">If this season already has data</label>
+      <select id="impMode">
+        <option value="merge">Merge into existing season (add new rallies/drivers, update matched ones)</option>
+        <option value="replace">Replace the whole season</option>
+      </select>
+      <p class="hint">The importer looks for a header row containing "Driver" (or "Name") and treats the columns
+        between "Car" and "Consistency"/"Average"/"Points" as rally results. Merge mode shows a preview before
+        touching anything; it never removes existing drivers or rallies, it only adds/updates.</p>
+      <div style="margin-top:14px;text-align:right">
+        <button class="btn ghost" id="impCancel">Cancel</button>
+        <button class="btn primary" id="impGo">Import</button>
+      </div>
+    `);
+    $('#impCancel').onclick = closeModal;
+    $('#impGo').onclick = () => {
+      const sheetName = $('#impSheet').value;
+      const year = $('#impYear').value.trim();
+      const mode = $('#impMode').value;
+      if (!/^\d{4}$/.test(year)) { toast('Enter a valid 4-digit year', 'err'); return; }
+      const existing = State.data && SD() && SD()[year];
+      if (mode === 'replace' && existing && existing.drivers && existing.drivers.length) {
+        if (!confirm('This will REPLACE all ' + existing.drivers.length + ' existing drivers for ' + year + ' with the sheet\'s data. This can\'t be undone once exported. Continue?')) return;
+      }
+      try {
+        const parsedSeason = parseSheetToSeason(wb.Sheets[sheetName]);
+        if (parsedSeason.warnings.length) parsedSeason.warnings.forEach(w => toast(w, 'err'));
+        if (mode === 'merge' && existing) {
+          const plan = computeMergePlan(existing, parsedSeason);
+          showMergePreview(year, existing, parsedSeason, plan);
+        } else {
+          commitReplace(year, parsedSeason);
+          closeModal();
+        }
+      } catch (e) {
+        console.error(e);
+        toast('Import failed: ' + e.message, 'err');
+      }
+    };
+  }
+  // Pure parse: turns a worksheet into { rallies, rallyNames, drivers, warnings }. No State mutation.
+  function parseSheetToSeason(sheet) {
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, blankrows: false });
+    const headerIdxs = [];
+    for (let i = 0; i < rows.length; i++) {
+      const cells = (rows[i] || []).map(c => (c == null ? '' : String(c).trim().toLowerCase()));
+      if (cells.includes('driver') || cells.includes('name')) headerIdxs.push(i);
+    }
+    if (headerIdxs.length === 0) throw new Error('No header row found (expected a "Driver" column)');
+
+    const header = rows[headerIdxs[0]];
+    const cols = header.map(h => (h == null ? '' : String(h).trim()));
+    const lowerCols = cols.map(c => c.toLowerCase());
+    const carIdx = lowerCols.indexOf('car');
+    const nameIdx = lowerCols.findIndex(c => c === 'driver' || c === 'name');
+    let firstMetaIdx = -1;
+    for (let i = (carIdx > -1 ? carIdx + 1 : nameIdx + 1); i < cols.length; i++) {
+      if (META_HEADER_ALIASES[lowerCols[i]]) { firstMetaIdx = i; break; }
+    }
+    if (firstMetaIdx === -1) firstMetaIdx = cols.length;
+    const rallyStart = (carIdx > -1 ? carIdx + 1 : nameIdx + 1);
+    const rallyCols = [];
+    for (let i = rallyStart; i < firstMetaIdx; i++) {
+      if (cols[i]) rallyCols.push({ idx: i, name: cols[i] });
+    }
+    const rallies = rallyCols.map(rc => slugify(rc.name));
+    const seen = {};
+    rallies.forEach((k, i) => { if (seen[k]) { rallies[i] = k + (++seen[k]); } else { seen[k] = 1; } });
+    const rallyNames = rallyCols.map(rc => rc.name);
+
+    // Split into blocks: each block runs from one header row (exclusive) to the next
+    // header row (exclusive) / end of sheet. Multiple stacked blocks with the same
+    // driver order represent perf / stage-count / rally-rank values respectively
+    // (matches the '', '_s', '_r' suffixes used by the live editor).
+    const blocks = headerIdxs.map((hIdx, bi) => {
+      const end = (bi + 1 < headerIdxs.length) ? headerIdxs[bi + 1] : rows.length;
+      const dataRows = [];
+      for (let r = hIdx + 1; r < end; r++) {
+        const row = rows[r];
+        if (!row || row[nameIdx] == null || String(row[nameIdx]).trim() === '') continue;
+        dataRows.push(row);
+      }
+      return dataRows;
+    });
+
+    const suffixForBlock = ['', '_s', '_r']; // perf, stages, rank
+    const primary = blocks[0];
+    // Meta columns are normally read from the block that follows Car, but sheets
+    // routinely put Ranking and No in front of the driver's name -- rank was
+    // already looked for across the whole header, and number now is too, so a
+    // sheet that carries entry numbers doesn't quietly lose them.
+    const rankIdx = cols.findIndex((_, i) => ['ranking','rank','pos','pos.'].includes(lowerCols[i]));
+    const numIdx = cols.findIndex((_, i) => META_HEADER_ALIASES[lowerCols[i]] === 'number');
+    const drivers = primary.map((row, ri) => {
+      const d = {
+        rank: numOrNull2(row[rankIdx]),
+        number: numIdx > -1 ? numOrNull2(row[numIdx]) : null,
+        name: String(row[nameIdx]).trim(),
+        car: carIdx > -1 ? (row[carIdx] || '') : '',
+        average: null, consistency: null, points: 0, wins: 0, podiums: 0, stageWins: 0,
+      };
+      for (let i = firstMetaIdx; i < cols.length; i++) {
+        const key = META_HEADER_ALIASES[lowerCols[i]];
+        if (!key || key === 'rank') continue;
+        d[key] = (key === 'name' || key === 'car') ? (row[i] || '') : numOrNull2(row[i]);
+      }
+      rallyCols.forEach((rc, i) => {
+        d[rallies[i]] = numOrNull2(row[rc.idx]);
+        d[rallies[i] + '_s'] = null;
+        d[rallies[i] + '_r'] = null;
+      });
+      return d;
+    });
+
+    // Merge in subsequent blocks (stage counts, rank) by matching driver name;
+    // fall back to matching by row position if a name doesn't line up, and warn
+    // about it — a silent positional fallback is exactly how data gets misattributed.
+    let positionalFallback = 0;
+    for (let bi = 1; bi < blocks.length && bi < suffixForBlock.length; bi++) {
+      const sfx = suffixForBlock[bi];
+      if (!sfx) continue;
+      const block = blocks[bi];
+      const byName = {};
+      block.forEach(row => { byName[String(row[nameIdx]).trim().toLowerCase()] = row; });
+      drivers.forEach((d, ri) => {
+        const nameMatch = byName[d.name.toLowerCase()];
+        const row = nameMatch || block[ri];
+        if (!row) return;
+        if (!nameMatch && block[ri]) positionalFallback++;
+        rallyCols.forEach((rc, i) => {
+          d[rallies[i] + sfx] = numOrNull2(row[rc.idx]);
+        });
+      });
+    }
+
+    drivers.sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
+    const warnings = [];
+    if (positionalFallback) warnings.push(positionalFallback + ' row(s) in the stage-count/rank blocks didn\'t match a driver name and were matched by position instead — double-check those.');
+    return { rallies, rallyNames, drivers, warnings };
+  }
+  function finishImport(year, count, verb) {
+    if (!State.parsed) {
+      $('#emptyState').style.display = 'none';
+      $('#side').style.display = 'block';
+      $('#exportBtn').disabled = false; $('#previewBtn').disabled = false; $('#buildBtn').disabled = false;
+    }
+    State.curYear = Number(year);
+    // A sheet without a number column leaves them blank, so seed them from the
+    // finishing order the import just brought in. Anything already numbered --
+    // by the sheet or by hand -- is untouched.
+    const numbered = numbersFromRank(SD()[year], false);
+    markDirty();
+    setStatus(years().length + ' seasons · ' + driverTotal() + ' drivers loaded', 'ok');
+    go('drivers');
+    toast(verb + ' ' + count + ' driver' + (count === 1 ? '' : 's') + ' for ' + year +
+          (numbered ? ' · numbered ' + numbered + ' from rank' : ''), 'ok');
+  }
+  function commitReplace(year, parsedSeason) {
+    if (!State.data) State.data = { seasonsData: {}, driverFlagCodes: {}, rallyFlagCodes: {}, flagUrls: {}, flagColors: {}, carLiveries: {}, driverYearColors: {}, driverRallyColors: {}, driverSpecialColors: {}, seriesData: {}, __currentSeasonDefault: Number(year) };
+    if (!SD()) SD() = {};
+    const hadExisting = !!SD()[year];
+    SD()[year] = { rallies: parsedSeason.rallies, rallyNames: parsedSeason.rallyNames, drivers: parsedSeason.drivers };
+    finishImport(year, parsedSeason.drivers.length, hadExisting ? 'Replaced' : 'Imported');
+  }
+  // Compares an imported season against the existing one for that year and reports,
+  // without changing anything yet, exactly what a merge would do.
+  function computeMergePlan(existing, imported) {
+    const existingRallySet = new Set(existing.rallies || []);
+    const importedRallyList = imported.rallies.map((k, i) => ({ key: k, name: imported.rallyNames[i] }));
+    const newRallies = importedRallyList.filter(r => !existingRallySet.has(r.key));
+    const matchedRallies = importedRallyList.filter(r => existingRallySet.has(r.key));
+
+    const existingByName = {};
+    (existing.drivers || []).forEach((d, i) => { existingByName[(d.name || '').trim().toLowerCase()] = i; });
+
+    const matchedDrivers = [], newDrivers = [];
+    imported.drivers.forEach(d => {
+      const key = (d.name || '').trim().toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(existingByName, key)) {
+        matchedDrivers.push({ existingIdx: existingByName[key], imported: d });
+      } else {
+        newDrivers.push(d);
+      }
+    });
+    const touched = new Set(matchedDrivers.map(m => (m.imported.name || '').trim().toLowerCase()));
+    const untouchedCount = (existing.drivers || []).filter(d => !touched.has((d.name || '').trim().toLowerCase())).length;
+
+    return { newRallies, matchedRallies, matchedDrivers, newDrivers, untouchedCount };
+  }
+  function showMergePreview(year, existing, imported, plan) {
+    const list = arr => arr.length ? esc(arr.map(x => x.name || x).join(', ')) : '<span class="muted">none</span>';
+    modal(`
+      <h3>Merge preview — ${esc(year)}</h3>
+      <div class="kv"><div class="kname">New rallies to add</div><div>${plan.newRallies.length}: ${list(plan.newRallies)}</div><div></div></div>
+      <div class="kv"><div class="kname">Existing rallies matched</div><div>${plan.matchedRallies.length}: ${list(plan.matchedRallies)}</div><div></div></div>
+      <div class="kv"><div class="kname">Drivers matched (results updated)</div><div>${plan.matchedDrivers.length}: ${list(plan.matchedDrivers.map(m=>m.imported))}</div><div></div></div>
+      <div class="kv"><div class="kname">New drivers to add</div><div>${plan.newDrivers.length}: ${list(plan.newDrivers)}</div><div></div></div>
+      <div class="kv"><div class="kname">Existing drivers left untouched</div><div>${plan.untouchedCount}</div><div></div></div>
+      <label style="margin-top:14px;display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="mergeStatsToo" style="width:auto;margin:0">
+        Also overwrite career stats (rank, points, avg, consistency, wins, podiums, stage wins, car) for matched drivers
+      </label>
+      <p class="hint">Rally-by-rally results (perf/stages/rank) for matched drivers are always merged in for the rallies
+        in this sheet. Drivers are matched by name — a driver with two rows this season (e.g. mid-season team change)
+        only has its later row updated; fix the other one by hand afterwards if needed. Nothing existing is deleted.</p>
+      <div style="margin-top:14px;text-align:right">
+        <button class="btn ghost" id="mergeCancel">Cancel</button>
+        <button class="btn primary" id="mergeGo">Merge ${plan.matchedDrivers.length + plan.newDrivers.length} driver${(plan.matchedDrivers.length + plan.newDrivers.length) === 1 ? '' : 's'}</button>
+      </div>
+    `);
+    $('#mergeCancel').onclick = closeModal;
+    $('#mergeGo').onclick = () => {
+      applyMergePlan(year, existing, imported, plan, $('#mergeStatsToo').checked);
+      closeModal();
+    };
+  }
+  function applyMergePlan(year, existing, imported, plan, overwriteStats) {
+    plan.newRallies.forEach(r => { existing.rallies.push(r.key); existing.rallyNames.push(r.name); });
+    // Give every existing driver a placeholder for any brand-new rally column so the
+    // per-rally table stays fully populated (null = no data, not "missing key").
+    (existing.drivers || []).forEach(d => {
+      plan.newRallies.forEach(r => {
+        if (!(r.key in d)) { d[r.key] = null; d[r.key + '_s'] = null; d[r.key + '_r'] = null; }
+      });
+    });
+
+    const metaFields = META_FIELDS.filter(f => f !== 'name');
+    plan.matchedDrivers.forEach(m => {
+      const target = existing.drivers[m.existingIdx], src = m.imported;
+      imported.rallies.forEach(key => {
+        ['', '_s', '_r'].forEach(sfx => {
+          const fk = key + sfx;
+          if (src[fk] !== null && src[fk] !== undefined) target[fk] = src[fk];
+        });
+      });
+      if (overwriteStats) metaFields.forEach(f => { if (src[f] !== null && src[f] !== undefined) target[f] = src[f]; });
+    });
+
+    plan.newDrivers.forEach(d => {
+      existing.rallies.forEach(key => {
+        if (!(key in d)) { d[key] = null; d[key + '_s'] = null; d[key + '_r'] = null; }
+      });
+      existing.drivers.push(d);
+    });
+
+    finishImport(year, plan.matchedDrivers.length + plan.newDrivers.length, 'Merged');
+  }
+
+  function modal(html) {
+    $('#modalBox').innerHTML = html;
+    $('#modalBg').classList.add('show');
+  }
+  function closeModal() { $('#modalBg').classList.remove('show'); }
+
+})();
+</script>
+<script data-pplx-inline-edit="">
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+
+</script></body>
+</html>

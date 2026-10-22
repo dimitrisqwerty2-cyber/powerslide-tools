@@ -174,7 +174,7 @@ def push():
     git('commit', '-q', '-m', 'Powerslide Tools')
     git('branch', '-D', branch)
     git('branch', '-m', branch)
-    git('push', '-q', '--force', 'origin', branch)
+    git('push', '-q', '--force', '-u', 'origin', branch)
     print('Uploaded. GitHub needs about a minute before the site shows the change.')
 
 

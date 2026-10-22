@@ -1273,7 +1273,8 @@ function render(ctx,st){
   if(head){
     let ts=Math.round(66*Math.min(L.hs,1.5));
     if(L.hs>1)while(ts>66&&textW(st.title,ts)>W-515-40)ts--;   // taller header: grow the title only while it still fits
-    drawGlitchTitle(ctx,st.title||'',515,L.topBot-10,ts,tk(T,'glitchInk'),tk(T,'speck'));
+    measureCtx.font=`700 ${ts}px "WRC Clean"`;const capH=measureCtx.measureText('H').actualBoundingBoxAscent;   // centred on the capitals, so descenders don't shift it
+    drawGlitchTitle(ctx,st.title||'',515,Math.round(L.topBot/2+capH/2),ts,tk(T,'glitchInk'),tk(T,'speck'));
   }
   drawStripText(ctx,st,T);
   if(M.strips)drawStrips(ctx,st,T);

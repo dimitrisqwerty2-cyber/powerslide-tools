@@ -845,6 +845,15 @@ function quoteLayout(q){
   if(!q.showFoot){const d=b.strip2[1]-b.strip2[0];o.foot=[H,H];o.strip2=[H-d,H];o.panel=[o.panel[0],H-d];}
   return o;
 }
+// top and bottom of a logo's visible pixels, as fractions of its height (its PNG may have empty margins)
+const INKBOX=new Map();
+function inkBox(im){
+  if(INKBOX.has(im))return INKBOX.get(im);
+  const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);
+  const d=x.getImageData(0,0,c.width,c.height).data;let t=-1,b=-1;
+  for(let y=0;y<c.height;y++){for(let i=y*c.width*4+3,e=i+c.width*4;i<e;i+=4)if(d[i]>40){if(t<0)t=y;b=y;break;}}
+  const r=t<0?[0,1]:[t/c.height,(b+1)/c.height];INKBOX.set(im,r);return r;
+}
 function drawLogo(ctx,lg,T,x,y,w,h){ctx.save();if(T.logoInvert)ctx.filter='invert(1)';ctx.drawImage(lg,x,y,w,h);ctx.restore();}
 
 /* ---------- photo strips ----------
@@ -1263,9 +1272,11 @@ function render(ctx,st){
   drawBackground(ctx,T);
   drawBands(ctx,T,foot&&M.rightCell&&!!st.rally);
   const lg=PS_IMG[st.logo]||PS_IMG.media;
+  let logoMid=null;   // the header title lines up with the logo's middle
   if(lg&&head&&logoAt==='header'){let h=(st.logo==='icon'?120:92)*L.hs,w=h*lg.width/lg.height;
     if(L.hs>1&&66+w>L.div-24){w=L.div-24-66;h=w*lg.height/lg.width;}   // keep it left of the divider
-    drawLogo(ctx,lg,T,66,L.topBot-12-h,w,h);}
+    drawLogo(ctx,lg,T,66,L.topBot-12-h,w,h);
+    const b=inkBox(lg);logoMid=L.topBot-12-h+h*(b[0]+b[1])/2;}
   if(lg&&foot&&logoAt==='footer'){   // centred in the footer's left cell
     const fh=L.foot[1]-L.foot[0];let h=fh*(st.logo==='icon'?.82:.7),w=h*lg.width/lg.height;
     if(w>L.div-60){w=L.div-60;h=w*lg.height/lg.width;}
@@ -1273,8 +1284,8 @@ function render(ctx,st){
   if(head){
     let ts=Math.round(66*Math.min(L.hs,1.5));
     if(L.hs>1)while(ts>66&&textW(st.title,ts)>W-515-40)ts--;   // taller header: grow the title only while it still fits
-    measureCtx.font=`700 ${ts}px "WRC Clean"`;const capH=measureCtx.measureText('H').actualBoundingBoxAscent;   // centred on the capitals, so descenders don't shift it
-    drawGlitchTitle(ctx,st.title||'',515,Math.round(L.topBot/2+capH/2),ts,tk(T,'glitchInk'),tk(T,'speck'));
+    measureCtx.font=`700 ${ts}px "WRC Clean"`;const capH=measureCtx.measureText('H').actualBoundingBoxAscent;   // capitals centred on the logo (or the band), so descenders don't shift it
+    drawGlitchTitle(ctx,st.title||'',515,Math.round((logoMid??L.topBot/2)+capH/2),ts,tk(T,'glitchInk'),tk(T,'speck'));
   }
   drawStripText(ctx,st,T);
   if(M.strips)drawStrips(ctx,st,T);

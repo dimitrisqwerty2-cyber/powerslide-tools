@@ -211,6 +211,7 @@
         <div><label>Big word size</label><input type="range" id="hSize" min="60" max="300" value="190"></div>
         <div><label>Shade behind the text</label><input type="range" id="hFade" min="0" max="95" value="65"></div>
         <div><label>Text colour</label><select id="hInk"><option value="white">White (dark pictures)</option><option value="black">Black (light pictures)</option></select></div>
+        <div><label>Shade colour</label><label style="display:inline"><input type="checkbox" id="hShadeAuto" checked> Auto (black / white)</label> <input type="color" id="hShadeCol" value="#7a1010"></div>
         <div><label>Name tiles order</label><select id="hOrder"><option value="flag">Flag, then car</option><option value="car">Car, then flag</option></select></div>
       </div>
       <div class="note">Drag the headline on the preview to move the whole block freely. <button type="button" id="hReset">Reset positions</button></div>
@@ -1503,9 +1504,11 @@ function drawHeadline(ctx,st,T){
   measure();
   while(H0>p1-p0-2*m&&wz>40){wz=Math.round(wz*.9);bZ=Math.max(18,Math.round(bZ*.92));chH=Math.max(28,Math.round(chH*.92));measure();}
   const top=Math.round(hd.pos==='top'?p0+m:hd.pos==='center'?p0+(p1-p0-H0)/2:p1-m-H0);
-  const a=(hd.fade||0)/100;
-  if(hd.pos==='bottom')shadePic(ctx,a,'y',p1,Math.max(p0,top-200*k));
-  else if(hd.pos==='top')shadePic(ctx,a,'y',p0,Math.min(p1,top+H0+200*k));
+  const a=(hd.fade||0)/100,sTop=top+((hd.off||{}).all||[0,0])[1],sMid=sTop+H0/2,ph=p1-p0;
+  if(hd.shadeCol){const [r,g,b]=hexRgb(hd.shadeCol);SHADE_RGB=r+','+g+','+b;}
+  // the shade follows the block: from the nearer edge of the picture, or all over when it sits in the middle
+  if(sMid>p0+ph*.62)shadePic(ctx,a,'y',p1,Math.max(p0,sTop-200*k));
+  else if(sMid<p0+ph*.38)shadePic(ctx,a,'y',p0,Math.min(p1,sTop+H0+200*k));
   else shadePic(ctx,a);
   let y=top;
   const tw0=()=>{ctx.font=`700 ${wz}px "WRC Clean"`;return ctx.measureText(word).width;};
@@ -1691,7 +1694,7 @@ function buildHeadNames(names){
   }
 }
 function readHead(){
-  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,ink:$('hInk').value,order:$('hOrder').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
+  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,ink:$('hInk').value,shadeCol:$('hShadeAuto').checked?'':$('hShadeCol').value,order:$('hOrder').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
     names:[...$('hNames').children].map(d=>({name:d.querySelector('[data-h=name]').value.trim(),flag:d.querySelector('[data-h=flag]').value,badge:d.querySelector('[data-h=badge]').value}))};
 }
 function extrasUI(){const p=$('tPhoto').value;document.querySelectorAll('.tPic').forEach(d=>d.hidden=p==='none');$('tShareLbl').textContent=p==='behind'?'Darken the picture':'Picture share';
@@ -1739,7 +1742,7 @@ function loadMode(m){
   $('stripL').value=(s&&s.stripL)||'';$('stripR').value=(s&&s.stripR)||'';
   $('tallyBox').hidden=m==='results';$('gapLbl').textContent=m==='results'?'Time column shows':m==='points'?'Total column shows':'Value 2 shows';
   const hd={...HEAD_DEFAULT,...((s&&s.head)||{})};
-  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;$('hOrder').value=hd.order||'flag';$('hInk').value=hd.ink||'white';HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
+  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;$('hOrder').value=hd.order||'flag';$('hInk').value=hd.ink||'white';$('hShadeAuto').checked=!hd.shadeCol;if(hd.shadeCol)$('hShadeCol').value=hd.shadeCol;HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
   const sx={...STATS_DEFAULT,...((s&&s.sx)||{})};
   $('sxStyle').value=sx.style;$('sxPos').value=sx.pos;$('sxSize').value=sx.size;$('sxFade').value=sx.fade;$('sxHead').value=sx.head;$('sxHStyle').value=sx.hStyle;$('sxHSize').value=sx.hSize;
   $('sxHPos').value=sx.hPos;$('sxFx').value=sx.fx;$('sxFy').value=sx.fy;$('sxHFx').value=sx.hfx;$('sxHFy').value=sx.hfy;$('sxAlpha').value=sx.alpha;
@@ -1964,7 +1967,7 @@ async function openProject(file){
   $('mode').addEventListener('change',()=>{loadMode($('mode').value);redraw();});
   ['title','foot','rally','start','theme','themeCol','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('theme').addEventListener('input',()=>{$('themeColBox').hidden=!/^custom/.test($('theme').value);});
-  ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hInk','hOrder','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
+  ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hInk','hShadeAuto','hShadeCol','hOrder','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
     .forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('tPhoto').addEventListener('input',()=>{extrasUI();redraw();});
   ['tCells','sxLabelCol','sxValueCol','sxHlCol','sxHeadCol'].forEach(id=>$(id).addEventListener('input',()=>{extrasUI();redraw();}));
@@ -2045,6 +2048,7 @@ async function openProject(file){
     HEAD_OFF[hdrag.p]=[Math.round(hdrag.ox+pt.x-hdrag.sx),Math.round(hdrag.oy+pt.y-hdrag.sy)];redraw();e.stopImmediatePropagation();
   },true);
   const endH=()=>{hdrag=null;};cv.addEventListener('pointerup',endH);cv.addEventListener('pointercancel',endH);
+  $('hShadeCol').addEventListener('input',()=>{$('hShadeAuto').checked=false;redraw();});
   $('hReset').onclick=()=>{HEAD_OFF={};redraw();};
   cv.addEventListener('dragover',e=>{if(MODES[MODE].quote){e.preventDefault();cv.classList.add('dropping');}});
   cv.addEventListener('dragleave',()=>cv.classList.remove('dropping'));

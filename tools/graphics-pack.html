@@ -127,6 +127,8 @@
       <div id="rallyBox"><label id="rallyLbl">Rally</label><input id="rally"></div>
       <div><label>Colours</label><select id="theme"><option value="warm">Warm (Points screen)</option><option value="cool">Cool (Results screen)</option><option value="site">Powerslide site</option><option value="siteDark">Powerslide site (dark)</option><option value="custom">Custom colour…</option><option value="customDark">Custom colour (dark)…</option></select></div>
       <div id="themeColBox" hidden><label>Theme colour</label><input type="color" id="themeCol" value="#d0202a"></div>
+      <div><label>Picture tint colour</label><label style="display:inline"><input type="checkbox" id="hShadeAuto" checked> Auto</label> <input type="color" id="hShadeCol" value="#7a1010"></div>
+      <div><label>Tint over the whole picture</label><input type="range" id="pTint" min="0" max="90" value="0"></div>
       <div id="startBox"><label>Numbering starts at</label><input id="start" inputmode="numeric" placeholder="1"></div>
       <div id="alignBox"><label id="alignLbl">Time alignment</label><select id="valAlign"><option value="">Default</option><option value="left">Left</option><option value="center">Centred</option><option value="right">Right</option></select></div>
       <div><label>Top strip text <small>(left)</small></label><input id="stripL" placeholder="e.g. Round 13 · Rally Italia Sardegna"></div>
@@ -211,7 +213,6 @@
         <div><label>Big word size</label><input type="range" id="hSize" min="60" max="300" value="190"></div>
         <div><label>Shade behind the text</label><input type="range" id="hFade" min="0" max="95" value="65"></div>
         <div><label>Text colour</label><select id="hInk"><option value="white">White (dark pictures)</option><option value="black">Black (light pictures)</option></select></div>
-        <div><label>Shade colour</label><label style="display:inline"><input type="checkbox" id="hShadeAuto" checked> Auto (black / white)</label> <input type="color" id="hShadeCol" value="#7a1010"></div>
         <div><label>Name tiles order</label><select id="hOrder"><option value="flag">Flag, then car</option><option value="car">Car, then flag</option></select></div>
       </div>
       <div class="note">Drag the headline on the preview to move the whole block freely. <button type="button" id="hReset">Reset positions</button></div>
@@ -764,7 +765,7 @@ function drawPhoto(ctx,q){
   const x0=RAIL[0]+RAIL[1],w=RAILR[0]-x0;
   const s=Math.max(w/im.width,h/im.height)*(q.zoom||1),dw=im.width*s,dh=im.height*s;
   ctx.save();ctx.beginPath();ctx.rect(x0,p0,w,h);ctx.clip();
-  ctx.drawImage(im,x0+(w-dw)*q.fx,p0+(h-dh)*q.fy,dw,dh);ctx.restore();
+  ctx.drawImage(im,x0+(w-dw)*q.fx,p0+(h-dh)*q.fy,dw,dh);if(PIC_TINT>0){ctx.fillStyle=`rgba(${SHADE_RGB},${PIC_TINT})`;ctx.fillRect(x0,p0,w,h);}ctx.restore();
 }
 function drawOuterRails(ctx,T,pa){
   const [p0,p1]=pa||L.panel;
@@ -1293,7 +1294,9 @@ function initStripsUI(cv,toCanvas){
   });
 }
 
+let PIC_TINT=0;   // tint over every picture, in SHADE_RGB
 function render(ctx,st){
+  {const c=st.head&&st.head.shadeCol;SHADE_RGB=c?hexRgb(c).join(','):'0,0,0';PIC_TINT=(st.tint||0)/100;}
   const M=MODES[st.mode],T=themeOf(st),q=M.quote?st.quote:(M.strips?st.strips:null);
   if(q)L=quoteLayout(q);   // setFormat() puts the stock layout back on the next draw
   if(ctx.canvas.id==='cv')QBOX=null;
@@ -1360,7 +1363,7 @@ const TPHOTO={img:null};
 function drawCover(ctx,im,r,z,fx,fy){
   const s=Math.max(r.w/im.width,r.h/im.height)*(z||1),dw=im.width*s,dh=im.height*s;
   ctx.save();ctx.beginPath();ctx.rect(r.x,r.y,r.w,r.h);ctx.clip();
-  ctx.drawImage(im,r.x+(r.w-dw)*clamp01(fx),r.y+(r.h-dh)*clamp01(fy),dw,dh);ctx.restore();
+  ctx.drawImage(im,r.x+(r.w-dw)*clamp01(fx),r.y+(r.h-dh)*clamp01(fy),dw,dh);if(PIC_TINT>0){ctx.fillStyle=`rgba(${SHADE_RGB},${PIC_TINT})`;ctx.fillRect(r.x,r.y,r.w,r.h);}ctx.restore();
 }
 function drawTally(ctx,icon,v,[x,w,align],cy,ink){
   const n=parseInt(v,10);if(!(n>0)){if(v)cellText(ctx,v,[x,w],align,cy+2);return;}
@@ -1408,7 +1411,7 @@ function drawTable(ctx,st,T){
   } else colsA=layout(st,tx0,txr,idxA);
   if(ph==='behind'){
     if(img)drawCover(ctx,img,{x:x0,y:p0,w:x1-x0,h:p1-p0},o.zoom,o.fx,o.fy);
-    if(dark>0){ctx.fillStyle=`rgba(0,0,0,${dark.toFixed(3)})`;ctx.fillRect(x0,p0,x1-x0,p1-p0);}
+    if(dark>0){ctx.fillStyle=`rgba(${SHADE_RGB},${dark.toFixed(3)})`;ctx.fillRect(x0,p0,x1-x0,p1-p0);}
     drawOuterRails(ctx,T);
   } else {
     drawRails(ctx,T,[...Object.values(colsA),...(colsB?Object.values(colsB):[]),...extra]);
@@ -1470,7 +1473,7 @@ function nameChip(ctx,x,y,h,n,T,dry){
   return w;
 }
 // darken the picture towards the side the text sits on
-let SHADE_RGB='0,0,0';   // black shade, or white behind black text
+let SHADE_RGB='0,0,0';   // picture shade colour: black, the picked tint, or white behind black headline text
 function shadePic(ctx,a,dir,from,to){
   if(!(a>0))return;const [p0,p1]=L.panel,x0=RAIL[0]+RAIL[1],x1=RAILR[0];
   ctx.save();ctx.beginPath();ctx.rect(x0,p0,x1-x0,p1-p0);ctx.clip();
@@ -1482,7 +1485,7 @@ function shadePic(ctx,a,dir,from,to){
 }
 let HEAD_OFF={},HEAD_RECTS=[];   // per-part drag offsets of the headline card, and where each part landed
 function drawHeadline(ctx,st,T){
-  const dark=(st.head||{}).ink==='black',INK=dark?'#111111':'#ffffff';SHADE_RGB=dark?'255,255,255':'0,0,0';
+  const hd0=st.head||{},dark=hd0.ink==='black',INK=dark?'#111111':'#ffffff';if(!hd0.shadeCol&&dark)SHADE_RGB='255,255,255';
   CHIP_CAR_FIRST=(st.head||{}).order==='car';HEAD_RECTS=[];const offs=(st.head&&st.head.off)||{};
   const part=(p,x,y,w,h,fn)=>{const [dx,dy]=offs.all||[0,0];ctx.save();ctx.translate(dx,dy);fn();ctx.restore();HEAD_RECTS.push({p,x:x+dx,y:y+dy,w,h});};
   const hd={...HEAD_DEFAULT,...(st.head||{})},[p0,p1]=L.panel,k=L.rowH/62;
@@ -1505,7 +1508,6 @@ function drawHeadline(ctx,st,T){
   while(H0>p1-p0-2*m&&wz>40){wz=Math.round(wz*.9);bZ=Math.max(18,Math.round(bZ*.92));chH=Math.max(28,Math.round(chH*.92));measure();}
   const top=Math.round(hd.pos==='top'?p0+m:hd.pos==='center'?p0+(p1-p0-H0)/2:p1-m-H0);
   const a=(hd.fade||0)/100,sTop=top+((hd.off||{}).all||[0,0])[1],sMid=sTop+H0/2,ph=p1-p0;
-  if(hd.shadeCol){const [r,g,b]=hexRgb(hd.shadeCol);SHADE_RGB=r+','+g+','+b;}
   // the shade follows the block: from the nearer edge of the picture, or all over when it sits in the middle
   if(sMid>p0+ph*.62)shadePic(ctx,a,'y',p1,Math.max(p0,sTop-200*k));
   else if(sMid<p0+ph*.38)shadePic(ctx,a,'y',p0,Math.min(p1,sTop+H0+200*k));
@@ -1669,7 +1671,7 @@ function refreshFieldVisibility(){
 }
 function readRows(){return [...$('rows').children].map(d=>{const o={pos:'',name:'',flag:'',badge:'',move:'',a:'',b:''};d.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value.trim());return o;});}
 function readState(){
-  return {mode:MODE,title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,
+  return {mode:MODE,title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,tint:+$('pTint').value,
           logo:$('logo').value,valAlign:$('valAlign').value,hl:$('hl').value===''?-1:+$('hl').value,
           show:{flag:$('showFlag').checked,badge:$('showBadge').checked,move:$('showMove').checked},rows:readRows(),
           quote:{text:$('qText').value,sub:$('qSub').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
@@ -1749,7 +1751,7 @@ function loadMode(m){
   $('sxLabelCol').value=sx.labelCol;$('sxValueCol').value=sx.valueCol;$('sxHlCol').value=sx.hlCol;$('sxHeadCol').value=sx.headCol;$('sxCustom').value=sx.custom;extrasUI();
   buildRows(s?s.rows:DEFAULTS[m]);
   $('title').value=s?s.title:M.title;$('foot').value=s?s.foot:M.foot;$('rally').value=s?(s.rally||''):M.rally;
-  $('start').value=s?(s.start||''):'';$('theme').value=(s&&s.theme)||M.theme;if(s&&s.themeCol)$('themeCol').value=s.themeCol;$('themeColBox').hidden=!/^custom/.test($('theme').value);
+  $('start').value=s?(s.start||''):'';$('theme').value=(s&&s.theme)||M.theme;if(s&&s.themeCol)$('themeCol').value=s.themeCol;$('pTint').value=(s&&s.tint)||0;$('themeColBox').hidden=!/^custom/.test($('theme').value);
   $('hl').value=s?(s.hl<0?'':String(s.hl)):'0';
   $('rowsUI').hidden=$('hlBox').hidden=!!(M.strips||(M.quote&&!M.stats));$('quoteUI').hidden=!M.quote;$('stripsUI').hidden=!M.strips;
   $('headUI').hidden=!M.headline;$('statsUI').hidden=!M.stats;$('quoteUI').classList.toggle('noText',!!(M.headline||M.stats));
@@ -1965,7 +1967,7 @@ async function openProject(file){
   $('logo').value=PS_LOGOS[lg]?lg:'media';
   loadMode(m);
   $('mode').addEventListener('change',()=>{loadMode($('mode').value);redraw();});
-  ['title','foot','rally','start','theme','themeCol','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
+  ['title','foot','rally','start','theme','themeCol','pTint','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('theme').addEventListener('input',()=>{$('themeColBox').hidden=!/^custom/.test($('theme').value);});
   ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hInk','hShadeAuto','hShadeCol','hOrder','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
     .forEach(id=>$(id).addEventListener('input',()=>redraw()));

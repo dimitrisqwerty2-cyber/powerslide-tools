@@ -210,6 +210,7 @@
         <div><label>Block position</label><select id="hPos"><option value="bottom">Bottom</option><option value="center">Middle</option><option value="top">Top</option></select></div>
         <div><label>Big word size</label><input type="range" id="hSize" min="60" max="300" value="190"></div>
         <div><label>Shade behind the text</label><input type="range" id="hFade" min="0" max="95" value="65"></div>
+        <div><label>Text colour</label><select id="hInk"><option value="white">White (dark pictures)</option><option value="black">Black (light pictures)</option></select></div>
         <div><label>Name tiles order</label><select id="hOrder"><option value="flag">Flag, then car</option><option value="car">Car, then flag</option></select></div>
       </div>
       <div class="note">Drag the headline on the preview to move the whole block freely. <button type="button" id="hReset">Reset positions</button></div>
@@ -1468,17 +1469,19 @@ function nameChip(ctx,x,y,h,n,T,dry){
   return w;
 }
 // darken the picture towards the side the text sits on
+let SHADE_RGB='0,0,0';   // black shade, or white behind black text
 function shadePic(ctx,a,dir,from,to){
   if(!(a>0))return;const [p0,p1]=L.panel,x0=RAIL[0]+RAIL[1],x1=RAILR[0];
   ctx.save();ctx.beginPath();ctx.rect(x0,p0,x1-x0,p1-p0);ctx.clip();
   let g=null;
   if(dir==='x')g=ctx.createLinearGradient(from,0,to,0);else if(dir==='y')g=ctx.createLinearGradient(0,from,0,to);
-  if(g){g.addColorStop(0,`rgba(0,0,0,${a})`);g.addColorStop(.5,`rgba(0,0,0,${a*.65})`);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;}
-  else ctx.fillStyle=`rgba(0,0,0,${a*.6})`;
+  if(g){g.addColorStop(0,`rgba(${SHADE_RGB},${a})`);g.addColorStop(.5,`rgba(${SHADE_RGB},${a*.65})`);g.addColorStop(1,`rgba(${SHADE_RGB},0)`);ctx.fillStyle=g;}
+  else ctx.fillStyle=`rgba(${SHADE_RGB},${a*.6})`;
   ctx.fillRect(x0,p0,x1-x0,p1-p0);ctx.restore();
 }
 let HEAD_OFF={},HEAD_RECTS=[];   // per-part drag offsets of the headline card, and where each part landed
 function drawHeadline(ctx,st,T){
+  const dark=(st.head||{}).ink==='black',INK=dark?'#111111':'#ffffff';SHADE_RGB=dark?'255,255,255':'0,0,0';
   CHIP_CAR_FIRST=(st.head||{}).order==='car';HEAD_RECTS=[];const offs=(st.head&&st.head.off)||{};
   const part=(p,x,y,w,h,fn)=>{const [dx,dy]=offs.all||[0,0];ctx.save();ctx.translate(dx,dy);fn();ctx.restore();HEAD_RECTS.push({p,x:x+dx,y:y+dy,w,h});};
   const hd={...HEAD_DEFAULT,...(st.head||{})},[p0,p1]=L.panel,k=L.rowH/62;
@@ -1506,23 +1509,23 @@ function drawHeadline(ctx,st,T){
   else shadePic(ctx,a);
   let y=top;
   const tw0=()=>{ctx.font=`700 ${wz}px "WRC Clean"`;return ctx.measureText(word).width;};
-  const soft=b=>{ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=b*k;ctx.shadowOffsetY=Math.round(b*k/4);};
+  const soft=b=>{ctx.shadowColor=dark?'rgba(255,255,255,.6)':'rgba(0,0,0,.55)';ctx.shadowBlur=b*k;ctx.shadowOffsetY=Math.round(b*k/4);};
   if(above){const y0=y;
     part('above',X0,y0-4,maxW,Math.round(aZ*1.2)+8,()=>{
     ctx.save();ctx.font=`700 ${aZ}px "WRC Clean"`;try{ctx.letterSpacing=Math.round(aZ*.18)+'px';}catch(e){}
-    ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='top';soft(8);ctx.fillText(above.toLocaleUpperCase(),cx,y0);ctx.restore();});
+    ctx.fillStyle=INK;ctx.textAlign='center';ctx.textBaseline='top';soft(8);ctx.fillText(above.toLocaleUpperCase(),cx,y0);ctx.restore();});
     y+=Math.round(aZ*1.2)+gap;
   }
   if(word){part('word',Math.round(cx-tw0()/2-pad),y,Math.round(tw0()+pad*2),KH,()=>{
     ctx.font=`700 ${wz}px "WRC Clean"`;const tw=ctx.measureText(word).width,base=y+(boxy?Math.round(pad/2):0)+Math.round(wz*.78);
-    if(hd.style==='glitch')drawGlitchTitle(ctx,word,cx-tw/2,base,wz,'#ffffff',90);
+    if(hd.style==='glitch')drawGlitchTitle(ctx,word,cx-tw/2,base,wz,INK,90);
     else{
       ctx.save();ctx.textAlign='center';ctx.textBaseline='alphabetic';
       if(boxy){const bw=Math.round(tw+pad*2),P=hd.style==='band'?{fill:vgrad(ctx,y,y+KH,tk(T,'hl')),ink:tk(T,'inkHl')}:{fill:vgrad(ctx,y,y+KH,[[0,T.strip[0]],[1,T.strip[1]]]),ink:'#ffffff'};
         cell(ctx,Math.round(cx-bw/2),y,bw,KH,P.fill,T);ctx.fillStyle=P.ink;ctx.fillText(word,cx,base);}
       else{soft(24);
-        if(hd.style==='outline'){ctx.lineWidth=Math.max(2,Math.round(wz*.03));ctx.strokeStyle='#ffffff';ctx.strokeText(word,cx,base);}
-        else{ctx.fillStyle=hd.style==='gold'?vgrad(ctx,base-wz*.78,base,tk(T,'hl')):'#ffffff';ctx.fillText(word,cx,base);}}
+        if(hd.style==='outline'){ctx.lineWidth=Math.max(2,Math.round(wz*.03));ctx.strokeStyle=INK;ctx.strokeText(word,cx,base);}
+        else{ctx.fillStyle=hd.style==='gold'?vgrad(ctx,base-wz*.78,base,tk(T,'hl')):INK;ctx.fillText(word,cx,base);}}
       ctx.restore();
     }});
     y+=KH+gap;
@@ -1530,7 +1533,7 @@ function drawHeadline(ctx,st,T){
   if(bl.length){
     const lh=Math.round(bZ*1.22);
     const y0=y;part('below',X0,y0,maxW,bl.length*lh,()=>{
-    ctx.save();ctx.font=`700 ${bZ}px "WRC Clean"`;ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='top';soft(10);
+    ctx.save();ctx.font=`700 ${bZ}px "WRC Clean"`;ctx.fillStyle=INK;ctx.textAlign='center';ctx.textBaseline='top';soft(10);
     bl.forEach((l,i)=>ctx.fillText(l,cx,y0+i*lh));ctx.restore();});y+=bl.length*lh+gap;
   }
   if(cr.length){const y0=y,cw=Math.max(...cr.map(r=>r.w)),chT=cr.length*(chH+5+cg)-cg;
@@ -1688,7 +1691,7 @@ function buildHeadNames(names){
   }
 }
 function readHead(){
-  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,order:$('hOrder').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
+  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,ink:$('hInk').value,order:$('hOrder').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
     names:[...$('hNames').children].map(d=>({name:d.querySelector('[data-h=name]').value.trim(),flag:d.querySelector('[data-h=flag]').value,badge:d.querySelector('[data-h=badge]').value}))};
 }
 function extrasUI(){const p=$('tPhoto').value;document.querySelectorAll('.tPic').forEach(d=>d.hidden=p==='none');$('tShareLbl').textContent=p==='behind'?'Darken the picture':'Picture share';
@@ -1736,7 +1739,7 @@ function loadMode(m){
   $('stripL').value=(s&&s.stripL)||'';$('stripR').value=(s&&s.stripR)||'';
   $('tallyBox').hidden=m==='results';$('gapLbl').textContent=m==='results'?'Time column shows':m==='points'?'Total column shows':'Value 2 shows';
   const hd={...HEAD_DEFAULT,...((s&&s.head)||{})};
-  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;$('hOrder').value=hd.order||'flag';HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
+  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;$('hOrder').value=hd.order||'flag';$('hInk').value=hd.ink||'white';HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
   const sx={...STATS_DEFAULT,...((s&&s.sx)||{})};
   $('sxStyle').value=sx.style;$('sxPos').value=sx.pos;$('sxSize').value=sx.size;$('sxFade').value=sx.fade;$('sxHead').value=sx.head;$('sxHStyle').value=sx.hStyle;$('sxHSize').value=sx.hSize;
   $('sxHPos').value=sx.hPos;$('sxFx').value=sx.fx;$('sxFy').value=sx.fy;$('sxHFx').value=sx.hfx;$('sxHFy').value=sx.hfy;$('sxAlpha').value=sx.alpha;
@@ -1961,7 +1964,7 @@ async function openProject(file){
   $('mode').addEventListener('change',()=>{loadMode($('mode').value);redraw();});
   ['title','foot','rally','start','theme','themeCol','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('theme').addEventListener('input',()=>{$('themeColBox').hidden=!/^custom/.test($('theme').value);});
-  ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hOrder','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
+  ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hInk','hOrder','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
     .forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('tPhoto').addEventListener('input',()=>{extrasUI();redraw();});
   ['tCells','sxLabelCol','sxValueCol','sxHlCol','sxHeadCol'].forEach(id=>$(id).addEventListener('input',()=>{extrasUI();redraw();}));

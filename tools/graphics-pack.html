@@ -125,7 +125,8 @@
       <div id="hlBox"><label>Highlighted row</label><select id="hl"></select></div>
       <div><label>Footer</label><input id="foot"></div>
       <div id="rallyBox"><label id="rallyLbl">Rally</label><input id="rally"></div>
-      <div><label>Colours</label><select id="theme"><option value="warm">Warm (Points screen)</option><option value="cool">Cool (Results screen)</option><option value="site">Powerslide site</option><option value="siteDark">Powerslide site (dark)</option></select></div>
+      <div><label>Colours</label><select id="theme"><option value="warm">Warm (Points screen)</option><option value="cool">Cool (Results screen)</option><option value="site">Powerslide site</option><option value="siteDark">Powerslide site (dark)</option><option value="custom">Custom colour…</option><option value="customDark">Custom colour (dark)…</option></select></div>
+      <div id="themeColBox" hidden><label>Theme colour</label><input type="color" id="themeCol" value="#d0202a"></div>
       <div id="startBox"><label>Numbering starts at</label><input id="start" inputmode="numeric" placeholder="1"></div>
       <div id="alignBox"><label id="alignLbl">Time alignment</label><select id="valAlign"><option value="">Default</option><option value="left">Left</option><option value="center">Centred</option><option value="right">Right</option></select></div>
       <div><label>Top strip text <small>(left)</small></label><input id="stripL" placeholder="e.g. Round 13 · Rally Italia Sardegna"></div>
@@ -210,6 +211,7 @@
         <div><label>Big word size</label><input type="range" id="hSize" min="60" max="300" value="190"></div>
         <div><label>Shade behind the text</label><input type="range" id="hFade" min="0" max="95" value="65"></div>
       </div>
+      <div class="note">Drag the line above, the big word, the line under it or the names on the preview to move each one freely. <button type="button" id="hReset">Reset positions</button></div>
       <label style="display:block;margin-top:8px">Line under it <small>(optional)</small></label>
       <textarea id="hBelow" style="font-family:inherit;font-size:13px;min-height:52px"></textarea>
       <div class="hdr" style="margin-top:8px">Names: flag and brand tiles as in the table rows; leave a name empty to skip it</div>
@@ -460,6 +462,31 @@ const THEME_DEFAULTS = {
   hl:[[0,'#fad623'],[.6,'#f0c513'],[1,'#ddb00b']], hi:'rgba(255,255,255,.35)', tileEdge:'rgba(28,8,18,.85)',
   ink:'#2a2a2c', inkHl:'#1c1c1c', footInk:'#2b2b2e', rightInk:'#ffffff', glitchInk:'#303033', speck:200
 };
+/* Custom colour: the Powerslide site theme (or its dark mode) with every colour turned to the picked hue;
+   the gold highlight stays gold. */
+const CUSTOM_THEMES={};
+function hexRgb(h){h=h.replace('#','');if(h.length===3)h=h.replace(/./g,c=>c+c);const n=parseInt(h,16);return [n>>16&255,n>>8&255,n&255];}
+function rgbHsl(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;
+  if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60;}return [h,s,l];}
+function hslRgb(h,s,l){h=((h%360)+360)%360/360;if(!s)return [l,l,l].map(v=>Math.round(v*255));
+  const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,f=t=>{t=(t+1)%1;return t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p;};
+  return [f(h+1/3),f(h),f(h-1/3)].map(v=>Math.round(v*255));}
+function customTheme(hex,dark){
+  const key=hex+(dark?'d':'');if(CUSTOM_THEMES[key])return CUSTOM_THEMES[key];
+  const [th,ts]=rgbHsl(...hexRgb(hex)),src=dark?THEMES.siteDark:THEMES.site,sh=154,ss=.81;
+  const conv=(r,g,b)=>{const [h,s,l]=rgbHsl(r,g,b);if(s<.12)return [r,g,b];return hslRgb(h+th-sh,Math.min(1,s*ts/ss),l);};
+  const map=v=>{
+    if(typeof v==='string'){
+      if(/^#[0-9a-f]{3,6}$/i.test(v))return '#'+conv(...hexRgb(v)).map(x=>x.toString(16).padStart(2,'0')).join('');
+      return v.replace(/rgba\((\d+),(\d+),(\d+),/g,(m,r,g,b)=>'rgba('+conv(+r,+g,+b).join(',')+',');
+    }
+    if(Array.isArray(v))return v.length===3&&v.every(x=>typeof x==='number')?conv(...v):v.map(map);
+    if(v&&typeof v==='object'){const o={};for(const k in v)o[k]=k==='hl'?v[k]:map(v[k]);return o;}
+    return v;
+  };
+  return CUSTOM_THEMES[key]=map(src);
+}
+function themeOf(st){return /^custom/.test(st.theme)?customTheme(st.themeCol||'#d0202a',st.theme==='customDark'):(THEMES[st.theme]||THEMES.warm);}
 const tk=(T,k)=>(T&&T[k]!==undefined)?T[k]:THEME_DEFAULTS[k];
 const THEMES = {
   warm:{
@@ -1264,7 +1291,7 @@ function initStripsUI(cv,toCanvas){
 }
 
 function render(ctx,st){
-  const M=MODES[st.mode],T=THEMES[st.theme]||THEMES.warm,q=M.quote?st.quote:(M.strips?st.strips:null);
+  const M=MODES[st.mode],T=themeOf(st),q=M.quote?st.quote:(M.strips?st.strips:null);
   if(q)L=quoteLayout(q);   // setFormat() puts the stock layout back on the next draw
   if(ctx.canvas.id==='cv')QBOX=null;
   const head=!q||q.showHead,foot=!q||q.showFoot,logoAt=q?q.logoPos:'header';
@@ -1447,7 +1474,10 @@ function shadePic(ctx,a,dir,from,to){
   else ctx.fillStyle=`rgba(0,0,0,${a*.6})`;
   ctx.fillRect(x0,p0,x1-x0,p1-p0);ctx.restore();
 }
+let HEAD_OFF={},HEAD_RECTS=[];   // per-part drag offsets of the headline card, and where each part landed
 function drawHeadline(ctx,st,T){
+  HEAD_RECTS=[];const offs=(st.head&&st.head.off)||{};
+  const part=(p,x,y,w,h,fn)=>{const [dx,dy]=offs[p]||[0,0];ctx.save();ctx.translate(dx,dy);fn();ctx.restore();HEAD_RECTS.push({p,x:x+dx,y:y+dy,w,h});};
   const hd={...HEAD_DEFAULT,...(st.head||{})},[p0,p1]=L.panel,k=L.rowH/62;
   const word=(hd.kicker||'').trim(),above=(hd.above||'').trim(),below=(hd.below||'').trim();
   const names=(hd.names||[]).filter(n=>n&&(n.name||'').trim());
@@ -1472,13 +1502,15 @@ function drawHeadline(ctx,st,T){
   else if(hd.pos==='top')shadePic(ctx,a,'y',p0,Math.min(p1,top+H0+200*k));
   else shadePic(ctx,a);
   let y=top;
+  const tw0=()=>{ctx.font=`700 ${wz}px "WRC Clean"`;return ctx.measureText(word).width;};
   const soft=b=>{ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=b*k;ctx.shadowOffsetY=Math.round(b*k/4);};
-  if(above){
+  if(above){const y0=y;
+    part('above',X0,y0-4,maxW,Math.round(aZ*1.2)+8,()=>{
     ctx.save();ctx.font=`700 ${aZ}px "WRC Clean"`;try{ctx.letterSpacing=Math.round(aZ*.18)+'px';}catch(e){}
-    ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='top';soft(8);ctx.fillText(above.toLocaleUpperCase(),cx,y);ctx.restore();
+    ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='top';soft(8);ctx.fillText(above.toLocaleUpperCase(),cx,y0);ctx.restore();});
     y+=Math.round(aZ*1.2)+gap;
   }
-  if(word){
+  if(word){part('word',Math.round(cx-tw0()/2-pad),y,Math.round(tw0()+pad*2),KH,()=>{
     ctx.font=`700 ${wz}px "WRC Clean"`;const tw=ctx.measureText(word).width,base=y+(boxy?Math.round(pad/2):0)+Math.round(wz*.78);
     if(hd.style==='glitch')drawGlitchTitle(ctx,word,cx-tw/2,base,wz,'#ffffff',90);
     else{
@@ -1489,15 +1521,17 @@ function drawHeadline(ctx,st,T){
         if(hd.style==='outline'){ctx.lineWidth=Math.max(2,Math.round(wz*.03));ctx.strokeStyle='#ffffff';ctx.strokeText(word,cx,base);}
         else{ctx.fillStyle=hd.style==='gold'?vgrad(ctx,base-wz*.78,base,tk(T,'hl')):'#ffffff';ctx.fillText(word,cx,base);}}
       ctx.restore();
-    }
+    }});
     y+=KH+gap;
   }
   if(bl.length){
     const lh=Math.round(bZ*1.22);
+    const y0=y;part('below',X0,y0,maxW,bl.length*lh,()=>{
     ctx.save();ctx.font=`700 ${bZ}px "WRC Clean"`;ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='top';soft(10);
-    bl.forEach((l,i)=>ctx.fillText(l,cx,y+i*lh));ctx.restore();y+=bl.length*lh+gap;
+    bl.forEach((l,i)=>ctx.fillText(l,cx,y0+i*lh));ctx.restore();});y+=bl.length*lh+gap;
   }
-  cr.forEach(r=>{let x=Math.round(cx-r.w/2);r.ix.forEach(i=>{nameChip(ctx,x,y,chH,names[i],T);x+=ws[i]+cg;});y+=chH+5+cg;});
+  if(cr.length){const y0=y,cw=Math.max(...cr.map(r=>r.w)),chT=cr.length*(chH+5+cg)-cg;
+    part('names',Math.round(cx-cw/2),y0,cw,chT,()=>{let yy=y0;cr.forEach(r=>{let x=Math.round(cx-r.w/2);r.ix.forEach(i=>{nameChip(ctx,x,yy,chH,names[i],T);x+=ws[i]+cg;});yy+=chH+5+cg;});});}
 }
 
 /* ---------- stat panel ----------
@@ -1626,7 +1660,7 @@ function refreshFieldVisibility(){
 }
 function readRows(){return [...$('rows').children].map(d=>{const o={pos:'',name:'',flag:'',badge:'',move:'',a:'',b:''};d.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value.trim());return o;});}
 function readState(){
-  return {mode:MODE,title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,
+  return {mode:MODE,title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,
           logo:$('logo').value,valAlign:$('valAlign').value,hl:$('hl').value===''?-1:+$('hl').value,
           show:{flag:$('showFlag').checked,badge:$('showBadge').checked,move:$('showMove').checked},rows:readRows(),
           quote:{text:$('qText').value,sub:$('qSub').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
@@ -1651,7 +1685,7 @@ function buildHeadNames(names){
   }
 }
 function readHead(){
-  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,size:+$('hSize').value,fade:+$('hFade').value,
+  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
     names:[...$('hNames').children].map(d=>({name:d.querySelector('[data-h=name]').value.trim(),flag:d.querySelector('[data-h=flag]').value,badge:d.querySelector('[data-h=badge]').value}))};
 }
 function extrasUI(){const p=$('tPhoto').value;document.querySelectorAll('.tPic').forEach(d=>d.hidden=p==='none');$('tShareLbl').textContent=p==='behind'?'Darken the picture':'Picture share';
@@ -1699,14 +1733,14 @@ function loadMode(m){
   $('stripL').value=(s&&s.stripL)||'';$('stripR').value=(s&&s.stripR)||'';
   $('tallyBox').hidden=m==='results';$('gapLbl').textContent=m==='results'?'Time column shows':m==='points'?'Total column shows':'Value 2 shows';
   const hd={...HEAD_DEFAULT,...((s&&s.head)||{})};
-  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;buildHeadNames(hd.names||[]);
+  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
   const sx={...STATS_DEFAULT,...((s&&s.sx)||{})};
   $('sxStyle').value=sx.style;$('sxPos').value=sx.pos;$('sxSize').value=sx.size;$('sxFade').value=sx.fade;$('sxHead').value=sx.head;$('sxHStyle').value=sx.hStyle;$('sxHSize').value=sx.hSize;
   $('sxHPos').value=sx.hPos;$('sxFx').value=sx.fx;$('sxFy').value=sx.fy;$('sxHFx').value=sx.hfx;$('sxHFy').value=sx.hfy;$('sxAlpha').value=sx.alpha;
   $('sxLabelCol').value=sx.labelCol;$('sxValueCol').value=sx.valueCol;$('sxHlCol').value=sx.hlCol;$('sxHeadCol').value=sx.headCol;$('sxCustom').value=sx.custom;extrasUI();
   buildRows(s?s.rows:DEFAULTS[m]);
   $('title').value=s?s.title:M.title;$('foot').value=s?s.foot:M.foot;$('rally').value=s?(s.rally||''):M.rally;
-  $('start').value=s?(s.start||''):'';$('theme').value=(s&&s.theme)||M.theme;
+  $('start').value=s?(s.start||''):'';$('theme').value=(s&&s.theme)||M.theme;if(s&&s.themeCol)$('themeCol').value=s.themeCol;$('themeColBox').hidden=!/^custom/.test($('theme').value);
   $('hl').value=s?(s.hl<0?'':String(s.hl)):'0';
   $('rowsUI').hidden=$('hlBox').hidden=!!(M.strips||(M.quote&&!M.stats));$('quoteUI').hidden=!M.quote;$('stripsUI').hidden=!M.strips;
   $('headUI').hidden=!M.headline;$('statsUI').hidden=!M.stats;$('quoteUI').classList.toggle('noText',!!(M.headline||M.stats));
@@ -1922,7 +1956,8 @@ async function openProject(file){
   $('logo').value=PS_LOGOS[lg]?lg:'media';
   loadMode(m);
   $('mode').addEventListener('change',()=>{loadMode($('mode').value);redraw();});
-  ['title','foot','rally','start','theme','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
+  ['title','foot','rally','start','theme','themeCol','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
+  $('theme').addEventListener('input',()=>{$('themeColBox').hidden=!/^custom/.test($('theme').value);});
   ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
     .forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('tPhoto').addEventListener('input',()=>{extrasUI();redraw();});
@@ -1991,6 +2026,20 @@ async function openProject(file){
     redraw();
   });
   const endS=()=>{sdrag=null;};cv.addEventListener('pointerup',endS);cv.addEventListener('pointercancel',endS);
+  // headline card: drag each part (line above, big word, line under, names) on its own
+  let hdrag=null;
+  const headHit=pt=>[...HEAD_RECTS].reverse().find(b=>pt.x>=b.x&&pt.x<=b.x+b.w&&pt.y>=b.y&&pt.y<=b.y+b.h);
+  cv.addEventListener('pointerdown',e=>{
+    if(!MODES[MODE].headline)return;const pt=toCanvas(e),r=headHit(pt);if(!r)return;
+    const o=HEAD_OFF[r.p]||[0,0];hdrag={p:r.p,sx:pt.x,sy:pt.y,ox:o[0],oy:o[1]};cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();
+  },true);
+  cv.addEventListener('pointermove',e=>{
+    if(!MODES[MODE].headline)return;const pt=toCanvas(e);
+    if(!hdrag){if(headHit(pt))cv.style.cursor='move';return;}
+    HEAD_OFF[hdrag.p]=[Math.round(hdrag.ox+pt.x-hdrag.sx),Math.round(hdrag.oy+pt.y-hdrag.sy)];redraw();e.stopImmediatePropagation();
+  },true);
+  const endH=()=>{hdrag=null;};cv.addEventListener('pointerup',endH);cv.addEventListener('pointercancel',endH);
+  $('hReset').onclick=()=>{HEAD_OFF={};redraw();};
   cv.addEventListener('dragover',e=>{if(MODES[MODE].quote){e.preventDefault();cv.classList.add('dropping');}});
   cv.addEventListener('dragleave',()=>cv.classList.remove('dropping'));
   cv.addEventListener('drop',e=>{cv.classList.remove('dropping');if(!MODES[MODE].quote)return;e.preventDefault();setPhoto(e.dataTransfer.files[0]);});

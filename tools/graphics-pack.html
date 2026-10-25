@@ -63,7 +63,9 @@
   .checks{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px}
   .checks label{display:inline-flex;align-items:center;margin:0;font-size:12px;color:var(--text);cursor:pointer}
   .row{display:grid;gap:3px;align-items:center;margin-bottom:3px}
-  .row .n{color:var(--muted);text-align:right;font-size:10.5px}
+  .row .n{color:var(--muted);text-align:right;font-size:10.5px;display:flex;align-items:center;justify-content:flex-end;gap:1px}
+  .row .n .mv{padding:0 2px;font-size:8px;line-height:1;min-width:0;height:auto;background:none;border:0;color:var(--muted);cursor:pointer}
+  .row .n .mv:hover{color:var(--text)}
   .row.igOnly .n{color:#c9a5e8}
   .row.twoOnly .n{color:#8fd1ad}
   .hdr{margin-bottom:3px;font-size:10.5px;color:var(--muted);white-space:nowrap}
@@ -160,6 +162,7 @@
       <label><input type="checkbox" id="teamCol">Name cells in team colours</label>
       <label><input type="checkbox" id="twoCol">Two columns (up to 20 rows)</label>
     </div>
+    <div id="teamColBox" hidden><div class="hdr">Team colours <small>(for the brands in the rows; Reset = the brand's own colours)</small></div><div id="teamColList" style="display:flex;flex-wrap:wrap;gap:6px 14px"></div></div>
     </div>
     <h2>Rows</h2>
     <div class="row hdr" id="hdr"></div>
@@ -948,11 +951,13 @@ function hexRgb(h){h=String(h||'').replace('#','');if(h.length===3)h=h.split('')
 const lum=([r,g,b])=>(0.299*r+0.587*g+0.114*b)/255;
 const shade=(c,f)=>`rgb(${c.map(v=>Math.round(f<0?v*(1+f):v+(255-v)*f)).join(',')})`;
 // fill + text colour for a chip or text box style
+let TEAM_OVR={};   // brand -> picked team colour (overrides the brand's own colours)
 function paint(ctx,y,h,style,T,o){
   o=o||{};const g=(a,b)=>vgrad(ctx,y,y+h,[[0,a],[1,b]]);
   if(style==='gold')return {fill:vgrad(ctx,y,y+h,tk(T,'hl')),ink:tk(T,'inkHl')};
   if(style==='light')return {fill:cellFill(ctx,y,h,false,.92,T),ink:tk(T,'ink')};
   if(style==='strip')return {fill:g(T.strip[0],T.strip[1]),ink:'#ffffff'};
+  if(style==='brand'&&TEAM_OVR[o.badge]){const c=hexRgb(TEAM_OVR[o.badge]);return {fill:g(shade(c,.12),shade(c,-.22)),ink:lum(c)>.62?'#1c1c1c':'#ffffff'};}
   if(style==='brand'&&BADGES[o.badge]){const b=BADGES[o.badge];return {fill:g(b.bg[0],b.bg[1]),ink:lum(hexRgb(b.bg[0]))>.62?'#1c1c1c':'#ffffff'};}
   if(style==='red')return {fill:g('#ea2a2f','#b5141b'),ink:'#ffffff'};
   if(style==='blue')return {fill:g('#2a4f8c','#10265a'),ink:'#ffffff'};
@@ -1483,7 +1488,7 @@ function shadePic(ctx,a,dir,from,to){
   else ctx.fillStyle=`rgba(${SHADE_RGB},${a*.6})`;
   ctx.fillRect(x0,p0,x1-x0,p1-p0);ctx.restore();
 }
-let HEAD_OFF={},HEAD_RECTS=[];   // per-part drag offsets of the headline card, and where each part landed
+let HEAD_OFF={},HEAD_RECTS=[],HEAD_BLOCK=null;   // per-part drag offsets of the headline card, and where each part landed
 function drawHeadline(ctx,st,T){
   const hd0=st.head||{},dark=hd0.ink==='black',INK=dark?'#111111':'#ffffff';if(!hd0.shadeCol&&dark)SHADE_RGB='255,255,255';
   CHIP_CAR_FIRST=(st.head||{}).order==='car';HEAD_RECTS=[];const offs=(st.head&&st.head.off)||{};
@@ -1512,7 +1517,7 @@ function drawHeadline(ctx,st,T){
   if(sMid>p0+ph*.62)shadePic(ctx,a,'y',p1,Math.max(p0,sTop-200*k));
   else if(sMid<p0+ph*.38)shadePic(ctx,a,'y',p0,Math.min(p1,sTop+H0+200*k));
   else shadePic(ctx,a);
-  let y=top;
+  let y=top;HEAD_BLOCK={top,H0,mid:(p0+p1)/2};
   const tw0=()=>{ctx.font=`700 ${wz}px "WRC Clean"`;return ctx.measureText(word).width;};
   const soft=b=>{ctx.shadowColor=dark?'rgba(255,255,255,.6)':'rgba(0,0,0,.55)';ctx.shadowBlur=b*k;ctx.shadowOffsetY=Math.round(b*k/4);};
   if(above){const y0=y;
@@ -1640,21 +1645,41 @@ const flagOptions='<option value="">auto</option><option value="-">none</option>
 const moveOptions='<option value=""></option><option value="=">=</option><option value="up">▲</option><option value="down">▼</option>';
 let MODE='points';
 
-function gridCols(){const M=MODES[MODE];return '22px '+M.fields.filter(([k])=>visibleField(k)).map(([k])=>FIELD_W[k]).join(' ');}
+function gridCols(){const M=MODES[MODE];return '46px '+M.fields.filter(([k])=>visibleField(k)).map(([k])=>FIELD_W[k]).join(' ');}
 function visibleField(k){return !((k==='flag'&&!$('showFlag').checked)||(k==='badge'&&!$('showBadge').checked)||(k==='move'&&!$('showMove').checked));}
+function teamColUI(){
+  const box=$('teamColBox');box.hidden=!$('teamCol').checked;if(box.hidden)return;
+  const used=[...new Set(readRows().map(r=>r.badge).filter(b=>BADGES[b]))],list=$('teamColList');
+  if(list.dataset.keys===used.join(','))return;list.dataset.keys=used.join(',');list.innerHTML='';
+  used.forEach(b=>{
+    const d=document.createElement('label');d.style.cssText='display:flex;align-items:center;gap:5px';
+    d.innerHTML=`<span>${BADGES[b].name}</span><input type="color" style="width:34px;height:22px;padding:0"><button type="button">Reset</button>`;
+    const c=d.querySelector('input');c.value=TEAM_OVR[b]||BADGES[b].bg[0];
+    c.addEventListener('input',()=>{TEAM_OVR[b]=c.value;redraw();});
+    d.querySelector('button').onclick=()=>{delete TEAM_OVR[b];c.value=BADGES[b].bg[0];redraw();};
+    list.appendChild(d);
+  });
+}
+function moveRow(i,d){
+  const j=i+d,rs=readRows();if(j<0||j>=rs.length)return;
+  [rs[i],rs[j]]=[rs[j],rs[i]];
+  const hl=$('hl');if(hl.value!==''){const h=+hl.value;if(h===i)hl.value=String(j);else if(h===j)hl.value=String(i);}
+  buildRows(rs);redraw();
+}
 function buildRows(rows){
   const M=MODES[MODE];
   $('rows').innerHTML='';
   for(let i=0;i<MAX_ROWS;i++){
     const r=rows[i]||{};
     const d=document.createElement('div');d.className='row'+(i>=FORMATS.ig.L.rows?' twoOnly':i>=FORMATS.screen.L.rows?' igOnly':'');
-    d.innerHTML=`<span class="n">${i+1}</span>`+M.fields.map(([k])=>{
+    d.innerHTML=`<span class="n"><button type="button" class="mv" data-d="-1" title="Move up">▲</button><button type="button" class="mv" data-d="1" title="Move down">▼</button>${i+1}</span>`+M.fields.map(([k])=>{
       if(k==='badge')return `<select data-k="badge">${badgeOptions}</select>`;
       if(k==='flag')return `<select data-k="flag">${flagOptions}</select>`;
       if(k==='move')return `<select data-k="move">${moveOptions}</select>`;
       return `<input data-k="${k}"${k==='pos'?' placeholder="'+(i+1)+'"':''}>`;
     }).join('');
     d.querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;el.value=k==='move'?normMove(r[k]):(r[k]||'');el.addEventListener('input',()=>redraw());});
+    d.querySelectorAll('.mv').forEach(b=>b.onclick=()=>moveRow(i,+b.dataset.d));
     $('rows').appendChild(d);
   }
   refreshFieldVisibility();
@@ -1681,7 +1706,7 @@ function readState(){
           strips:SS?JSON.parse(JSON.stringify(SS)):null,
           stripL:$('stripL').value,stripR:$('stripR').value,
           opt:{gap:$('gapMode').value,tally:$('tally').value,photo:$('tPhoto').value,share:+$('tShare').value,zoom:+$('tZoom').value,fx:+$('tFx').value,fy:+$('tFy').value,
-               teamCol:$('teamCol').checked,twoCol:$('twoCol').checked,cells:$('tCells').value,cellCustom:$('tCellCustom').value,cellAlpha:+$('tCellAlpha').value},
+               teamCol:$('teamCol').checked,teamCols:{...TEAM_OVR},twoCol:$('twoCol').checked,cells:$('tCells').value,cellCustom:$('tCellCustom').value,cellAlpha:+$('tCellAlpha').value},
           head:readHead(),sx:{style:$('sxStyle').value,pos:$('sxPos').value,size:+$('sxSize').value,fade:+$('sxFade').value,head:$('sxHead').value,hStyle:$('sxHStyle').value,hSize:+$('sxHSize').value,
             hPos:$('sxHPos').value,fx:+$('sxFx').value,fy:+$('sxFy').value,hfx:+$('sxHFx').value,hfy:+$('sxHFy').value,
             labelCol:$('sxLabelCol').value,valueCol:$('sxValueCol').value,hlCol:$('sxHlCol').value,headCol:$('sxHeadCol').value,custom:$('sxCustom').value,alpha:+$('sxAlpha').value}};
@@ -1740,7 +1765,7 @@ function loadMode(m){
   $('showFlag').checked=!!show.flag;$('showBadge').checked=!!show.badge;$('showMove').checked=!!show.move;
   const o={...OPT_DEFAULT,...((s&&s.opt)||{})};
   $('gapMode').value=o.gap;$('tally').value=o.tally;$('tPhoto').value=o.photo;$('tShare').value=o.share;$('tZoom').value=o.zoom;$('tFx').value=o.fx;$('tFy').value=o.fy;
-  $('teamCol').checked=!!o.teamCol;$('twoCol').checked=!!o.twoCol;$('tCells').value=o.cells;$('tCellCustom').value=o.cellCustom;$('tCellAlpha').value=o.cellAlpha;extrasUI();
+  $('teamCol').checked=!!o.teamCol;TEAM_OVR={...(o.teamCols||{})};$('twoCol').checked=!!o.twoCol;$('tCells').value=o.cells;$('tCellCustom').value=o.cellCustom;$('tCellAlpha').value=o.cellAlpha;extrasUI();
   $('stripL').value=(s&&s.stripL)||'';$('stripR').value=(s&&s.stripR)||'';
   $('tallyBox').hidden=m==='results';$('gapLbl').textContent=m==='results'?'Time column shows':m==='points'?'Total column shows':'Value 2 shows';
   const hd={...HEAD_DEFAULT,...((s&&s.head)||{})};
@@ -1787,7 +1812,7 @@ function redraw(fromImage){
   $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');
   $('sbMode').textContent=MODES[MODE].label;$('sbSize').textContent=W+' × '+H;
   $('sbExp').textContent=FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
-  render(cv.getContext('2d'),st);if(!fromImage)save(st);
+  render(cv.getContext('2d'),st);if(!fromImage)save(st);teamColUI();
 }
 
 function matchBadge(s){
@@ -2047,7 +2072,10 @@ async function openProject(file){
   cv.addEventListener('pointermove',e=>{
     if(!MODES[MODE].headline)return;const pt=toCanvas(e);
     if(!hdrag){if(headHit(pt))cv.style.cursor='move';return;}
-    HEAD_OFF[hdrag.p]=[Math.round(hdrag.ox+pt.x-hdrag.sx),Math.round(hdrag.oy+pt.y-hdrag.sy)];redraw();e.stopImmediatePropagation();
+    let dx=Math.round(hdrag.ox+pt.x-hdrag.sx),dy=Math.round(hdrag.oy+pt.y-hdrag.sy);const SN=24;
+    if(Math.abs(dx)<SN)dx=0;   // the block is laid out centred, so dx 0 = centred across
+    if(HEAD_BLOCK){const c=HEAD_BLOCK.mid-(HEAD_BLOCK.top+HEAD_BLOCK.H0/2);if(Math.abs(dy-c)<SN)dy=Math.round(c);}   // centred down
+    HEAD_OFF[hdrag.p]=[dx,dy];redraw();e.stopImmediatePropagation();
   },true);
   const endH=()=>{hdrag=null;};cv.addEventListener('pointerup',endH);cv.addEventListener('pointercancel',endH);
   $('hShadeCol').addEventListener('input',()=>{$('hShadeAuto').checked=false;redraw();});

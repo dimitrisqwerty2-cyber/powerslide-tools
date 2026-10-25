@@ -25,6 +25,11 @@
   .stage{position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--work)}
   .stage canvas{position:absolute;inset:0;margin:auto;display:block;width:auto;height:auto;max-width:calc(100% - 56px);max-height:calc(100% - 56px);
                 box-shadow:0 0 0 1px #0d0d0d,0 12px 40px rgba(0,0,0,.6)}
+  .colHide{display:none!important}
+  .stage.col canvas{bottom:130px;max-height:calc(100% - 186px)}
+  #colStrip{position:absolute;left:0;right:0;bottom:14px;height:100px;align-items:center;display:flex;justify-content:center;gap:8px;overflow-x:auto;padding:0 20px}
+  #colStrip canvas{position:static;margin:0;max-width:none;max-height:none;box-shadow:none;width:72px;height:90px;cursor:pointer;outline:1px solid var(--line2);flex:none}
+  #colStrip canvas.on{outline:2px solid var(--accent);outline-offset:2px}
   .stage canvas.dropping{outline:2px dashed var(--accent);outline-offset:4px}
   .side{min-height:0;overflow-y:auto;overflow-x:hidden;background:var(--panel);border-left:1px solid var(--line);padding:0 12px 28px}
   .side::-webkit-scrollbar{width:11px}
@@ -116,25 +121,25 @@
   </div>
 </div>
 <div class="wrap">
-  <div class="stage"><canvas id="cv" width="1440" height="1080"></canvas></div>
+  <div class="stage"><canvas id="cv" width="1440" height="1080"></canvas><div id="colStrip" hidden></div></div>
   <div class="side">
     <div class="paneltabs"><span class="on">Properties</span></div>
     <h2>Document</h2>
     <div class="grid2">
       <div><label>Mode</label><select id="mode"></select></div>
       <div><label>Logo</label><select id="logo"></select></div>
-      <div><label>Title</label><input id="title"></div>
-      <div id="hlBox"><label>Highlighted row</label><select id="hl"></select></div>
-      <div><label>Footer</label><input id="foot"></div>
-      <div id="rallyBox"><label id="rallyLbl">Rally</label><input id="rally"></div>
+      <div class="noCol"><label>Title</label><input id="title"></div>
+      <div id="hlBox" class="noCol"><label>Highlighted row</label><select id="hl"></select></div>
+      <div class="noCol"><label>Footer</label><input id="foot"></div>
+      <div id="rallyBox" class="noCol"><label id="rallyLbl">Rally</label><input id="rally"></div>
       <div><label>Colours</label><select id="theme"><option value="warm">Warm (Points screen)</option><option value="cool">Cool (Results screen)</option><option value="site">Powerslide site</option><option value="siteDark">Powerslide site (dark)</option><option value="custom">Custom colour…</option><option value="customDark">Custom colour (dark)…</option></select></div>
       <div id="themeColBox" hidden><label>Theme colour</label><input type="color" id="themeCol" value="#d0202a"></div>
       <div><label>Picture tint colour</label><label style="display:inline"><input type="checkbox" id="hShadeAuto" checked> Auto</label> <input type="color" id="hShadeCol" value="#7a1010"></div>
       <div><label>Tint over the whole picture</label><input type="range" id="pTint" min="0" max="90" value="0"></div>
-      <div id="startBox"><label>Numbering starts at</label><input id="start" inputmode="numeric" placeholder="1"></div>
-      <div id="alignBox"><label id="alignLbl">Time alignment</label><select id="valAlign"><option value="">Default</option><option value="left">Left</option><option value="center">Centred</option><option value="right">Right</option></select></div>
-      <div><label>Top strip text <small>(left)</small></label><input id="stripL" placeholder="e.g. Round 13 · Rally Italia Sardegna"></div>
-      <div><label>Top strip text <small>(right)</small></label><input id="stripR" placeholder="e.g. Next rally 6-8 Nov · 1/8"></div>
+      <div id="startBox" class="noCol"><label>Numbering starts at</label><input id="start" inputmode="numeric" placeholder="1"></div>
+      <div id="alignBox" class="noCol"><label id="alignLbl">Time alignment</label><select id="valAlign"><option value="">Default</option><option value="left">Left</option><option value="center">Centred</option><option value="right">Right</option></select></div>
+      <div class="noCol"><label>Top strip text <small>(left)</small></label><input id="stripL" placeholder="e.g. Round 13 · Rally Italia Sardegna"></div>
+      <div class="noCol"><label>Top strip text <small>(right)</small></label><input id="stripR" placeholder="e.g. Next rally 6-8 Nov · 1/8"></div>
     </div>
     <div id="rowsUI">
     <div class="checks" id="rowChecks">
@@ -269,27 +274,39 @@
       <div class="note">Drop a picture straight onto a strip in the preview, drag a picture to move it, scroll on it to zoom. Drag a row of chips or a text box to put it anywhere; scroll on a chip row to resize it. A chip can be text, an icon with text, a brand or a flag, in any colour; a brand chip with no text shows the brand name. "Copy chips to other strips" copies this strip's chips (text included) so you only change what differs.</div>
     </div>
     <div id="collageUI" hidden>
-      <h2>Collage</h2>
+      <h2>Slides</h2>
       <div class="grid2">
-        <div><label>Slides in the carousel</label><input type="number" id="colSlides" min="1" max="10" value="3"></div>
-        <div><label>Slide</label><div style="display:flex;gap:6px"><button id="colPrev" style="flex:1">‹ Previous</button><button id="colNext" style="flex:1">Next ›</button></div></div>
-        <div><label>Background top / bottom</label><input type="color" id="colBg" value="#0c1714"> <input type="color" id="colBg2" value="#06100d"></div>
-        <div><label>Accent colour</label><input type="color" id="colAccent" value="#2fe08a"></div>
+        <div><label id="colSlides">Slide 1 of 3</label><div style="display:flex;gap:6px"><button id="colPrev" style="flex:1" title="PageUp">‹ Previous</button><button id="colNext" style="flex:1" title="PageDown">Next ›</button></div></div>
+        <div><label>&nbsp;</label><div style="display:flex;gap:6px"><button id="colAddSlide" style="flex:1">Add slide</button><button id="colDelSlide" style="flex:1">Remove this slide</button></div></div>
+        <div><label>Background</label><select id="colBgMode"><option value="theme">Theme glow (Colours)</option><option value="custom">Own colours…</option></select></div>
+        <div id="colBgBox"><label>Top / bottom</label><input type="color" id="colBg" value="#0c1714"> <input type="color" id="colBg2" value="#06100d"></div>
+        <div><label>Accent colour</label><select id="colAccentMode"><option value="theme">Theme strip</option><option value="gold">Gold</option><option value="custom">Own colour…</option></select> <input type="color" id="colAccent" value="#2fe08a"></div>
       </div>
+      <div class="hdr" style="margin-top:8px">Photo layout for this slide <small>(empty frames: drop pictures in)</small></div>
       <div class="btns" style="flex-wrap:wrap">
-        <label class="primary" style="display:inline-flex;align-items:center;padding:4px 10px;cursor:pointer;border:1px solid var(--line2)">Add photos…<input type="file" id="colPic" accept="image/*" multiple hidden></label>
-        <button data-coladd="full">Full-slide photo</button>
-        <button data-coladd="title">Title</button><button data-coladd="headline">Accent headline</button>
-        <button data-coladd="text">Text</button><button data-coladd="caption">Caption box</button><button data-coladd="logo">Logo</button>
+        <button data-collayout="hero">Full photo</button><button data-collayout="heroPair">Full + 2 prints</button><button data-collayout="stack">3 prints</button>
+        <button data-collayout="grid">2×2 grid</button><button data-collayout="split">Top / bottom</button><button data-collayout="sides">Left / right</button>
       </div>
-      <div class="btns"><button id="colDup">Duplicate</button><button id="colUp">Bring forward</button><button id="colDown">Send back</button><button id="colDel">Delete</button></div>
+      <h2>Add</h2>
+      <div class="btns" style="flex-wrap:wrap">
+        <label class="primary" style="display:inline-flex;align-items:center;padding:4px 10px;cursor:pointer;border:1px solid var(--line2)">Photos…<input type="file" id="colPic" accept="image/*" multiple hidden></label>
+        <button data-coladd="photo">Empty print</button><button data-coladd="full">Full-slide photo</button>
+        <button data-coladd="title">Title</button><button data-coladd="glitch">Glitch word</button><button data-coladd="headline">Accent headline</button>
+        <button data-coladd="text">Text</button><button data-coladd="caption">Caption box</button><button data-coladd="names">Name tiles</button><button data-coladd="logo">Logo</button>
+      </div>
+      <h2>Selected</h2>
+      <div class="btns"><button id="colUndo" title="Ctrl+Z">Undo</button><button id="colDup" title="Ctrl+D">Duplicate</button><button id="colUp">Forward</button><button id="colDown">Back</button><button id="colDel" title="Delete">Delete</button></div>
       <div id="colItem" hidden>
-        <div class="hdr" style="margin-top:8px">Selected: <b id="colKind"></b></div>
+        <div class="hdr" style="margin-top:8px"><b id="colKind"></b></div>
         <div class="grid2">
           <div data-for="text" style="grid-column:1/-1"><label>Text <small>(Enter = new line)</small></label><textarea id="ciText" style="font-family:inherit;font-size:13px;min-height:52px;width:100%"></textarea></div>
+          <div data-for="names" style="grid-column:1/-1"><label>Names <small>(one per line: Name | flag | car, e.g. Elfyn Evans | GB | toyota)</small></label><textarea id="ciNames" style="font-family:inherit;font-size:13px;min-height:52px;width:100%"></textarea></div>
+          <div data-for="names"><label>Tile height</label><input type="range" id="ciChip" min="24" max="160" value="62"></div>
+          <div data-for="names"><label><input type="checkbox" id="ciStack"> One under the other</label></div>
+          <div data-for="text"><label>Look</label><select id="ciStyle"><option value="plain">Plain</option><option value="glitch">Glitch (like the title)</option><option value="gold">Gold</option><option value="outline">Outline</option></select></div>
           <div data-for="text"><label>Size</label><input type="range" id="ciSize" min="16" max="320" value="50"></div>
-          <div data-for="text"><label>Colour</label><select id="ciColor"><option value="white">White</option><option value="accent">Accent</option><option value="black">Black</option><option value="custom">Custom…</option></select> <input type="color" id="ciCustom" value="#ffffff"></div>
-          <div data-for="text"><label><input type="checkbox" id="ciBox"> On a box</label><input type="color" id="ciBoxCol" value="#2fe08a"></div>
+          <div data-for="text"><label>Colour</label><select id="ciColor"><option value="white">White</option><option value="accent">Accent</option><option value="gold">Gold</option><option value="black">Black</option><option value="custom">Custom…</option></select> <input type="color" id="ciCustom" value="#ffffff"></div>
+          <div data-for="text"><label><input type="checkbox" id="ciBox"> On a box</label><select id="ciBoxCol"><option value="accent">Accent</option><option value="gold">Gold</option><option value="white">White</option><option value="black">Black</option></select></div>
           <div data-for="text"><label>Alignment</label><select id="ciAlign"><option value="left">Left</option><option value="center">Centred</option><option value="right">Right</option></select></div>
           <div data-for="photo"><label>Picture</label><input type="file" id="ciPic" accept="image/*"></div>
           <div data-for="photo"><label>White border</label><input type="range" id="ciBorder" min="0" max="60" value="16"></div>
@@ -297,13 +314,12 @@
           <div data-for="photo"><label><input type="checkbox" id="ciShadow" checked> Drop shadow</label></div>
           <div data-for="photo"><label>Picture ← →</label><input type="range" id="ciFx" min="0" max="1" step="0.005" value="0.5"></div>
           <div data-for="photo"><label>Picture ↑ ↓</label><input type="range" id="ciFy" min="0" max="1" step="0.005" value="0.5"></div>
-          <div data-for="logo"><label>Logo colour</label><select id="ciInk"><option value="white">White</option><option value="black">Black</option><option value="own">Own colours</option></select></div>
+          <div data-for="logo"><label>Logo colour</label><select id="ciInk"><option value="white">White</option><option value="black">Black</option><option value="own">Own colours, no shadow</option></select></div>
           <div data-for="logo"><label>Logo size</label><input type="range" id="ciLogoSize" min="30" max="400" value="110"></div>
-          <div data-for="text photo logo"><label>Rotation</label><input type="range" id="ciRot" min="-45" max="45" step="0.5" value="0"></div>
+          <div data-for="text photo logo names"><label>Rotation</label><input type="range" id="ciRot" min="-45" max="45" step="0.5" value="0"></div>
         </div>
       </div>
-      <div class="note">The slides sit side by side as one long picture, so a photo dragged over a slide edge carries on onto the next slide. Click to select; drag to move; drag the square corner to resize (Shift keeps the shape), the round handle to rotate. Shift+drag or scroll on a photo moves / zooms the picture inside it. Drop pictures on the preview to add them (on a photo: replaces it). Arrow keys nudge, Delete removes.</div>
-      <div class="btns"><button class="primary" id="colExport">Export all slides 1080×1350</button><button id="colExport2">2160×2700</button></div>
+      <div class="note">The slides sit side by side as one long picture, so anything over a slide edge carries on onto the next slide; the strip under the preview shows them all. Click to select, drag to move (it snaps to the slide's edges, middle and other items; hold Alt to place freely), drag the square to resize (Shift keeps a photo's shape), the round handle to rotate. Shift+drag or scroll on a photo moves / zooms the picture in its frame. Drop pictures on the preview: on a frame they replace its picture, elsewhere they fill this slide's empty frames first. Ctrl+Z undo, Ctrl+D duplicate, arrows nudge, PageUp/PageDown change slide.</div>
     </div>
     <h2>Project</h2>
     <div class="grid2">
@@ -313,14 +329,14 @@
     <div class="note">A project file (.wrcproj) holds everything on this graphic: the mode, text, rows, options and its pictures. It saves into the same folder as your PNGs. Opening one puts it back exactly, even on another computer.</div>
     <h2>Export</h2>
     <div class="btns">
-      <button class="primary" id="png1">Download PNG 1440×1080</button>
-      <button id="png2">PNG 2880×2160</button>
+      <button class="primary noCol" id="png1">Download PNG 1440×1080</button>
+      <button id="png2" class="noCol">PNG 2880×2160</button>
     </div>
     <div class="btns">
       <button class="primary" id="ig1">Instagram post 1080×1350</button>
       <button id="ig2">Instagram 2160×2700</button>
     </div>
-    <div class="checks"><label><input type="checkbox" id="previewIg">Preview Instagram 4:5 layout</label></div>
+    <div class="checks noCol"><label><input type="checkbox" id="previewIg">Preview Instagram 4:5 layout</label></div>
     <div class="note" id="saveDirRow">Saving to: <b id="saveDirName"></b>
       <div class="btns" style="margin-top:6px"><button id="saveDirPick">Choose save folder…</button><button id="saveDirClear" hidden>Use Downloads again</button></div>
       <div id="saveMsg"></div>
@@ -1826,8 +1842,10 @@ function loadMode(m){
   $('rowsUI').hidden=$('hlBox').hidden=!!(M.strips||(M.quote&&!M.stats));$('quoteUI').hidden=!M.quote;$('stripsUI').hidden=!M.strips;
   $('headUI').hidden=!M.headline;$('statsUI').hidden=!M.stats;$('quoteUI').classList.toggle('noText',!!(M.headline||M.stats));
   $('extrasUI').hidden=$('rowChecks').hidden=!!M.stats;
-  $('collageUI').hidden=!M.collage;
-  if(M.collage){$('rowsUI').hidden=$('quoteUI').hidden=true;COL=JSON.parse(JSON.stringify((s&&s.collage)||COL_DEFAULT));COL_SEL=-1;COL_SLIDE=0;colUI();if(ready)colLoadImgs();}
+  $('collageUI').hidden=!M.collage;document.querySelectorAll('.noCol').forEach(e=>e.classList.toggle('colHide',!!M.collage));
+  $('tabScreen').classList.toggle('colHide',!!M.collage);document.querySelector('.stage').classList.toggle('col',!!M.collage);
+  $('ig1').textContent=M.collage?'Export all slides 1080×1350':'Instagram post 1080×1350';$('ig2').textContent=M.collage?'All slides 2160×2700':'Instagram 2160×2700';
+  if(M.collage){$('rowsUI').hidden=$('quoteUI').hidden=true;COL=JSON.parse(JSON.stringify((s&&s.collage)||COL_DEFAULT));if(!COL.bgMode)COL.bgMode='custom';if(!COL.accentMode)COL.accentMode='custom';COL_SEL=-1;COL_SLIDE=0;COL_HIST.length=0;colUI();if(ready)colLoadImgs();}
   if(M.strips){SS=normStrips(s&&s.strips,M.grid?GRID_DEFAULT:STRIPS_DEFAULT);STRIP_IMG.length=0;buildStripUI();if(ready)loadStripImgs();}
   const q={...QUOTE_DEFAULT,...((s&&s.quote)||{})};
   $('qText').value=q.text;$('qSub').value=q.sub;$('qStyle').value=q.style;$('qPlace').value=q.place;
@@ -1859,7 +1877,7 @@ function redraw(fromImage){
   $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');
   $('sbMode').textContent=MODES[MODE].label;$('sbSize').textContent=W+' × '+H;
   $('sbExp').textContent=FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
-  render(cv.getContext('2d'),st);if(!fromImage)save(st);teamColUI();
+  render(cv.getContext('2d'),st);if(!fromImage)save(st);teamColUI();colThumbs();
 }
 
 function matchBadge(s){
@@ -1905,6 +1923,7 @@ function onGridKey(e){
 }
 
 function exportPNG(scale,fmt='screen'){
+  if(MODES[MODE].collage){colExport(scale>1?2:1);return;}
   withFormat(fmt,()=>{
     const c=document.createElement('canvas');c.width=W*scale;c.height=H*scale;
     const x=c.getContext('2d');x.scale(scale,scale);render(x,readState());
@@ -2029,25 +2048,43 @@ async function openProject(file){
 /* ---------- recap collage ----------
    An Instagram carousel laid out as one long panorama (slides side by side), after the Toksport
    season recaps: tilted photos with white borders, big titles, accent headlines and caption boxes.
-   Items can sit across a slide edge, so they carry on onto the next slide. */
-const COL_W=1440,COL_H=1800;
-const COL_DEFAULT={slides:3,bg:'#0c1714',bg2:'#06100d',accent:'#2fe08a',items:[
-  {t:'text',text:'RECAP 2026',x:90,y:80,size:150,color:'white',box:false,rot:0,align:'left'},
-  {t:'logo',x:1080,y:96,size:110,ink:'white',rot:0},
-  {t:'text',text:'WIN IN THE SAFARI\nCELEBRATING IN HELL\'S GATE',x:90,y:1330,size:84,color:'accent',box:false,rot:0,align:'left'},
-  {t:'text',text:'Starting the season in Kenya with a demanding safari adventure',x:90,y:1560,size:44,color:'white',box:false,rot:0,align:'left'},
-  {t:'text',text:'Swipe »',x:1220,y:1700,size:40,color:'white',box:false,rot:0,align:'left'}
+   Items can sit across a slide edge, so they carry on onto the next slide. The background and accent
+   follow the Colours theme unless set by hand; text can use the pack's glitch / gold title looks and
+   the name tiles from the headline card. */
+const COL_W=1440,COL_H=1800,COL_SNAP=18;
+const COL_DEFAULT={slides:3,bgMode:'theme',bg:'#0c1714',bg2:'#06100d',accentMode:'theme',accent:'#2fe08a',items:[
+  {t:'text',text:'RECAP 2026',x:90,y:80,size:150,color:'white',style:'plain',box:false,rot:0,align:'left'},
+  {t:'logo',x:1060,y:96,size:110,ink:'white',rot:0},
+  {t:'photo',id:'demo1',x:120,y:420,w:820,h:600,rot:-4,border:16,zoom:1,fx:.5,fy:.5},
+  {t:'photo',id:'demo2',x:1050,y:620,w:700,h:520,rot:5,border:16,zoom:1,fx:.5,fy:.5},
+  {t:'text',text:'WIN IN THE SAFARI\nCELEBRATING IN HELL\'S GATE',x:90,y:1300,size:84,color:'accent',style:'plain',box:false,rot:0,align:'left'},
+  {t:'text',text:'Starting the season in Kenya with a demanding safari adventure',x:90,y:1530,size:44,color:'white',style:'plain',box:false,rot:0,align:'left'},
+  {t:'text',text:'Swipe »',x:1200,y:1690,size:40,color:'white',style:'plain',box:false,rot:0,align:'left'}
 ]};
-let COL=JSON.parse(JSON.stringify(COL_DEFAULT)),COL_SLIDE=0,COL_SEL=-1;
+let COL=JSON.parse(JSON.stringify(COL_DEFAULT)),COL_SLIDE=0,COL_SEL=-1,COL_T=THEMES.siteDark,COL_GUIDES=[];
 const COL_IMG={};   // photo id -> image (pictures kept in IndexedDB as colPhoto_<id>)
 const colKey=id=>'colPhoto_'+id;
-function colInk(c){return c==='accent'?COL.accent:c==='white'?'#ffffff':c==='black'?'#111111':c;}
-function colTextLines(it){return String(it.text||'').split('\n');}
-// item size in panorama px (text is measured)
+const colNewId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+// accent: the theme's strip colour, the gold highlight, or a picked colour
+function colAccent(){
+  if(COL.accentMode==='gold')return tk(COL_T,'hl')[1][1];
+  if(COL.accentMode==='custom')return COL.accent;
+  const m=String(COL_T.strip[0]).match(/rgba?\((\d+),(\d+),(\d+)/);
+  return m?'#'+[m[1],m[2],m[3]].map(v=>(+v).toString(16).padStart(2,'0')).join(''):COL.accent;
+}
+function colInk(c){return c==='accent'?colAccent():c==='white'?'#ffffff':c==='black'?'#111111':c==='gold'?tk(COL_T,'hl')[1][1]:c;}
+const colLines=it=>String(it.text||'').split('\n');
+// "Name | flag | car" per line -> name tiles
+function colNames(it){return String(it.text||'').split('\n').map(l=>l.split('|').map(x=>x.trim())).filter(p=>p[0]).map(([name,flag,badge])=>{
+  const b=(badge||'').toLowerCase(),key=BADGES[b]?b:(BADGE_KEYS.find(k=>BADGES[k].name.toLowerCase()===b)||'');
+  return {name,flag:flag||'',badge:key};});}
 function colSize(it){
   if(it.t==='photo')return [it.w,it.h];
   if(it.t==='logo'){const lg=PS_IMG[$('logo').value]||PS_IMG.media;return lg?[it.size*lg.width/lg.height,it.size]:[it.size,it.size];}
-  measureCtx.font=`700 ${it.size}px "WRC Clean"`;const ls=colTextLines(it),pad=it.box?Math.round(it.size*.28):0;
+  if(it.t==='names'){const ns=colNames(it),g=Math.round(it.size*.25),ws=ns.map(n=>nameChip(measureCtx,0,0,it.size,n,COL_T,true));
+    if(!ns.length)return [it.size*4,it.size];
+    return it.stack?[Math.max(...ws),ns.length*(it.size+5)+(ns.length-1)*g]:[ws.reduce((a,b)=>a+b,0)+g*(ns.length-1),it.size+5];}
+  measureCtx.font=`700 ${it.size}px "WRC Clean"`;const ls=colLines(it),pad=it.box?Math.round(it.size*.28):0;
   return [Math.max(...ls.map(l=>measureCtx.measureText(l).width))+pad*2,ls.length*Math.round(it.size*(it.box?1.32:1.08))];
 }
 function colDrawItem(ctx,it){
@@ -2059,38 +2096,46 @@ function colDrawItem(ctx,it){
     ctx.fillStyle=b?(it.borderCol||'#ffffff'):'#20262a';ctx.fillRect(0,0,w,h);ctx.shadowColor='transparent';
     const im=COL_IMG[it.id];
     if(im)drawCover(ctx,im,{x:b,y:b,w:w-2*b,h:h-2*b},it.zoom||1,it.fx??.5,it.fy??.5);
-    else{ctx.fillStyle='#3a4248';ctx.fillRect(b,b,w-2*b,h-2*b);ctx.fillStyle='#9aa4aa';ctx.font='700 40px "WRC Clean"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Drop a picture',w/2,h/2);}
+    else if(ctx.canvas.id==='cv'||ctx.canvas.dataset.thumb){ctx.fillStyle='#3a4248';ctx.fillRect(b,b,w-2*b,h-2*b);ctx.fillStyle='#9aa4aa';ctx.font='700 40px "WRC Clean"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Drop a picture here',w/2,h/2);}
   }else if(it.t==='logo'){
     const lg=PS_IMG[$('logo').value]||PS_IMG.media;
-    if(lg){if(it.ink==='white')ctx.filter='brightness(0) invert(1)';else if(it.ink==='black')ctx.filter='brightness(0)';ctx.drawImage(lg,0,0,w,h);ctx.filter='none';}
+    if(lg){ctx.filter=(it.ink==='white'?'invert(1) ':'')+(it.ink==='own'?'':'drop-shadow(0 2px 6px rgba(0,0,0,.45))');ctx.drawImage(lg,0,0,w,h);ctx.filter='none';}
+  }else if(it.t==='names'){
+    const ns=colNames(it),g=Math.round(it.size*.25);let x=0,y=0;
+    ns.forEach(n=>{const cw=nameChip(ctx,0,0,it.size,n,COL_T,true);nameChip(ctx,it.stack?0:x,y,it.size,n,COL_T);if(it.stack)y+=it.size+5+g;else x+=cw+g;});
   }else{
     ctx.font=`700 ${it.size}px "WRC Clean"`;ctx.textBaseline='alphabetic';ctx.textAlign='left';
-    const ls=colTextLines(it),pad=it.box?Math.round(it.size*.28):0,lh=Math.round(it.size*(it.box?1.32:1.08)),cap=it.size*.78;
+    const ls=colLines(it),pad=it.box?Math.round(it.size*.28):0,lh=Math.round(it.size*(it.box?1.32:1.08)),cap=it.size*.78,ink=colInk(it.color);
     ls.forEach((l,i)=>{
       const lw=ctx.measureText(l).width,x=it.align==='center'?(w-lw)/2-pad:it.align==='right'?w-lw-2*pad:0,y=i*lh;
+      const base=y+(it.box?(lh-Math.round(it.size*.12))/2+cap/2:cap);
       if(it.box&&l){ctx.fillStyle=colInk(it.boxCol||'accent');ctx.fillRect(x,y,lw+pad*2,lh-Math.round(it.size*.12));}
-      ctx.fillStyle=colInk(it.color);
+      if(it.style==='glitch'){drawGlitchTitle(ctx,l,x+pad,base,it.size,ink,tk(COL_T,'speck'));ctx.font=`700 ${it.size}px "WRC Clean"`;ctx.textAlign='left';ctx.textBaseline='alphabetic';return;}
       if(!it.box){ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=14;}
-      ctx.fillText(l,x+pad,y+(it.box?(lh-Math.round(it.size*.12))/2+cap/2:cap));ctx.shadowColor='transparent';
+      if(it.style==='outline'){ctx.lineWidth=Math.max(2,Math.round(it.size*.03));ctx.strokeStyle=ink;ctx.strokeText(l,x+pad,base);}
+      else{ctx.fillStyle=it.style==='gold'?vgrad(ctx,base-cap,base,tk(COL_T,'hl')):ink;ctx.fillText(l,x+pad,base);}
+      ctx.shadowColor='transparent';
     });
   }
   ctx.restore();
 }
 function drawCollage(ctx,st){
-  const c=st.collage||COL,k=COL_SLIDE;
-  const g=ctx.createLinearGradient(0,0,0,COL_H);g.addColorStop(0,c.bg);g.addColorStop(1,c.bg2||c.bg);
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const c=st.collage||COL,k=COL_SLIDE;COL_T=themeOf(st);
+  if(c.bgMode==='theme')drawBackground(ctx,COL_T);
+  else{const g=ctx.createLinearGradient(0,0,0,COL_H);g.addColorStop(0,c.bg);g.addColorStop(1,c.bg2||c.bg);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
   ctx.save();ctx.translate(-k*COL_W,0);
   c.items.forEach(it=>colDrawItem(ctx,it));
-  if(ctx.canvas.id==='cv'&&COL_SEL>=0&&c.items[COL_SEL]){   // selection frame + handles, preview only
-    const it=c.items[COL_SEL],[w,h]=colSize(it);
-    ctx.translate(it.x+w/2,it.y+h/2);ctx.rotate((it.rot||0)*Math.PI/180);
-    ctx.strokeStyle='#2f8be6';ctx.lineWidth=4;ctx.setLineDash([14,8]);ctx.strokeRect(-w/2,-h/2,w,h);ctx.setLineDash([]);
-    ctx.fillStyle='#2f8be6';ctx.fillRect(w/2-18,h/2-18,36,36);   // resize
-    ctx.beginPath();ctx.arc(0,-h/2-50,18,0,7);ctx.fill();ctx.fillRect(-2,-h/2-50,4,50);   // rotate
+  if(ctx.canvas.id==='cv'){
+    ctx.strokeStyle='#ff3df0';ctx.lineWidth=3;COL_GUIDES.forEach(([a,v])=>{ctx.beginPath();if(a==='x'){ctx.moveTo(v,0);ctx.lineTo(v,COL_H);}else{ctx.moveTo(k*COL_W,v);ctx.lineTo((k+1)*COL_W,v);}ctx.stroke();});
+    if(COL_SEL>=0&&c.items[COL_SEL]){   // selection frame + handles, preview only
+      const it=c.items[COL_SEL],[w,h]=colSize(it);
+      ctx.translate(it.x+w/2,it.y+h/2);ctx.rotate((it.rot||0)*Math.PI/180);
+      ctx.strokeStyle='#2f8be6';ctx.lineWidth=4;ctx.setLineDash([14,8]);ctx.strokeRect(-w/2,-h/2,w,h);ctx.setLineDash([]);
+      ctx.fillStyle='#2f8be6';ctx.fillRect(w/2-18,h/2-18,36,36);
+      ctx.beginPath();ctx.arc(0,-h/2-50,18,0,7);ctx.fill();ctx.fillRect(-2,-h/2-50,4,50);
+    }
   }
   ctx.restore();
-  if(ctx.canvas.id==='cv'){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(W-170,20,150,56);ctx.fillStyle='#fff';ctx.font='700 36px "WRC Clean"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`${k+1} / ${c.slides}`,W-95,50);}
 }
 // pointer in panorama coords -> item-local coords
 function colLocal(it,pt){const [w,h]=colSize(it),cx=it.x+w/2,cy=it.y+h/2,a=-(it.rot||0)*Math.PI/180,dx=pt.x-cx,dy=pt.y-cy;
@@ -2102,6 +2147,18 @@ function colHit(pt){
   for(let i=COL.items.length-1;i>=0;i--){const l=colLocal(COL.items[i],pt);if(Math.abs(l.x)<=l.w/2&&Math.abs(l.y)<=l.h/2)return {i,mode:'move'};}
   return null;
 }
+// snap a moved item's edges / centre to the slide's edges and centre and to the other items
+function colSnap(it,i){
+  const [w,h]=colSize(it),k=Math.floor((it.x+w/2)/COL_W),m=70,xs=[k*COL_W,k*COL_W+m,k*COL_W+COL_W/2,(k+1)*COL_W-m,(k+1)*COL_W],ys=[0,m,COL_H/2,COL_H-m,COL_H];
+  COL.items.forEach((o,j)=>{if(j===i||o.rot)return;const [ow,oh]=colSize(o);xs.push(o.x,o.x+ow/2,o.x+ow);ys.push(o.y,o.y+oh/2,o.y+oh);});
+  COL_GUIDES=[];
+  const pick=(edges,lines,axis)=>{let best=null;edges.forEach(e=>lines.forEach(v=>{const d=v-e;if(Math.abs(d)<COL_SNAP&&(!best||Math.abs(d)<Math.abs(best[0])))best=[d,v];}));if(best)COL_GUIDES.push([axis,best[1]]);return best?best[0]:0;};
+  it.x+=pick([it.x,it.x+w/2,it.x+w],xs,'x');it.y+=pick([it.y,it.y+h/2,it.y+h],ys,'y');
+}
+// undo: snapshots of COL before each change
+const COL_HIST=[];
+function colPush(){COL_HIST.push(JSON.stringify(COL));if(COL_HIST.length>60)COL_HIST.shift();}
+function colUndo(){const s=COL_HIST.pop();if(!s)return;COL=JSON.parse(s);if(COL_SEL>=COL.items.length)COL_SEL=-1;colUI();redraw();}
 function colSetPhoto(id,file){
   if(!file||!/^image\//.test(file.type))return;
   const url=URL.createObjectURL(file),im=new Image();
@@ -2113,77 +2170,130 @@ function colSetPhoto(id,file){
   };
   im.src=url;
 }
+// new pictures fill empty frames first, then get frames of their own
 function colAddPhotos(files,at){
-  [...files].filter(f=>/^image\//.test(f.type)).forEach((f,n)=>{
-    const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    const w=760,h=560,x=(at?at.x-w/2:COL_SLIDE*COL_W+200)+n*60,y=(at?at.y-h/2:500)+n*60;
-    COL.items.push({t:'photo',id,x,y,w,h,rot:n%2?3:-3,border:16,zoom:1,fx:.5,fy:.5});colSetPhoto(id,f);
+  colPush();
+  let fs=[...files].filter(f=>/^image\//.test(f.type));
+  COL.items.forEach(it=>{if(it.t==='photo'&&!COL_IMG[it.id]&&fs.length&&Math.floor((it.x+it.w/2)/COL_W)===COL_SLIDE)colSetPhoto(it.id,fs.shift());});
+  fs.forEach((f,n)=>{
+    const id=colNewId(),w=760,h=560,x=(at?at.x-w/2:COL_SLIDE*COL_W+200)+n*60,y=(at?at.y-h/2:500)+n*60;
+    COL.items.push({t:'photo',id,x,y,w,h,rot:n%2?3:-3,border:16,zoom:1,fx:.5,fy:.5});colSetPhoto(id,f);COL_SEL=COL.items.length-1;
   });
-  COL_SEL=COL.items.length-1;colUI();redraw();
+  colUI();redraw();
 }
 async function colLoadImgs(){for(const it of COL.items)if(it.t==='photo'&&!COL_IMG[it.id]){try{const d=await idb('readonly',st=>st.get(colKey(it.id)));if(d)COL_IMG[it.id]=await loadImg(d);}catch(e){}}redraw(true);}
 function colAdd(kind){
-  const x=COL_SLIDE*COL_W+120,base={rot:0,align:'left'};
+  colPush();
+  const x=COL_SLIDE*COL_W+120,base={rot:0,align:'left',style:'plain'};
   const it=kind==='title'?{...base,t:'text',text:'TITLE',x,y:120,size:150,color:'white',box:false}
+    :kind==='glitch'?{...base,t:'text',text:'CHAMPIONS',x,y:1250,size:190,color:'white',style:'glitch',box:false}
     :kind==='headline'?{...base,t:'text',text:'HEADLINE',x,y:1300,size:110,color:'accent',box:false}
     :kind==='caption'?{...base,t:'text',text:'PODIUM\nIN PORTUGAL',x,y:1200,size:56,color:'#111111',box:true,boxCol:'accent'}
+    :kind==='names'?{t:'names',text:'Elfyn Evans | GB | toyota\nScott Martin | GB',x,y:1450,size:62,stack:false,rot:0}
     :kind==='logo'?{t:'logo',x:x+800,y:96,size:110,ink:'white',rot:0}
-    :kind==='full'?{t:'photo',id:Date.now().toString(36),x:COL_SLIDE*COL_W,y:0,w:COL_W,h:COL_H,rot:0,border:0,zoom:1,fx:.5,fy:.5,shadow:false}
+    :kind==='full'?{t:'photo',id:colNewId(),x:COL_SLIDE*COL_W,y:0,w:COL_W,h:COL_H,rot:0,border:0,zoom:1,fx:.5,fy:.5,shadow:false}
+    :kind==='photo'?{t:'photo',id:colNewId(),x:x+200,y:500,w:760,h:560,rot:-3,border:16,zoom:1,fx:.5,fy:.5}
     :{...base,t:'text',text:'Text',x,y:900,size:50,color:'white',box:false};
   if(kind==='full')COL.items.unshift(it),COL_SEL=0;else COL.items.push(it),COL_SEL=COL.items.length-1;
   colUI();redraw();
 }
+// ready-made photo layouts for the current slide (empty frames to drop pictures into)
+const COL_LAYOUTS={
+  hero:[[0,0,1440,1800,0,0]],
+  heroPair:[[0,0,1440,1800,0,0],[90,330,700,520,-4,16],[700,1180,640,470,4,16]],
+  stack:[[140,360,900,660,-5,18],[480,760,860,620,4,18],[160,1150,760,520,-2,18]],
+  grid:[[60,330,640,620,0,10],[740,330,640,620,0,10],[60,990,640,620,0,10],[740,990,640,620,0,10]],
+  split:[[0,0,1440,900,0,0],[0,900,1440,900,0,0]],
+  sides:[[0,0,720,1800,0,0],[720,0,720,1800,0,0]]
+};
+function colLayout(name){
+  colPush();const o=COL_SLIDE*COL_W;
+  const frames=COL_LAYOUTS[name].map(([x,y,w,h,rot,border])=>({t:'photo',id:colNewId(),x:o+x,y,w,h,rot,border,zoom:1,fx:.5,fy:.5,shadow:!!border}));
+  const full=frames.filter(f=>!f.border),rest=frames.filter(f=>f.border);
+  COL.items=[...full,...COL.items,...rest];COL_SEL=-1;colUI();redraw();
+}
+function colAddSlide(){colPush();COL.slides=Math.min(10,COL.slides+1);COL_SLIDE=COL.slides-1;colUI();redraw();}
+function colDelSlide(){
+  if(COL.slides<2)return;colPush();const a=COL_SLIDE*COL_W,b=a+COL_W;
+  COL.items=COL.items.filter(it=>{const [w]=colSize(it),c=it.x+w/2;return c<a||c>=b;});
+  COL.items.forEach(it=>{if(it.x>=b)it.x-=COL_W;});
+  COL.slides--;COL_SLIDE=Math.min(COL_SLIDE,COL.slides-1);COL_SEL=-1;colUI();redraw();
+}
 // the panel for the selected item
 function colUI(){
-  $('colSlides').value=COL.slides;$('colBg').value=COL.bg;$('colBg2').value=COL.bg2||COL.bg;$('colAccent').value=COL.accent;
-  const it=COL.items[COL_SEL],box=$('colItem');box.hidden=!it;$('colDel').disabled=$('colUp').disabled=$('colDown').disabled=$('colDup').disabled=!it;
+  $('colSlides').textContent=`Slide ${COL_SLIDE+1} of ${COL.slides}`;
+  $('colBgMode').value=COL.bgMode||'custom';$('colBg').value=COL.bg;$('colBg2').value=COL.bg2||COL.bg;$('colBgBox').hidden=$('colBgMode').value==='theme';
+  $('colAccentMode').value=COL.accentMode||'custom';$('colAccent').value=COL.accent;$('colAccent').hidden=$('colAccentMode').value!=='custom';
+  const it=COL.items[COL_SEL],box=$('colItem');box.hidden=!it;['colDel','colUp','colDown','colDup'].forEach(id=>$(id).disabled=!it);
   if(!it)return;
   box.querySelectorAll('[data-for]').forEach(e=>e.hidden=!e.dataset.for.split(' ').includes(it.t));
-  $('colKind').textContent=it.t==='photo'?'Photo':it.t==='logo'?'Logo':'Text';
-  $('ciText').value=it.text||'';$('ciSize').value=it.size||50;$('ciColor').value=/^#/.test(it.color)?'custom':(it.color||'white');$('ciCustom').value=/^#/.test(it.color)?it.color:'#ffffff';
-  $('ciBox').checked=!!it.box;$('ciBoxCol').value=it.boxCol&&/^#/.test(it.boxCol)?it.boxCol:COL.accent;$('ciAlign').value=it.align||'left';
+  $('colKind').textContent={photo:'Photo',logo:'Logo',names:'Name tiles',text:'Text'}[it.t];
+  $('ciText').value=it.text||'';$('ciNames').value=it.t==='names'?it.text||'':'';$('ciSize').value=it.size||50;$('ciChip').value=it.size||62;$('ciStack').checked=!!it.stack;
+  $('ciColor').value=/^#/.test(it.color)?'custom':(it.color||'white');$('ciCustom').value=/^#/.test(it.color)?it.color:'#ffffff';$('ciCustom').hidden=$('ciColor').value!=='custom';
+  $('ciStyle').value=it.style||'plain';$('ciBox').checked=!!it.box;$('ciBoxCol').value=it.boxCol&&/^#/.test(it.boxCol)?it.boxCol:'accent';$('ciAlign').value=it.align||'left';
   $('ciRot').value=it.rot||0;$('ciBorder').value=it.border||0;$('ciZoom').value=it.zoom||1;$('ciFx').value=it.fx??.5;$('ciFy').value=it.fy??.5;$('ciShadow').checked=it.shadow!==false;
   $('ciInk').value=it.ink||'white';$('ciLogoSize').value=it.size||110;
 }
+let colEditing=false;   // one undo step per run of slider / typing changes
 function colFromUI(){
   const it=COL.items[COL_SEL];if(!it)return;
+  if(!colEditing){colPush();colEditing=true;}
   it.rot=+$('ciRot').value;
-  if(it.t==='text'){it.text=$('ciText').value;it.size=+$('ciSize').value;it.color=$('ciColor').value==='custom'?$('ciCustom').value:$('ciColor').value;it.box=$('ciBox').checked;it.boxCol=$('ciBoxCol').value;it.align=$('ciAlign').value;}
+  if(it.t==='text'){it.text=$('ciText').value;it.size=+$('ciSize').value;it.color=$('ciColor').value==='custom'?$('ciCustom').value:$('ciColor').value;it.style=$('ciStyle').value;
+    it.box=$('ciBox').checked;it.boxCol=$('ciBoxCol').value;it.align=$('ciAlign').value;$('ciCustom').hidden=$('ciColor').value!=='custom';}
+  if(it.t==='names'){it.text=$('ciNames').value;it.size=+$('ciChip').value;it.stack=$('ciStack').checked;}
   if(it.t==='photo'){it.border=+$('ciBorder').value;it.zoom=+$('ciZoom').value;it.fx=+$('ciFx').value;it.fy=+$('ciFy').value;it.shadow=$('ciShadow').checked;}
   if(it.t==='logo'){it.ink=$('ciInk').value;it.size=+$('ciLogoSize').value;}
   redraw();
 }
+// thumbnails of every slide under the preview; click one to edit it
+let colThumbT=0;
+function colThumbs(){
+  const strip=$('colStrip');if(!MODES[MODE].collage){strip.hidden=true;return;}
+  strip.hidden=false;clearTimeout(colThumbT);
+  colThumbT=setTimeout(()=>{
+    while(strip.children.length>COL.slides)strip.lastChild.remove();
+    while(strip.children.length<COL.slides){const c=document.createElement('canvas');c.width=144;c.height=180;c.dataset.thumb=1;const n=strip.children.length;c.onclick=()=>{COL_SLIDE=+c.dataset.k;COL_SEL=-1;colUI();redraw();};strip.appendChild(c);}
+    const keep=COL_SLIDE,st=readState();
+    withFormat('ig',()=>[...strip.children].forEach((c,k)=>{c.dataset.k=k;c.classList.toggle('on',k===keep);COL_SLIDE=k;const x=c.getContext('2d');x.setTransform(.1,0,0,.1,0,0);render(x,st);}));
+    COL_SLIDE=keep;
+  },120);
+}
 function initCollageUI(cv,toCanvas){
   const on=()=>MODES[MODE].collage,pano=e=>{const p=toCanvas(e);return {x:p.x+COL_SLIDE*COL_W,y:p.y};};
-  const go=d=>{COL_SLIDE=Math.max(0,Math.min(COL.slides-1,COL_SLIDE+d));redraw();};
-  $('colPrev').onclick=()=>go(-1);$('colNext').onclick=()=>go(1);
-  $('colSlides').addEventListener('input',()=>{COL.slides=Math.max(1,Math.min(10,+$('colSlides').value||1));if(COL_SLIDE>=COL.slides)COL_SLIDE=COL.slides-1;redraw();});
+  const go=d=>{COL_SLIDE=Math.max(0,Math.min(COL.slides-1,COL_SLIDE+d));COL_SEL=-1;colUI();redraw();};
+  $('colPrev').onclick=()=>go(-1);$('colNext').onclick=()=>go(1);$('colAddSlide').onclick=colAddSlide;$('colDelSlide').onclick=colDelSlide;
+  $('colBgMode').addEventListener('input',()=>{colPush();COL.bgMode=$('colBgMode').value;colUI();redraw();});
+  $('colAccentMode').addEventListener('input',()=>{colPush();COL.accentMode=$('colAccentMode').value;colUI();redraw();});
   [['colBg','bg'],['colBg2','bg2'],['colAccent','accent']].forEach(([id,k])=>$(id).addEventListener('input',()=>{COL[k]=$(id).value;redraw();}));
   $('colPic').addEventListener('change',()=>{colAddPhotos($('colPic').files);$('colPic').value='';});
   document.querySelectorAll('[data-coladd]').forEach(b=>b.onclick=()=>colAdd(b.dataset.coladd));
-  $('colDel').onclick=()=>{if(COL_SEL<0)return;COL.items.splice(COL_SEL,1);COL_SEL=-1;colUI();redraw();};
-  $('colDup').onclick=()=>{const it=COL.items[COL_SEL];if(!it)return;const c={...it,x:it.x+60,y:it.y+60};if(c.t==='photo'){c.id=Date.now().toString(36);if(COL_IMG[it.id]){COL_IMG[c.id]=COL_IMG[it.id];idb('readonly',st=>st.get(colKey(it.id))).then(d=>d&&idb('readwrite',st=>st.put(d,colKey(c.id))));}}
+  document.querySelectorAll('[data-collayout]').forEach(b=>b.onclick=()=>colLayout(b.dataset.collayout));
+  $('colDel').onclick=()=>{if(COL_SEL<0)return;colPush();COL.items.splice(COL_SEL,1);COL_SEL=-1;colUI();redraw();};
+  $('colDup').onclick=()=>{const it=COL.items[COL_SEL];if(!it)return;colPush();const c={...it,x:it.x+60,y:it.y+60};
+    if(c.t==='photo'){c.id=colNewId();if(COL_IMG[it.id]){COL_IMG[c.id]=COL_IMG[it.id];getIdb(colKey(it.id)).then(d=>d&&idb('readwrite',st=>st.put(d,colKey(c.id))));}}
     COL.items.push(c);COL_SEL=COL.items.length-1;colUI();redraw();};
-  $('colUp').onclick=()=>{const i=COL_SEL;if(i<0||i>=COL.items.length-1)return;[COL.items[i],COL.items[i+1]]=[COL.items[i+1],COL.items[i]];COL_SEL++;redraw();};
-  $('colDown').onclick=()=>{const i=COL_SEL;if(i<=0)return;[COL.items[i],COL.items[i-1]]=[COL.items[i-1],COL.items[i]];COL_SEL--;redraw();};
+  $('colUp').onclick=()=>{const i=COL_SEL;if(i<0||i>=COL.items.length-1)return;colPush();[COL.items[i],COL.items[i+1]]=[COL.items[i+1],COL.items[i]];COL_SEL++;redraw();};
+  $('colDown').onclick=()=>{const i=COL_SEL;if(i<=0)return;colPush();[COL.items[i],COL.items[i-1]]=[COL.items[i-1],COL.items[i]];COL_SEL--;redraw();};
+  $('colUndo').onclick=colUndo;
   $('ciPic').addEventListener('change',()=>{const it=COL.items[COL_SEL];if(it&&it.t==='photo')colSetPhoto(it.id,$('ciPic').files[0]);$('ciPic').value='';});
-  ['ciText','ciSize','ciColor','ciCustom','ciBox','ciBoxCol','ciAlign','ciRot','ciBorder','ciZoom','ciFx','ciFy','ciShadow','ciInk','ciLogoSize'].forEach(id=>$(id).addEventListener('input',colFromUI));
-  $('colExport').onclick=()=>colExport(1);$('colExport2').onclick=()=>colExport(2);
+  ['ciText','ciNames','ciSize','ciChip','ciStack','ciColor','ciCustom','ciStyle','ciBox','ciBoxCol','ciAlign','ciRot','ciBorder','ciZoom','ciFx','ciFy','ciShadow','ciInk','ciLogoSize'].forEach(id=>{
+    $(id).addEventListener('input',colFromUI);$(id).addEventListener('change',()=>{colEditing=false;});});
   let drag=null;
   cv.addEventListener('pointerdown',e=>{
     if(!on())return;const pt=pano(e),h=colHit(pt);
     COL_SEL=h?h.i:-1;colUI();redraw();if(!h)return;
-    const it=COL.items[h.i],[w,hh]=colSize(it);
-    drag={...h,sx:pt.x,sy:pt.y,ox:it.x,oy:it.y,ow:w,oh:hh,os:it.size,orot:it.rot||0,pan:e.shiftKey&&it.t==='photo',ofx:it.fx??.5,ofy:it.fy??.5};
+    colPush();const it=COL.items[h.i],[w,hh]=colSize(it);
+    drag={...h,sx:pt.x,sy:pt.y,ox:it.x,oy:it.y,ow:w,oh:hh,os:it.size,pan:e.shiftKey&&it.t==='photo',ofx:it.fx??.5,ofy:it.fy??.5,moved:false};
     cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();
   },true);
   cv.addEventListener('pointermove',e=>{
     if(!on())return;const pt=pano(e);
     if(!drag){const h=colHit(pt);cv.style.cursor=h?(h.mode==='size'?'nwse-resize':h.mode==='rot'?'grab':'move'):'';return;}
-    e.stopImmediatePropagation();const it=COL.items[drag.i],dx=pt.x-drag.sx,dy=pt.y-drag.sy;
+    e.stopImmediatePropagation();const it=COL.items[drag.i],dx=pt.x-drag.sx,dy=pt.y-drag.sy;drag.moved=true;
     if(drag.mode==='move'){
       if(drag.pan){it.fx=clamp01(drag.ofx-dx/it.w);it.fy=clamp01(drag.ofy-dy/it.h);}
-      else{it.x=Math.round(drag.ox+dx);it.y=Math.round(drag.oy+dy);}
+      else{it.x=Math.round(drag.ox+dx);it.y=Math.round(drag.oy+dy);if(!e.altKey)colSnap(it,drag.i);else COL_GUIDES=[];}
     }else if(drag.mode==='size'){
       const cx=drag.ox+drag.ow/2,cy=drag.oy+drag.oh/2,a=-(it.rot||0)*Math.PI/180,lx=(pt.x-cx)*Math.cos(a)-(pt.y-cy)*Math.sin(a),ly=(pt.x-cx)*Math.sin(a)+(pt.y-cy)*Math.cos(a);
       if(it.t==='photo'){const nw=Math.max(80,drag.ow/2+lx),nh=e.shiftKey?nw*drag.oh/drag.ow:Math.max(80,drag.oh/2+ly);it.w=Math.round(nw);it.h=Math.round(nh);it.x=Math.round(cx-drag.ow/2);it.y=Math.round(cy-drag.oh/2);}
@@ -2191,16 +2301,22 @@ function initCollageUI(cv,toCanvas){
     }else{const [w,h]=colSize(it),cx=it.x+w/2,cy=it.y+h/2;let r=Math.atan2(pt.y-cy,pt.x-cx)*180/Math.PI+90;r=((r+540)%360)-180;if(Math.abs(r)<2)r=0;it.rot=Math.round(r*2)/2;}
     colUI();redraw();
   },true);
-  const end=()=>{drag=null;};cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  const end=()=>{if(drag&&!drag.moved)COL_HIST.pop();drag=null;if(COL_GUIDES.length){COL_GUIDES=[];redraw();}};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
   cv.addEventListener('wheel',e=>{if(!on())return;const h=colHit(pano(e));const it=h&&COL.items[h.i];if(!it||it.t!=='photo')return;e.preventDefault();it.zoom=Math.max(1,Math.min(5,(it.zoom||1)*(e.deltaY<0?1.06:1/1.06)));COL_SEL=h.i;colUI();redraw();},{passive:false});
   cv.addEventListener('dragover',e=>{if(on()){e.preventDefault();cv.classList.add('dropping');}});
   cv.addEventListener('drop',e=>{if(!on())return;e.preventDefault();e.stopImmediatePropagation();cv.classList.remove('dropping');
     const pt=pano(e),h=colHit(pt),it=h&&COL.items[h.i],fs=e.dataTransfer.files;
     if(it&&it.t==='photo'&&fs.length===1)colSetPhoto(it.id,fs[0]);else colAddPhotos(fs,pt);},true);
-  document.addEventListener('keydown',e=>{if(!on()||COL_SEL<0||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
-    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();$('colDel').click();}
+  document.addEventListener('keydown',e=>{if(!on()||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();colUndo();return;}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'&&COL_SEL>=0){e.preventDefault();$('colDup').click();return;}
+    if(e.key==='PageDown'){e.preventDefault();go(1);return;}if(e.key==='PageUp'){e.preventDefault();go(-1);return;}
+    if(COL_SEL<0)return;
+    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();$('colDel').click();return;}
+    if(e.key==='Escape'){COL_SEL=-1;colUI();redraw();return;}
     const st=e.shiftKey?20:2,mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
-    if(mv){e.preventDefault();const it=COL.items[COL_SEL];it.x+=mv[0];it.y+=mv[1];redraw();}});
+    if(mv){e.preventDefault();if(!e.repeat)colPush();const it=COL.items[COL_SEL];it.x+=mv[0];it.y+=mv[1];redraw();}});
 }
 async function colExport(scale){
   const keep=COL_SLIDE,sel=COL_SEL;COL_SEL=-1;

@@ -282,6 +282,16 @@
         <div id="colBgBox"><label>Top / bottom</label><input type="color" id="colBg" value="#0c1714"> <input type="color" id="colBg2" value="#06100d"></div>
         <div><label>Accent colour</label><select id="colAccentMode"><option value="theme">Theme strip</option><option value="gold">Gold</option><option value="custom">Own colour…</option></select> <input type="color" id="colAccent" value="#2fe08a"></div>
       </div>
+      <div class="hdr" style="margin-top:8px">Background picture across all slides <small>(one wide photo that carries on as you swipe)</small></div>
+      <div class="grid2">
+        <div><label>Picture</label><div style="display:flex;gap:6px"><label class="primary" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;cursor:pointer;border:1px solid var(--line2)">Choose…<input type="file" id="colPano" accept="image/*" hidden></label><button id="colPanoDel" style="flex:1">Remove</button></div></div>
+        <div><label>Zoom</label><input type="range" id="colPanoZoom" min="1" max="4" step="0.01" value="1"></div>
+        <div><label>Picture ← →</label><input type="range" id="colPanoFx" min="0" max="1" step="0.005" value="0.5"></div>
+        <div><label>Picture ↑ ↓</label><input type="range" id="colPanoFy" min="0" max="1" step="0.005" value="0.5"></div>
+        <div><label>Darken</label><input type="range" id="colPanoDark" min="0" max="80" value="0"></div>
+        <div><label>Shade top / bottom</label><div style="display:flex;gap:6px"><input type="range" id="colFadeTop" min="0" max="95" value="0" style="flex:1"><input type="range" id="colFadeBot" min="0" max="95" value="0" style="flex:1"></div></div>
+      </div>
+      <div class="note" style="margin-top:2px">Alt+drag on an empty part of the preview slides the background picture; scroll there with Alt to zoom it.</div>
       <div class="hdr" style="margin-top:8px">Photo layout for this slide <small>(empty frames: drop pictures in)</small></div>
       <div class="btns" style="flex-wrap:wrap">
         <button data-collayout="hero">Full photo</button><button data-collayout="heroPair">Full + 2 prints</button><button data-collayout="stack">3 prints</button>
@@ -2009,7 +2019,7 @@ async function saveProject(){
   if(M.quote){try{pics.quote=localStorage.getItem('wrcTpl_photo')||null;}catch(e){}}
   if(!M.quote&&!M.strips&&st.opt&&st.opt.photo!=='none')pics.table=await getIdb('tablePhoto');
   if(M.strips){pics.strips=[];const n=Math.min(STRIP_MAX,(SS&&SS.n)||0);for(let i=0;i<n;i++)pics.strips.push(await getIdb(photoKey(i))||null);}
-  if(M.collage){pics.collage={};for(const it of COL.items)if(it.t==='photo')pics.collage[it.id]=await getIdb(colKey(it.id))||null;}
+  if(M.collage){pics.collage={};if(COL.pano)pics.collage.pano=await getIdb(colKey('pano'))||null;for(const it of COL.items)if(it.t==='photo')pics.collage[it.id]=await getIdb(colKey(it.id))||null;}
   const proj={app:PROJ_APP,version:1,saved:new Date().toISOString(),mode:MODE,logo:st.logo,format:FMT,state:st,pictures:pics};
   const name=(slug($('projName').value)||slug(st.title)||M.file)+'.wrcproj';
   const f=await saveBlob(new Blob([JSON.stringify(proj)],{type:'application/json'}),name);
@@ -2124,6 +2134,12 @@ function drawCollage(ctx,st){
   if(c.bgMode==='theme')drawBackground(ctx,COL_T);
   else{const g=ctx.createLinearGradient(0,0,0,COL_H);g.addColorStop(0,c.bg);g.addColorStop(1,c.bg2||c.bg);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
   ctx.save();ctx.translate(-k*COL_W,0);
+  // one picture across every slide, so it runs on seamlessly as you swipe
+  const pano=c.pano&&COL_IMG.pano,PW=c.slides*COL_W;
+  if(pano)drawCover(ctx,pano,{x:0,y:0,w:PW,h:COL_H},c.panoZoom||1,c.panoFx??.5,c.panoFy??.5);
+  if(pano&&c.panoDark>0){ctx.fillStyle=`rgba(0,0,0,${c.panoDark/100})`;ctx.fillRect(0,0,PW,COL_H);}
+  for(const [f,y0,y1] of [[c.fadeTop,0,COL_H*.38],[c.fadeBot,COL_H,COL_H*.5]])if(f>0){   // shade from the top / bottom edge, for the text
+    const g=ctx.createLinearGradient(0,y0,0,y1);g.addColorStop(0,`rgba(0,0,0,${f/100})`);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,Math.min(y0,y1),PW,Math.abs(y1-y0));}
   c.items.forEach(it=>colDrawItem(ctx,it));
   if(ctx.canvas.id==='cv'){
     ctx.strokeStyle='#ff3df0';ctx.lineWidth=3;COL_GUIDES.forEach(([a,v])=>{ctx.beginPath();if(a==='x'){ctx.moveTo(v,0);ctx.lineTo(v,COL_H);}else{ctx.moveTo(k*COL_W,v);ctx.lineTo((k+1)*COL_W,v);}ctx.stroke();});
@@ -2181,7 +2197,7 @@ function colAddPhotos(files,at){
   });
   colUI();redraw();
 }
-async function colLoadImgs(){for(const it of COL.items)if(it.t==='photo'&&!COL_IMG[it.id]){try{const d=await idb('readonly',st=>st.get(colKey(it.id)));if(d)COL_IMG[it.id]=await loadImg(d);}catch(e){}}redraw(true);}
+async function colLoadImgs(){if(COL.pano&&!COL_IMG.pano){try{const d=await getIdb(colKey('pano'));if(d)COL_IMG.pano=await loadImg(d);}catch(e){}}for(const it of COL.items)if(it.t==='photo'&&!COL_IMG[it.id]){try{const d=await idb('readonly',st=>st.get(colKey(it.id)));if(d)COL_IMG[it.id]=await loadImg(d);}catch(e){}}redraw(true);}
 function colAdd(kind){
   colPush();
   const x=COL_SLIDE*COL_W+120,base={rot:0,align:'left',style:'plain'};
@@ -2224,6 +2240,8 @@ function colUI(){
   $('colSlides').textContent=`Slide ${COL_SLIDE+1} of ${COL.slides}`;
   $('colBgMode').value=COL.bgMode||'custom';$('colBg').value=COL.bg;$('colBg2').value=COL.bg2||COL.bg;$('colBgBox').hidden=$('colBgMode').value==='theme';
   $('colAccentMode').value=COL.accentMode||'custom';$('colAccent').value=COL.accent;$('colAccent').hidden=$('colAccentMode').value!=='custom';
+  $('colPanoZoom').value=COL.panoZoom||1;$('colPanoFx').value=COL.panoFx??.5;$('colPanoFy').value=COL.panoFy??.5;$('colPanoDark').value=COL.panoDark||0;
+  $('colFadeTop').value=COL.fadeTop||0;$('colFadeBot').value=COL.fadeBot||0;$('colPanoDel').disabled=!COL.pano;
   const it=COL.items[COL_SEL],box=$('colItem');box.hidden=!it;['colDel','colUp','colDown','colDup'].forEach(id=>$(id).disabled=!it);
   if(!it)return;
   box.querySelectorAll('[data-for]').forEach(e=>e.hidden=!e.dataset.for.split(' ').includes(it.t));
@@ -2266,6 +2284,10 @@ function initCollageUI(cv,toCanvas){
   $('colBgMode').addEventListener('input',()=>{colPush();COL.bgMode=$('colBgMode').value;colUI();redraw();});
   $('colAccentMode').addEventListener('input',()=>{colPush();COL.accentMode=$('colAccentMode').value;colUI();redraw();});
   [['colBg','bg'],['colBg2','bg2'],['colAccent','accent']].forEach(([id,k])=>$(id).addEventListener('input',()=>{COL[k]=$(id).value;redraw();}));
+  $('colPano').addEventListener('change',()=>{const f=$('colPano').files[0];$('colPano').value='';if(!f)return;colPush();COL.pano=true;COL.panoZoom=1;COL.panoFx=.5;COL.panoFy=.5;colSetPhoto('pano',f);colUI();});
+  $('colPanoDel').onclick=()=>{colPush();COL.pano=false;delete COL_IMG.pano;idb('readwrite',st=>st.delete(colKey('pano'))).catch(()=>{});colUI();redraw();};
+  [['colPanoZoom','panoZoom'],['colPanoFx','panoFx'],['colPanoFy','panoFy'],['colPanoDark','panoDark'],['colFadeTop','fadeTop'],['colFadeBot','fadeBot']].forEach(([id,k])=>{
+    $(id).addEventListener('pointerdown',()=>colPush());$(id).addEventListener('input',()=>{COL[k]=+$(id).value;redraw();});});
   $('colPic').addEventListener('change',()=>{colAddPhotos($('colPic').files);$('colPic').value='';});
   document.querySelectorAll('[data-coladd]').forEach(b=>b.onclick=()=>colAdd(b.dataset.coladd));
   document.querySelectorAll('[data-collayout]').forEach(b=>b.onclick=()=>colLayout(b.dataset.collayout));
@@ -2282,6 +2304,9 @@ function initCollageUI(cv,toCanvas){
   let drag=null;
   cv.addEventListener('pointerdown',e=>{
     if(!on())return;const pt=pano(e),h=colHit(pt);
+    if((!h||e.altKey)&&COL.pano&&COL_IMG.pano&&e.altKey){colPush();const im=COL_IMG.pano,PW=COL.slides*COL_W,sc=Math.max(PW/im.width,COL_H/im.height)*(COL.panoZoom||1);
+      drag={mode:'pano',sx:pt.x,sy:pt.y,ofx:COL.panoFx??.5,ofy:COL.panoFy??.5,rx:Math.max(1,im.width*sc-PW),ry:Math.max(1,im.height*sc-COL_H),moved:true};
+      cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
     COL_SEL=h?h.i:-1;colUI();redraw();if(!h)return;
     colPush();const it=COL.items[h.i],[w,hh]=colSize(it);
     drag={...h,sx:pt.x,sy:pt.y,ox:it.x,oy:it.y,ow:w,oh:hh,os:it.size,pan:e.shiftKey&&it.t==='photo',ofx:it.fx??.5,ofy:it.fy??.5,moved:false};
@@ -2290,7 +2315,9 @@ function initCollageUI(cv,toCanvas){
   cv.addEventListener('pointermove',e=>{
     if(!on())return;const pt=pano(e);
     if(!drag){const h=colHit(pt);cv.style.cursor=h?(h.mode==='size'?'nwse-resize':h.mode==='rot'?'grab':'move'):'';return;}
-    e.stopImmediatePropagation();const it=COL.items[drag.i],dx=pt.x-drag.sx,dy=pt.y-drag.sy;drag.moved=true;
+    e.stopImmediatePropagation();
+    if(drag.mode==='pano'){COL.panoFx=clamp01(drag.ofx-(pt.x-drag.sx)/drag.rx);COL.panoFy=clamp01(drag.ofy-(pt.y-drag.sy)/drag.ry);colUI();redraw();return;}
+    const it=COL.items[drag.i],dx=pt.x-drag.sx,dy=pt.y-drag.sy;drag.moved=true;
     if(drag.mode==='move'){
       if(drag.pan){it.fx=clamp01(drag.ofx-dx/it.w);it.fy=clamp01(drag.ofy-dy/it.h);}
       else{it.x=Math.round(drag.ox+dx);it.y=Math.round(drag.oy+dy);if(!e.altKey)colSnap(it,drag.i);else COL_GUIDES=[];}
@@ -2303,7 +2330,9 @@ function initCollageUI(cv,toCanvas){
   },true);
   const end=()=>{if(drag&&!drag.moved)COL_HIST.pop();drag=null;if(COL_GUIDES.length){COL_GUIDES=[];redraw();}};
   cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
-  cv.addEventListener('wheel',e=>{if(!on())return;const h=colHit(pano(e));const it=h&&COL.items[h.i];if(!it||it.t!=='photo')return;e.preventDefault();it.zoom=Math.max(1,Math.min(5,(it.zoom||1)*(e.deltaY<0?1.06:1/1.06)));COL_SEL=h.i;colUI();redraw();},{passive:false});
+  cv.addEventListener('wheel',e=>{if(!on())return;
+    if(e.altKey&&COL.pano){e.preventDefault();COL.panoZoom=Math.max(1,Math.min(4,(COL.panoZoom||1)*(e.deltaY<0?1.05:1/1.05)));colUI();redraw();return;}
+    const h=colHit(pano(e));const it=h&&COL.items[h.i];if(!it||it.t!=='photo')return;e.preventDefault();it.zoom=Math.max(1,Math.min(5,(it.zoom||1)*(e.deltaY<0?1.06:1/1.06)));COL_SEL=h.i;colUI();redraw();},{passive:false});
   cv.addEventListener('dragover',e=>{if(on()){e.preventDefault();cv.classList.add('dropping');}});
   cv.addEventListener('drop',e=>{if(!on())return;e.preventDefault();e.stopImmediatePropagation();cv.classList.remove('dropping');
     const pt=pano(e),h=colHit(pt),it=h&&COL.items[h.i],fs=e.dataTransfer.files;

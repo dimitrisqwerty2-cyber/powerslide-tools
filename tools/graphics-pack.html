@@ -465,8 +465,8 @@ const THEME_DEFAULTS = {
   hl:[[0,'#fad623'],[.6,'#f0c513'],[1,'#ddb00b']], hi:'rgba(255,255,255,.35)', tileEdge:'rgba(28,8,18,.85)',
   ink:'#2a2a2c', inkHl:'#1c1c1c', footInk:'#2b2b2e', rightInk:'#ffffff', glitchInk:'#303033', speck:200
 };
-/* Custom colour: the Powerslide site theme (or its dark mode) with every colour turned to the picked hue;
-   the gold highlight stays gold. */
+/* Custom colour: the Powerslide site theme (or its dark mode) with every colour turned to the picked hue
+   (the exact hue, so reds stay red rather than brown); the gold highlight stays gold. */
 const CUSTOM_THEMES={};
 function hexRgb(h){h=h.replace('#','');if(h.length===3)h=h.replace(/./g,c=>c+c);const n=parseInt(h,16);return [n>>16&255,n>>8&255,n&255];}
 function rgbHsl(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;
@@ -477,7 +477,7 @@ function hslRgb(h,s,l){h=((h%360)+360)%360/360;if(!s)return [l,l,l].map(v=>Math.
 function customTheme(hex,dark){
   const key=hex+(dark?'d':'');if(CUSTOM_THEMES[key])return CUSTOM_THEMES[key];
   const [th,ts]=rgbHsl(...hexRgb(hex)),src=dark?THEMES.siteDark:THEMES.site,sh=154,ss=.81;
-  const conv=(r,g,b)=>{const [h,s,l]=rgbHsl(r,g,b);if(s<.12)return [r,g,b];return hslRgb(h+th-sh,Math.min(1,s*ts/ss),l);};
+  const conv=(r,g,b)=>{const [h,s,l]=rgbHsl(r,g,b);if(s<.12)return [r,g,b];return hslRgb(th,Math.min(1,Math.max(s,.55)*ts/ss),l<.3?l*.6+.12:l);};
   const map=v=>{
     if(typeof v==='string'){
       if(/^#[0-9a-f]{3,6}$/i.test(v))return '#'+conv(...hexRgb(v)).map(x=>x.toString(16).padStart(2,'0')).join('');

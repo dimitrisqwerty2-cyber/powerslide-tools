@@ -211,7 +211,7 @@
         <div><label>Big word size</label><input type="range" id="hSize" min="60" max="300" value="190"></div>
         <div><label>Shade behind the text</label><input type="range" id="hFade" min="0" max="95" value="65"></div>
       </div>
-      <div class="note">Drag the line above, the big word, the line under it or the names on the preview to move each one freely. <button type="button" id="hReset">Reset positions</button></div>
+      <div class="note">Drag the headline on the preview to move the whole block freely. <button type="button" id="hReset">Reset positions</button></div>
       <label style="display:block;margin-top:8px">Line under it <small>(optional)</small></label>
       <textarea id="hBelow" style="font-family:inherit;font-size:13px;min-height:52px"></textarea>
       <div class="hdr" style="margin-top:8px">Names: flag and brand tiles as in the table rows; leave a name empty to skip it</div>
@@ -1477,7 +1477,7 @@ function shadePic(ctx,a,dir,from,to){
 let HEAD_OFF={},HEAD_RECTS=[];   // per-part drag offsets of the headline card, and where each part landed
 function drawHeadline(ctx,st,T){
   HEAD_RECTS=[];const offs=(st.head&&st.head.off)||{};
-  const part=(p,x,y,w,h,fn)=>{const [dx,dy]=offs[p]||[0,0];ctx.save();ctx.translate(dx,dy);fn();ctx.restore();HEAD_RECTS.push({p,x:x+dx,y:y+dy,w,h});};
+  const part=(p,x,y,w,h,fn)=>{const [dx,dy]=offs.all||[0,0];ctx.save();ctx.translate(dx,dy);fn();ctx.restore();HEAD_RECTS.push({p,x:x+dx,y:y+dy,w,h});};
   const hd={...HEAD_DEFAULT,...(st.head||{})},[p0,p1]=L.panel,k=L.rowH/62;
   const word=(hd.kicker||'').trim(),above=(hd.above||'').trim(),below=(hd.below||'').trim();
   const names=(hd.names||[]).filter(n=>n&&(n.name||'').trim());
@@ -2026,12 +2026,12 @@ async function openProject(file){
     redraw();
   });
   const endS=()=>{sdrag=null;};cv.addEventListener('pointerup',endS);cv.addEventListener('pointercancel',endS);
-  // headline card: drag each part (line above, big word, line under, names) on its own
+  // headline card: drag any part to move the whole block
   let hdrag=null;
   const headHit=pt=>[...HEAD_RECTS].reverse().find(b=>pt.x>=b.x&&pt.x<=b.x+b.w&&pt.y>=b.y&&pt.y<=b.y+b.h);
   cv.addEventListener('pointerdown',e=>{
     if(!MODES[MODE].headline)return;const pt=toCanvas(e),r=headHit(pt);if(!r)return;
-    const o=HEAD_OFF[r.p]||[0,0];hdrag={p:r.p,sx:pt.x,sy:pt.y,ox:o[0],oy:o[1]};cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();
+    const o=HEAD_OFF.all||[0,0];hdrag={p:'all',sx:pt.x,sy:pt.y,ox:o[0],oy:o[1]};cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();
   },true);
   cv.addEventListener('pointermove',e=>{
     if(!MODES[MODE].headline)return;const pt=toCanvas(e);

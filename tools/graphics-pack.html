@@ -210,6 +210,7 @@
         <div><label>Block position</label><select id="hPos"><option value="bottom">Bottom</option><option value="center">Middle</option><option value="top">Top</option></select></div>
         <div><label>Big word size</label><input type="range" id="hSize" min="60" max="300" value="190"></div>
         <div><label>Shade behind the text</label><input type="range" id="hFade" min="0" max="95" value="65"></div>
+        <div><label>Name tiles order</label><select id="hOrder"><option value="flag">Flag, then car</option><option value="car">Car, then flag</option></select></div>
       </div>
       <div class="note">Drag the headline on the preview to move the whole block freely. <button type="button" id="hReset">Reset positions</button></div>
       <label style="display:block;margin-top:8px">Line under it <small>(optional)</small></label>
@@ -1452,14 +1453,16 @@ function drawTable(ctx,st,T){
 /* ---------- headline card ----------
    One big word (WINNERS, BREAKING, CONFIRMED…) over the picture, a spaced line above it, an optional
    line under it, and the names as flag / brand tiles with a text cell, like the table rows. */
+let CHIP_CAR_FIRST=false;   // headline names: car tile before the flag
 function nameChip(ctx,x,y,h,n,T,dry){
   const tw=Math.round(h*TILE_W/62),g=Math.round(h*GAP/62),fs=Math.round(h*.56),pad=Math.round(h*.3);
   const fl=resolveFlag({name:n.name,flag:n.flag||'',pos:''}),bd=BADGES[n.badge]?n.badge:'';
   ctx.font=`700 ${fs}px "WRC Clean"`;const cw=Math.round(ctx.measureText(n.name).width+pad*2);
   const w=(fl?tw+g:0)+(bd?tw+g:0)+cw;if(dry)return w;
   let cx=x;
-  if(fl){drawFlagTile(ctx,cx,y,tw,h,fl,T);ctx.fillStyle=T.drop;ctx.fillRect(cx,y+h,tw,5);cx+=tw+g;}
-  if(bd){drawTile(ctx,cx,y,tw,h,bd,T);ctx.fillStyle=T.drop;ctx.fillRect(cx,y+h,tw,5);cx+=tw+g;}
+  const doFl=()=>{if(fl){drawFlagTile(ctx,cx,y,tw,h,fl,T);ctx.fillStyle=T.drop;ctx.fillRect(cx,y+h,tw,5);cx+=tw+g;}};
+  const doBd=()=>{if(bd){drawTile(ctx,cx,y,tw,h,bd,T);ctx.fillStyle=T.drop;ctx.fillRect(cx,y+h,tw,5);cx+=tw+g;}};
+  if(CHIP_CAR_FIRST){doBd();doFl();}else{doFl();doBd();}
   const P=paint(ctx,y,h,'light',T);cell(ctx,cx,y,cw,h,P.fill,T);
   ctx.font=`700 ${fs}px "WRC Clean"`;ctx.fillStyle=P.ink;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(n.name,cx+pad,y+h/2+2*h/62);
   return w;
@@ -1476,7 +1479,7 @@ function shadePic(ctx,a,dir,from,to){
 }
 let HEAD_OFF={},HEAD_RECTS=[];   // per-part drag offsets of the headline card, and where each part landed
 function drawHeadline(ctx,st,T){
-  HEAD_RECTS=[];const offs=(st.head&&st.head.off)||{};
+  CHIP_CAR_FIRST=(st.head||{}).order==='car';HEAD_RECTS=[];const offs=(st.head&&st.head.off)||{};
   const part=(p,x,y,w,h,fn)=>{const [dx,dy]=offs.all||[0,0];ctx.save();ctx.translate(dx,dy);fn();ctx.restore();HEAD_RECTS.push({p,x:x+dx,y:y+dy,w,h});};
   const hd={...HEAD_DEFAULT,...(st.head||{})},[p0,p1]=L.panel,k=L.rowH/62;
   const word=(hd.kicker||'').trim(),above=(hd.above||'').trim(),below=(hd.below||'').trim();
@@ -1685,7 +1688,7 @@ function buildHeadNames(names){
   }
 }
 function readHead(){
-  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
+  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,order:$('hOrder').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
     names:[...$('hNames').children].map(d=>({name:d.querySelector('[data-h=name]').value.trim(),flag:d.querySelector('[data-h=flag]').value,badge:d.querySelector('[data-h=badge]').value}))};
 }
 function extrasUI(){const p=$('tPhoto').value;document.querySelectorAll('.tPic').forEach(d=>d.hidden=p==='none');$('tShareLbl').textContent=p==='behind'?'Darken the picture':'Picture share';
@@ -1733,7 +1736,7 @@ function loadMode(m){
   $('stripL').value=(s&&s.stripL)||'';$('stripR').value=(s&&s.stripR)||'';
   $('tallyBox').hidden=m==='results';$('gapLbl').textContent=m==='results'?'Time column shows':m==='points'?'Total column shows':'Value 2 shows';
   const hd={...HEAD_DEFAULT,...((s&&s.head)||{})};
-  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
+  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;$('hOrder').value=hd.order||'flag';HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
   const sx={...STATS_DEFAULT,...((s&&s.sx)||{})};
   $('sxStyle').value=sx.style;$('sxPos').value=sx.pos;$('sxSize').value=sx.size;$('sxFade').value=sx.fade;$('sxHead').value=sx.head;$('sxHStyle').value=sx.hStyle;$('sxHSize').value=sx.hSize;
   $('sxHPos').value=sx.hPos;$('sxFx').value=sx.fx;$('sxFy').value=sx.fy;$('sxHFx').value=sx.hfx;$('sxHFy').value=sx.hfy;$('sxAlpha').value=sx.alpha;
@@ -1958,7 +1961,7 @@ async function openProject(file){
   $('mode').addEventListener('change',()=>{loadMode($('mode').value);redraw();});
   ['title','foot','rally','start','theme','themeCol','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('theme').addEventListener('input',()=>{$('themeColBox').hidden=!/^custom/.test($('theme').value);});
-  ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
+  ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hOrder','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
     .forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('tPhoto').addEventListener('input',()=>{extrasUI();redraw();});
   ['tCells','sxLabelCol','sxValueCol','sxHlCol','sxHeadCol'].forEach(id=>$(id).addEventListener('input',()=>{extrasUI();redraw();}));

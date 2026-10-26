@@ -305,7 +305,7 @@
         <button data-coladd="text">Text</button><button data-coladd="caption">Caption box</button><button data-coladd="names">Name tiles</button><button data-coladd="logo">Logo</button>
       </div>
       <h2>Selected</h2>
-      <div class="btns"><button id="colUndo" title="Ctrl+Z">Undo</button><button id="colDup" title="Ctrl+D">Duplicate</button><button id="colUp">Forward</button><button id="colDown">Back</button><button id="colDel" title="Delete">Delete</button></div>
+      <div class="btns"><button id="colUndo" title="Ctrl+Z">Undo</button><button id="colDup" title="Ctrl+D">Duplicate</button><button id="colCopy" title="Ctrl+C">Copy</button><button id="colPaste" title="Ctrl+V">Paste</button><button id="colUp">Forward</button><button id="colDown">Back</button><button id="colDel" title="Delete">Delete</button></div>
       <div id="colItem" hidden>
         <div class="hdr" style="margin-top:8px"><b id="colKind"></b></div>
         <div class="grid2">
@@ -2189,6 +2189,24 @@ function colSetPhoto(id,file){
   im.src=url;
 }
 // new pictures fill empty frames first, then get frames of their own
+// copy / paste: the item goes to localStorage and its picture to IndexedDB, so it pastes onto any slide,
+// into another project or another tab. Ctrl+V with a picture on the system clipboard adds it as a photo.
+function colCopy(){
+  const it=COL.items[COL_SEL];if(!it)return;
+  const c={...it,slideX:it.x-Math.floor((it.x+colSize(it)[0]/2)/COL_W)*COL_W};
+  try{localStorage.setItem('colClip',JSON.stringify(c));}catch(e){}
+  if(it.t==='photo')getIdb(colKey(it.id)).then(d=>idb('readwrite',st=>d?st.put(d,'colClipPhoto'):st.delete('colClipPhoto'))).catch(()=>{});
+  saveMsg({photo:'Photo',logo:'Logo',names:'Name tiles',text:'Text'}[it.t]+' copied.');
+}
+async function colPaste(){
+  let c=null;try{c=JSON.parse(localStorage.getItem('colClip'));}catch(e){}
+  if(!c)return;colPush();
+  const x=COL_SLIDE*COL_W+c.slideX,same=COL.items.some(o=>o.t===c.t&&o.x===x&&o.y===c.y);
+  delete c.slideX;c.x=x+(same?40:0);c.y+=same?40:0;
+  if(c.t==='photo'){c.id=colNewId();const d=await getIdb('colClipPhoto').catch(()=>null);
+    if(d)await idb('readwrite',st=>st.put(d,colKey(c.id))).catch(()=>{});}
+  COL.items.push(c);COL_SEL=COL.items.length-1;colUI();redraw();if(c.t==='photo')colLoadImgs();
+}
 function colAddPhotos(files,at){
   colPush();
   let fs=[...files].filter(f=>/^image\//.test(f.type));
@@ -2244,7 +2262,7 @@ function colUI(){
   $('colAccentMode').value=COL.accentMode||'custom';$('colAccent').value=COL.accent;$('colAccent').hidden=$('colAccentMode').value!=='custom';
   $('colPanoZoom').value=COL.panoZoom||1;$('colPanoFx').value=COL.panoFx??.5;$('colPanoFy').value=COL.panoFy??.5;$('colPanoDark').value=COL.panoDark||0;
   $('colFadeTop').value=COL.fadeTop||0;$('colFadeBot').value=COL.fadeBot||0;$('colPanoDel').disabled=!COL.pano;
-  const it=COL.items[COL_SEL],box=$('colItem');box.hidden=!it;['colDel','colUp','colDown','colDup'].forEach(id=>$(id).disabled=!it);
+  const it=COL.items[COL_SEL],box=$('colItem');box.hidden=!it;['colDel','colUp','colDown','colDup','colCopy'].forEach(id=>$(id).disabled=!it);
   if(!it)return;
   box.querySelectorAll('[data-for]').forEach(e=>e.hidden=!e.dataset.for.split(' ').includes(it.t));
   $('colKind').textContent={photo:'Photo',logo:'Logo',names:'Name tiles',text:'Text'}[it.t];
@@ -2304,7 +2322,10 @@ function initCollageUI(cv,toCanvas){
     COL.items.push(c);COL_SEL=COL.items.length-1;colUI();redraw();};
   $('colUp').onclick=()=>{const i=COL_SEL;if(i<0||i>=COL.items.length-1)return;colPush();[COL.items[i],COL.items[i+1]]=[COL.items[i+1],COL.items[i]];COL_SEL++;redraw();};
   $('colDown').onclick=()=>{const i=COL_SEL;if(i<=0)return;colPush();[COL.items[i],COL.items[i-1]]=[COL.items[i-1],COL.items[i]];COL_SEL--;redraw();};
-  $('colUndo').onclick=colUndo;
+  $('colUndo').onclick=colUndo;$('colCopy').onclick=colCopy;$('colPaste').onclick=colPaste;
+  document.addEventListener('paste',e=>{if(!on()||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
+    const fs=[...(e.clipboardData?.files||[])].filter(f=>/^image\//.test(f.type));e.preventDefault();
+    if(fs.length)colAddPhotos(fs);else colPaste();});
   $('ciPic').addEventListener('change',()=>{const it=COL.items[COL_SEL];if(it&&it.t==='photo')colSetPhoto(it.id,$('ciPic').files[0]);$('ciPic').value='';});
   ['ciText','ciNames','ciSize','ciChip','ciStack','ciColor','ciCustom','ciStyle','ciBox','ciBoxCol','ciAlign','ciRot','ciBorder','ciZoom','ciFx','ciFy','ciShadow','ciScale','ciW','ciH','ciInk','ciLogoSize'].forEach(id=>{
     $(id).addEventListener('input',colFromUI);$(id).addEventListener('change',()=>{colEditing=false;if(id==='ciScale'){$(id).blur();colUI();}});});
@@ -2351,6 +2372,7 @@ function initCollageUI(cv,toCanvas){
     if(it&&it.t==='photo'&&fs.length===1)colSetPhoto(it.id,fs[0]);else colAddPhotos(fs,pt);},true);
   document.addEventListener('keydown',e=>{if(!on()||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();colUndo();return;}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='c'&&COL_SEL>=0&&!getSelection().toString()){e.preventDefault();colCopy();return;}
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'&&COL_SEL>=0){e.preventDefault();$('colDup').click();return;}
     if(e.key==='PageDown'){e.preventDefault();go(1);return;}if(e.key==='PageUp'){e.preventDefault();go(-1);return;}
     if(COL_SEL<0)return;

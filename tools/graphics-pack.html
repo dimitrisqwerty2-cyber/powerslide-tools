@@ -319,6 +319,8 @@
           <div data-for="text"><label><input type="checkbox" id="ciBox"> On a box</label><select id="ciBoxCol"><option value="accent">Accent</option><option value="gold">Gold</option><option value="white">White</option><option value="black">Black</option></select></div>
           <div data-for="text"><label>Alignment</label><select id="ciAlign"><option value="left">Left</option><option value="center">Centred</option><option value="right">Right</option></select></div>
           <div data-for="photo"><label>Picture</label><input type="file" id="ciPic" accept="image/*"></div>
+          <div data-for="photo"><label>Photo size <small>(keeps the shape)</small></label><input type="range" id="ciScale" min="10" max="300" value="100"></div>
+          <div data-for="photo"><label>Width / height</label><div style="display:flex;gap:6px"><input type="range" id="ciW" min="80" max="2880" value="820" style="flex:1"><input type="range" id="ciH" min="80" max="1800" value="600" style="flex:1"></div></div>
           <div data-for="photo"><label>White border</label><input type="range" id="ciBorder" min="0" max="60" value="16"></div>
           <div data-for="photo"><label>Picture zoom</label><input type="range" id="ciZoom" min="1" max="5" step="0.01" value="1"></div>
           <div data-for="photo"><label><input type="checkbox" id="ciShadow" checked> Drop shadow</label></div>
@@ -329,7 +331,7 @@
           <div data-for="text photo logo names"><label>Rotation</label><input type="range" id="ciRot" min="-45" max="45" step="0.5" value="0"></div>
         </div>
       </div>
-      <div class="note">The slides sit side by side as one long picture, so anything over a slide edge carries on onto the next slide; the strip under the preview shows them all. Click to select, drag to move (it snaps to the slide's edges, middle and other items; hold Alt to place freely), drag the square to resize (Shift keeps a photo's shape), the round handle to rotate. Shift+drag or scroll on a photo moves / zooms the picture in its frame. Drop pictures on the preview: on a frame they replace its picture, elsewhere they fill this slide's empty frames first. Ctrl+Z undo, Ctrl+D duplicate, arrows nudge, PageUp/PageDown change slide.</div>
+      <div class="note">The slides sit side by side as one long picture, so anything over a slide edge carries on onto the next slide; the strip under the preview shows them all. Click to select, drag to move (it snaps to the slide's edges, middle and other items; hold Alt to place freely), drag any corner square to resize, or use Photo size / Width / height (Shift keeps a photo's shape), the round handle to rotate. Shift+drag or scroll on a photo moves / zooms the picture in its frame. Drop pictures on the preview: on a frame they replace its picture, elsewhere they fill this slide's empty frames first. Ctrl+Z undo, Ctrl+D duplicate, arrows nudge, PageUp/PageDown change slide.</div>
     </div>
     <h2>Project</h2>
     <div class="grid2">
@@ -2147,7 +2149,7 @@ function drawCollage(ctx,st){
       const it=c.items[COL_SEL],[w,h]=colSize(it);
       ctx.translate(it.x+w/2,it.y+h/2);ctx.rotate((it.rot||0)*Math.PI/180);
       ctx.strokeStyle='#2f8be6';ctx.lineWidth=4;ctx.setLineDash([14,8]);ctx.strokeRect(-w/2,-h/2,w,h);ctx.setLineDash([]);
-      ctx.fillStyle='#2f8be6';ctx.fillRect(w/2-18,h/2-18,36,36);
+      ctx.fillStyle='#2f8be6';[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([sx,sy])=>ctx.fillRect(sx*w/2-18,sy*h/2-18,36,36));
       ctx.beginPath();ctx.arc(0,-h/2-50,18,0,7);ctx.fill();ctx.fillRect(-2,-h/2-50,4,50);
     }
   }
@@ -2158,7 +2160,7 @@ function colLocal(it,pt){const [w,h]=colSize(it),cx=it.x+w/2,cy=it.y+h/2,a=-(it.
   return {x:dx*Math.cos(a)-dy*Math.sin(a),y:dx*Math.sin(a)+dy*Math.cos(a),w,h};}
 function colHit(pt){
   if(COL_SEL>=0&&COL.items[COL_SEL]){const l=colLocal(COL.items[COL_SEL],pt);
-    if(Math.abs(l.x-(l.w/2))<30&&Math.abs(l.y-(l.h/2))<30)return {i:COL_SEL,mode:'size'};
+    for(const [sx,sy] of [[1,1],[-1,1],[1,-1],[-1,-1]])if(Math.abs(l.x-sx*l.w/2)<30&&Math.abs(l.y-sy*l.h/2)<30)return {i:COL_SEL,mode:'size',sx,sy};
     if(Math.hypot(l.x,l.y+l.h/2+50)<30)return {i:COL_SEL,mode:'rot'};}
   for(let i=COL.items.length-1;i>=0;i--){const l=colLocal(COL.items[i],pt);if(Math.abs(l.x)<=l.w/2&&Math.abs(l.y)<=l.h/2)return {i,mode:'move'};}
   return null;
@@ -2250,8 +2252,10 @@ function colUI(){
   $('ciColor').value=/^#/.test(it.color)?'custom':(it.color||'white');$('ciCustom').value=/^#/.test(it.color)?it.color:'#ffffff';$('ciCustom').hidden=$('ciColor').value!=='custom';
   $('ciStyle').value=it.style||'plain';$('ciBox').checked=!!it.box;$('ciBoxCol').value=it.boxCol&&/^#/.test(it.boxCol)?it.boxCol:'accent';$('ciAlign').value=it.align||'left';
   $('ciRot').value=it.rot||0;$('ciBorder').value=it.border||0;$('ciZoom').value=it.zoom||1;$('ciFx').value=it.fx??.5;$('ciFy').value=it.fy??.5;$('ciShadow').checked=it.shadow!==false;
+  if(it.t==='photo'&&document.activeElement!==$('ciScale')){$('ciW').value=it.w;$('ciH').value=it.h;$('ciScale').value=100;colScaleBase=[it.w,it.h];}
   $('ciInk').value=it.ink||'white';$('ciLogoSize').value=it.size||110;
 }
+let colScaleBase=null;   // the photo's size when the Photo size slider was grabbed (slider then shows 100%)
 let colEditing=false;   // one undo step per run of slider / typing changes
 function colFromUI(){
   const it=COL.items[COL_SEL];if(!it)return;
@@ -2260,7 +2264,10 @@ function colFromUI(){
   if(it.t==='text'){it.text=$('ciText').value;it.size=+$('ciSize').value;it.color=$('ciColor').value==='custom'?$('ciCustom').value:$('ciColor').value;it.style=$('ciStyle').value;
     it.box=$('ciBox').checked;it.boxCol=$('ciBoxCol').value;it.align=$('ciAlign').value;$('ciCustom').hidden=$('ciColor').value!=='custom';}
   if(it.t==='names'){it.text=$('ciNames').value;it.size=+$('ciChip').value;it.stack=$('ciStack').checked;}
-  if(it.t==='photo'){it.border=+$('ciBorder').value;it.zoom=+$('ciZoom').value;it.fx=+$('ciFx').value;it.fy=+$('ciFy').value;it.shadow=$('ciShadow').checked;}
+  if(it.t==='photo'){const cx=it.x+it.w/2,cy=it.y+it.h/2,f=+$('ciScale').value/100;
+    let w=+$('ciW').value,h=+$('ciH').value;if(document.activeElement===$('ciScale')&&colScaleBase){w=colScaleBase[0]*f;h=colScaleBase[1]*f;}
+    it.w=Math.max(80,Math.round(w));it.h=Math.max(80,Math.round(h));it.x=Math.round(cx-it.w/2);it.y=Math.round(cy-it.h/2);$('ciW').value=it.w;$('ciH').value=it.h;
+    it.border=+$('ciBorder').value;it.zoom=+$('ciZoom').value;it.fx=+$('ciFx').value;it.fy=+$('ciFy').value;it.shadow=$('ciShadow').checked;}
   if(it.t==='logo'){it.ink=$('ciInk').value;it.size=+$('ciLogoSize').value;}
   redraw();
 }
@@ -2299,8 +2306,8 @@ function initCollageUI(cv,toCanvas){
   $('colDown').onclick=()=>{const i=COL_SEL;if(i<=0)return;colPush();[COL.items[i],COL.items[i-1]]=[COL.items[i-1],COL.items[i]];COL_SEL--;redraw();};
   $('colUndo').onclick=colUndo;
   $('ciPic').addEventListener('change',()=>{const it=COL.items[COL_SEL];if(it&&it.t==='photo')colSetPhoto(it.id,$('ciPic').files[0]);$('ciPic').value='';});
-  ['ciText','ciNames','ciSize','ciChip','ciStack','ciColor','ciCustom','ciStyle','ciBox','ciBoxCol','ciAlign','ciRot','ciBorder','ciZoom','ciFx','ciFy','ciShadow','ciInk','ciLogoSize'].forEach(id=>{
-    $(id).addEventListener('input',colFromUI);$(id).addEventListener('change',()=>{colEditing=false;});});
+  ['ciText','ciNames','ciSize','ciChip','ciStack','ciColor','ciCustom','ciStyle','ciBox','ciBoxCol','ciAlign','ciRot','ciBorder','ciZoom','ciFx','ciFy','ciShadow','ciScale','ciW','ciH','ciInk','ciLogoSize'].forEach(id=>{
+    $(id).addEventListener('input',colFromUI);$(id).addEventListener('change',()=>{colEditing=false;if(id==='ciScale'){$(id).blur();colUI();}});});
   let drag=null;
   cv.addEventListener('pointerdown',e=>{
     if(!on())return;const pt=pano(e),h=colHit(pt);
@@ -2309,7 +2316,7 @@ function initCollageUI(cv,toCanvas){
       cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
     COL_SEL=h?h.i:-1;colUI();redraw();if(!h)return;
     colPush();const it=COL.items[h.i],[w,hh]=colSize(it);
-    drag={...h,sx:pt.x,sy:pt.y,ox:it.x,oy:it.y,ow:w,oh:hh,os:it.size,pan:e.shiftKey&&it.t==='photo',ofx:it.fx??.5,ofy:it.fy??.5,moved:false};
+    drag={...h,sx2:h.sx,sy2:h.sy,sx:pt.x,sy:pt.y,ox:it.x,oy:it.y,ow:w,oh:hh,os:it.size,pan:e.shiftKey&&it.t==='photo',ofx:it.fx??.5,ofy:it.fy??.5,moved:false};
     cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();
   },true);
   cv.addEventListener('pointermove',e=>{
@@ -2323,8 +2330,13 @@ function initCollageUI(cv,toCanvas){
       else{it.x=Math.round(drag.ox+dx);it.y=Math.round(drag.oy+dy);if(!e.altKey)colSnap(it,drag.i);else COL_GUIDES=[];}
     }else if(drag.mode==='size'){
       const cx=drag.ox+drag.ow/2,cy=drag.oy+drag.oh/2,a=-(it.rot||0)*Math.PI/180,lx=(pt.x-cx)*Math.cos(a)-(pt.y-cy)*Math.sin(a),ly=(pt.x-cx)*Math.sin(a)+(pt.y-cy)*Math.cos(a);
-      if(it.t==='photo'){const nw=Math.max(80,drag.ow/2+lx),nh=e.shiftKey?nw*drag.oh/drag.ow:Math.max(80,drag.oh/2+ly);it.w=Math.round(nw);it.h=Math.round(nh);it.x=Math.round(cx-drag.ow/2);it.y=Math.round(cy-drag.oh/2);}
-      else{const f=Math.max(.15,(drag.ow/2+lx)/drag.ow);it.size=Math.max(12,Math.round(drag.os*f));}
+      const sx=drag.sx2||1,sy=drag.sy2||1;
+      if(it.t==='photo'){const nw=Math.max(80,drag.ow/2+sx*lx),nh=e.shiftKey?nw*drag.oh/drag.ow:Math.max(80,drag.oh/2+sy*ly),r=(it.rot||0)*Math.PI/180;
+        // keep the opposite corner where it was, rotation included
+        const ax=-sx*drag.ow/2,ay=-sy*drag.oh/2,ox=cx+ax*Math.cos(r)-ay*Math.sin(r),oy=cy+ax*Math.sin(r)+ay*Math.cos(r),bx=sx*nw/2,by=sy*nh/2,
+          ncx=ox+bx*Math.cos(r)-by*Math.sin(r),ncy=oy+bx*Math.sin(r)+by*Math.cos(r);
+        it.w=Math.round(nw);it.h=Math.round(nh);it.x=Math.round(ncx-nw/2);it.y=Math.round(ncy-nh/2);}
+      else{const f=Math.max(.15,(drag.ow/2+sx*lx)/drag.ow);it.size=Math.max(12,Math.round(drag.os*f));}
     }else{const [w,h]=colSize(it),cx=it.x+w/2,cy=it.y+h/2;let r=Math.atan2(pt.y-cy,pt.x-cx)*180/Math.PI+90;r=((r+540)%360)-180;if(Math.abs(r)<2)r=0;it.rot=Math.round(r*2)/2;}
     colUI();redraw();
   },true);

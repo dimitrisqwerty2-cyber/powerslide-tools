@@ -1283,10 +1283,10 @@ function setStripPhoto(i,file){
   if(!file||!/^image\//.test(file.type))return;
   const url=URL.createObjectURL(file),im=new Image();
   im.onload=()=>{
-    const sc=Math.min(1,2400/Math.max(im.width,im.height)),c=document.createElement('canvas');
-    c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    const sc=Math.min(1,PHOTO_MAX/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);{const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);};
     URL.revokeObjectURL(url);
-    const data=c.toDataURL('image/jpeg',.9);
+    const data=c.toDataURL('image/jpeg',.95);
     loadImg(data).then(img=>{STRIP_IMG[i]=img;const s=SS&&SS.strips[i];if(s){s.zoom=1;s.fx=.5;s.fy=.5;}buildStripUI();redraw();});
     idb('readwrite',st=>st.put(data,photoKey(i))).catch(()=>{});
   };
@@ -1373,6 +1373,7 @@ function initStripsUI(cv,toCanvas){
 
 let PIC_TINT=0;   // tint over every picture, in SHADE_RGB
 function render(ctx,st){
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';   // sharp photos when scaled down
   {const c=st.head&&st.head.shadeCol;SHADE_RGB=c?hexRgb(c).join(','):'0,0,0';PIC_TINT=(st.tint||0)/100;}
   if(MODES[st.mode].collage){ctx.clearRect(0,0,W,H);drawCollage(ctx,st);return;}
   const M=MODES[st.mode],T=themeOf(st),q=M.quote?st.quote:(M.strips?st.strips:null);
@@ -1804,10 +1805,10 @@ function setTablePhoto(file){
   if(!file||!/^image\//.test(file.type))return;
   const url=URL.createObjectURL(file),im=new Image();
   im.onload=()=>{
-    const s=Math.min(1,2400/Math.max(im.width,im.height)),c=document.createElement('canvas');
-    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    const s=Math.min(1,PHOTO_MAX/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);{const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);};
     URL.revokeObjectURL(url);
-    const data=c.toDataURL('image/jpeg',.9);
+    const data=c.toDataURL('image/jpeg',.95);
     loadImg(data).then(i=>{TPHOTO.img=i;$('tZoom').value=1;$('tFx').value=.5;$('tFy').value=.5;redraw();});
     idb('readwrite',st=>st.put(data,'tablePhoto')).catch(()=>{});
   };
@@ -1872,8 +1873,8 @@ function setPhoto(file){
   if(!file||!/^image\//.test(file.type))return;
   const url=URL.createObjectURL(file),im=new Image();
   im.onload=()=>{
-    const s=Math.min(1,3000/Math.max(im.width,im.height)),c=document.createElement('canvas');
-    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    const s=Math.min(1,PHOTO_MAX/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);{const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);};
     URL.revokeObjectURL(url);
     const data=c.toDataURL('image/jpeg',.92);
     loadImg(data).then(i=>{PHOTO.img=i;$('qZoom').value=1;$('qFx').value=.5;$('qFy').value=.5;redraw();});
@@ -2063,6 +2064,7 @@ async function openProject(file){
    Items can sit across a slide edge, so they carry on onto the next slide. The background and accent
    follow the Colours theme unless set by hand; text can use the pack's glitch / gold title looks and
    the name tiles from the headline card. */
+const PHOTO_MAX=8000;   // longest side a loaded picture is kept at (big enough for a full-width carousel background in HD)
 const COL_W=1440,COL_H=1800,COL_SNAP=18;
 const COL_DEFAULT={slides:3,bgMode:'theme',bg:'#0c1714',bg2:'#06100d',accentMode:'theme',accent:'#2fe08a',items:[
   {t:'text',text:'RECAP 2026',x:90,y:80,size:150,color:'white',style:'plain',box:false,rot:0,align:'left'},
@@ -2181,9 +2183,9 @@ function colSetPhoto(id,file){
   if(!file||!/^image\//.test(file.type))return;
   const url=URL.createObjectURL(file),im=new Image();
   im.onload=()=>{
-    const sc=Math.min(1,2400/Math.max(im.width,im.height)),c=document.createElement('canvas');
-    c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);
-    const data=c.toDataURL('image/jpeg',.9);
+    const sc=Math.min(1,PHOTO_MAX/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);{const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);};URL.revokeObjectURL(url);
+    const data=c.toDataURL('image/jpeg',.95);
     loadImg(data).then(img=>{COL_IMG[id]=img;redraw();});idb('readwrite',st=>st.put(data,colKey(id))).catch(()=>{});
   };
   im.src=url;

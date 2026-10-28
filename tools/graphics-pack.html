@@ -27,6 +27,11 @@
                 box-shadow:0 0 0 1px #0d0d0d,0 12px 40px rgba(0,0,0,.6)}
   .colHide{display:none!important}
   .stage.col canvas{bottom:130px;max-height:calc(100% - 186px)}
+  .stage.col.yt canvas{bottom:250px;max-height:calc(100% - 306px)}
+  .stage.yt #colStrip{height:226px;gap:28px;align-items:flex-start}
+  .ytCard{flex:none;display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:11px;white-space:nowrap}
+  .ytCard b{color:var(--text);font-weight:600}
+  #colStrip .ytCard canvas{outline:none;cursor:default;border-radius:8px}
   #colStrip{position:absolute;left:0;right:0;bottom:14px;height:100px;align-items:center;display:flex;justify-content:center;gap:8px;overflow-x:auto;padding:0 20px}
   #colStrip canvas{position:static;margin:0;max-width:none;max-height:none;box-shadow:none;width:72px;height:90px;cursor:pointer;outline:1px solid var(--line2);flex:none}
   #colStrip canvas.on{outline:2px solid var(--accent);outline-offset:2px}
@@ -112,6 +117,7 @@
   <div class="doctabs">
     <div class="doctab on" id="tabScreen">Screen <small>1440×1080</small></div>
     <div class="doctab" id="tabIg">Instagram 4:5 <small>1080×1350</small></div>
+    <div class="doctab" id="tabYt" hidden>YouTube 16:9 <small>1280×720</small></div>
   </div>
   <div class="sp" style="flex:1"></div>
   <div class="tools">
@@ -274,15 +280,15 @@
       <div class="note">Drop a picture straight onto a strip in the preview, drag a picture to move it, scroll on it to zoom. Drag a row of chips or a text box to put it anywhere; scroll on a chip row to resize it. A chip can be text, an icon with text, a brand or a flag, in any colour; a brand chip with no text shows the brand name. "Copy chips to other strips" copies this strip's chips (text included) so you only change what differs.</div>
     </div>
     <div id="collageUI" hidden>
-      <h2>Slides</h2>
+      <h2 id="colHead">Slides</h2>
       <div class="grid2">
-        <div><label id="colSlides">Slide 1 of 3</label><div style="display:flex;gap:6px"><button id="colPrev" style="flex:1" title="PageUp">‹ Previous</button><button id="colNext" style="flex:1" title="PageDown">Next ›</button></div></div>
-        <div><label>&nbsp;</label><div style="display:flex;gap:6px"><button id="colAddSlide" style="flex:1">Add slide</button><button id="colDelSlide" style="flex:1">Remove this slide</button></div></div>
+        <div class="colOnly"><label id="colSlides">Slide 1 of 3</label><div style="display:flex;gap:6px"><button id="colPrev" style="flex:1" title="PageUp">‹ Previous</button><button id="colNext" style="flex:1" title="PageDown">Next ›</button></div></div>
+        <div class="colOnly"><label>&nbsp;</label><div style="display:flex;gap:6px"><button id="colAddSlide" style="flex:1">Add slide</button><button id="colDelSlide" style="flex:1">Remove this slide</button></div></div>
         <div><label>Background</label><select id="colBgMode"><option value="theme">Theme glow (Colours)</option><option value="custom">Own colours…</option></select></div>
         <div id="colBgBox"><label>Top / bottom</label><input type="color" id="colBg" value="#0c1714"> <input type="color" id="colBg2" value="#06100d"></div>
         <div><label>Accent colour</label><select id="colAccentMode"><option value="theme">Theme strip</option><option value="gold">Gold</option><option value="custom">Own colour…</option></select> <input type="color" id="colAccent" value="#2fe08a"></div>
       </div>
-      <div class="hdr" style="margin-top:8px">Background picture across all slides <small>(one wide photo that carries on as you swipe)</small></div>
+      <div class="hdr" style="margin-top:8px" id="colPanoHdr">Background picture across all slides <small>(one wide photo that carries on as you swipe)</small></div>
       <div class="grid2">
         <div><label>Picture</label><div style="display:flex;gap:6px"><label class="primary" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;cursor:pointer;border:1px solid var(--line2)">Choose…<input type="file" id="colPano" accept="image/*" hidden></label><button id="colPanoDel" style="flex:1">Remove</button></div></div>
         <div><label>Zoom</label><input type="range" id="colPanoZoom" min="1" max="4" step="0.01" value="1"></div>
@@ -290,10 +296,16 @@
         <div><label>Picture ↑ ↓</label><input type="range" id="colPanoFy" min="0" max="1" step="0.005" value="0.5"></div>
         <div><label>Darken</label><input type="range" id="colPanoDark" min="0" max="80" value="0"></div>
         <div><label>Shade top / bottom</label><div style="display:flex;gap:6px"><input type="range" id="colFadeTop" min="0" max="95" value="0" style="flex:1"><input type="range" id="colFadeBot" min="0" max="95" value="0" style="flex:1"></div></div>
+        <div class="thumbOnly"><label>Shade left / right <small>(behind text at the side)</small></label><div style="display:flex;gap:6px"><input type="range" id="colFadeL" min="0" max="95" value="0" style="flex:1"><input type="range" id="colFadeR" min="0" max="95" value="0" style="flex:1"></div></div>
       </div>
       <div class="note" style="margin-top:2px">Alt+drag on an empty part of the preview slides the background picture; scroll there with Alt to zoom it.</div>
-      <div class="hdr" style="margin-top:8px">Photo layout for this slide <small>(empty frames: drop pictures in)</small></div>
-      <div class="btns" style="flex-wrap:wrap">
+      <div class="hdr" style="margin-top:8px">Photo layout <small>(empty frames: drop pictures in)</small></div>
+      <div class="btns thumbOnly" style="flex-wrap:wrap">
+        <button data-collayout="tHero">Full photo</button><button data-collayout="tRight">Photo right</button><button data-collayout="tLeft">Photo left</button>
+        <button data-collayout="tSplit">Left / right</button><button data-collayout="tTrio">3 across</button><button data-collayout="tInset">Full + print</button>
+      </div>
+      <div class="checks thumbOnly"><label><input type="checkbox" id="colShowTime" checked>Show YouTube's video length badge (preview only)</label></div>
+      <div class="btns colOnly" style="flex-wrap:wrap">
         <button data-collayout="hero">Full photo</button><button data-collayout="heroPair">Full + 2 prints</button><button data-collayout="stack">3 prints</button>
         <button data-collayout="grid">2×2 grid</button><button data-collayout="split">Top / bottom</button><button data-collayout="sides">Left / right</button>
       </div>
@@ -303,6 +315,7 @@
         <button data-coladd="photo">Empty print</button><button data-coladd="full">Full-slide photo</button>
         <button data-coladd="title">Title</button><button data-coladd="glitch">Glitch word</button><button data-coladd="headline">Accent headline</button>
         <button data-coladd="text">Text</button><button data-coladd="caption">Caption box</button><button data-coladd="names">Name tiles</button><button data-coladd="logo">Logo</button>
+        <button data-coladd="arrow">Arrow</button><button data-coladd="ring">Circle</button><button data-coladd="box">Box</button><button data-coladd="bar">Colour bar</button>
       </div>
       <h2>Selected</h2>
       <div class="btns"><button id="colUndo" title="Ctrl+Z">Undo</button><button id="colDup" title="Ctrl+D">Duplicate</button><button id="colCopy" title="Ctrl+C">Copy</button><button id="colPaste" title="Ctrl+V">Paste</button><button id="colUp">Forward</button><button id="colDown">Back</button><button id="colDel" title="Delete">Delete</button></div>
@@ -315,12 +328,17 @@
           <div data-for="names"><label><input type="checkbox" id="ciStack"> One under the other</label></div>
           <div data-for="text"><label>Look</label><select id="ciStyle"><option value="plain">Plain</option><option value="glitch">Glitch (like the title)</option><option value="gold">Gold</option><option value="outline">Outline</option></select></div>
           <div data-for="text"><label>Size</label><input type="range" id="ciSize" min="16" max="320" value="50"></div>
-          <div data-for="text"><label>Colour</label><select id="ciColor"><option value="white">White</option><option value="accent">Accent</option><option value="gold">Gold</option><option value="black">Black</option><option value="custom">Custom…</option></select> <input type="color" id="ciCustom" value="#ffffff"></div>
+          <div data-for="shape"><label>Shape</label><select id="ciShape"><option value="arrow">Arrow</option><option value="ring">Circle</option><option value="box">Box (outline)</option><option value="bar">Colour bar (filled)</option></select></div>
+          <div data-for="text shape"><label>Colour</label><select id="ciColor"><option value="white">White</option><option value="accent">Accent</option><option value="gold">Gold</option><option value="black">Black</option><option value="custom">Custom…</option></select> <input type="color" id="ciCustom" value="#ffffff"></div>
           <div data-for="text"><label><input type="checkbox" id="ciBox"> On a box</label><select id="ciBoxCol"><option value="accent">Accent</option><option value="gold">Gold</option><option value="white">White</option><option value="black">Black</option></select></div>
           <div data-for="text"><label>Alignment</label><select id="ciAlign"><option value="left">Left</option><option value="center">Centred</option><option value="right">Right</option></select></div>
-          <div data-for="photo"><label>Picture</label><input type="file" id="ciPic" accept="image/*"></div>
-          <div data-for="photo"><label>Photo size <small>(keeps the shape)</small></label><input type="range" id="ciScale" min="10" max="300" value="100"></div>
-          <div data-for="photo"><label>Width / height</label><div style="display:flex;gap:6px"><input type="range" id="ciW" min="80" max="2880" value="820" style="flex:1"><input type="range" id="ciH" min="80" max="1800" value="600" style="flex:1"></div></div>
+          <div data-for="shape"><label>Line width <small>(circle, box)</small></label><input type="range" id="ciLine" min="4" max="60" value="16"></div>
+          <div data-for="shape"><label>Opacity</label><input type="range" id="ciAlpha" min="10" max="100" value="100"></div>
+          <div data-for="text shape photo"><label>Outline <small id="ciStrokeHint"></small></label><div style="display:flex;gap:6px"><input type="range" id="ciStroke" min="0" max="40" value="0" style="flex:1"><input type="color" id="ciStrokeCol" value="#000000" style="width:44px;flex:none"></div></div>
+          <div data-for="text shape"><label>Shadow</label><select id="ciShadowK"><option value="soft">Soft</option><option value="hard">Hard (thumbnail look)</option><option value="none">None</option></select></div>
+          <div data-for="photo"><label>Picture <small>(a transparent PNG becomes a cut-out)</small></label><input type="file" id="ciPic" accept="image/*"></div>
+          <div data-for="photo shape"><label>Size <small>(keeps the shape)</small></label><input type="range" id="ciScale" min="10" max="300" value="100"></div>
+          <div data-for="photo shape"><label>Width / height</label><div style="display:flex;gap:6px"><input type="range" id="ciW" min="80" max="2880" value="820" style="flex:1"><input type="range" id="ciH" min="80" max="1800" value="600" style="flex:1"></div></div>
           <div data-for="photo"><label>White border</label><input type="range" id="ciBorder" min="0" max="60" value="16"></div>
           <div data-for="photo"><label>Picture zoom</label><input type="range" id="ciZoom" min="1" max="5" step="0.01" value="1"></div>
           <div data-for="photo"><label><input type="checkbox" id="ciShadow" checked> Drop shadow</label></div>
@@ -328,10 +346,11 @@
           <div data-for="photo"><label>Picture ↑ ↓</label><input type="range" id="ciFy" min="0" max="1" step="0.005" value="0.5"></div>
           <div data-for="logo"><label>Logo colour</label><select id="ciInk"><option value="white">White</option><option value="black">Black</option><option value="own">Own colours, no shadow</option></select></div>
           <div data-for="logo"><label>Logo size</label><input type="range" id="ciLogoSize" min="30" max="400" value="110"></div>
-          <div data-for="text photo logo names"><label>Rotation</label><input type="range" id="ciRot" min="-45" max="45" step="0.5" value="0"></div>
+          <div data-for="text photo logo names shape"><label>Rotation</label><input type="range" id="ciRot" min="-45" max="45" step="0.5" value="0"></div>
         </div>
       </div>
-      <div class="note">The slides sit side by side as one long picture, so anything over a slide edge carries on onto the next slide; the strip under the preview shows them all. Click to select, drag to move (it snaps to the slide's edges, middle and other items; hold Alt to place freely), drag any corner square to resize, or use Photo size / Width / height (Shift keeps a photo's shape), the round handle to rotate. Shift+drag or scroll on a photo moves / zooms the picture in its frame. Drop pictures on the preview: on a frame they replace its picture, elsewhere they fill this slide's empty frames first. Ctrl+Z undo, Ctrl+D duplicate, arrows nudge, PageUp/PageDown change slide.</div>
+      <div class="note thumbOnly">YouTube shows thumbnails small, so keep to a few big words with an outline, one face or car, and nothing important in the bottom-right corner (the video length goes there). The cards under the preview show it at feed size. Drop a transparent PNG (a driver or car cut out) and it goes in without a frame; give it an Outline to lift it off the background. Click to select, drag to move (snaps to the edges, middle and other items; Alt places freely), corner squares resize, the round handle rotates. Shift+drag or scroll on a photo moves / zooms it in its frame. Ctrl+Z undo, Ctrl+D duplicate, Ctrl+C / Ctrl+V copy and paste, arrows nudge. The YouTube 1280×720 export is a PNG when it's under YouTube's 2 MB limit, otherwise a JPEG that fits.</div>
+      <div class="note colOnly">The slides sit side by side as one long picture, so anything over a slide edge carries on onto the next slide; the strip under the preview shows them all. Click to select, drag to move (it snaps to the slide's edges, middle and other items; hold Alt to place freely), drag any corner square to resize, or use Photo size / Width / height (Shift keeps a photo's shape), the round handle to rotate. Shift+drag or scroll on a photo moves / zooms the picture in its frame. Drop pictures on the preview: on a frame they replace its picture, elsewhere they fill this slide's empty frames first. Ctrl+Z undo, Ctrl+D duplicate, arrows nudge, PageUp/PageDown change slide.</div>
     </div>
     <h2>Project</h2>
     <div class="grid2">
@@ -520,6 +539,8 @@ const QUOTE_L = {
   screen:{...FORMATS.screen.L, topBot:150, strip1:[150,192], panel:[192,940], strip2:[940,978], foot:[978,1080]},
   ig:    {...FORMATS.ig.L,     topBot:200, strip1:[200,242], panel:[242,1622], strip2:[1622,1660], foot:[1660,1800]}
 };
+// YouTube thumbnail: 16:9 on the same 1440 width (the collage editor on one slide), exported at 1280x720 / 1920x1080
+FORMATS.thumb={H:810, L:{...FORMATS.screen.L, panel:[60,750]}};
 const tileW=()=>Math.round(TILE_W*L.rowH/62);
 const MAX_ROWS=20;   // 10 per column; rows 11-20 only with Two columns
 const W=1440;let H=1080, L=FORMATS.screen.L, FMT='screen';
@@ -663,6 +684,12 @@ const MODES = {
     show:{flag:false,badge:false,move:false}, labels:false, rightCell:false, collage:true,
     fields:[], right:[], paste:''
   },
+  // YouTube thumbnails: the collage editor on one 16:9 slide, with outlined text, arrows / circles and cut-out photos
+  thumb: {
+    label:'YouTube thumbnail (16:9)', title:'Thumbnail', foot:'', rally:'', theme:'siteDark', file:'yt_thumbnail',
+    show:{flag:false,badge:false,move:false}, labels:false, rightCell:false, collage:true, thumb:true,
+    fields:[], right:[], paste:''
+  },
   // after the DirtFish "13 rounds, 6 winners" and team-of-the-week grids: the photo strips in columns
   grid: {
     label:'Photo grid (winners, line-ups)', title:'Winners', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_grid',
@@ -684,6 +711,7 @@ const DEFAULTS = {
   strips:[],
   headline:[],
   collage:[],
+  thumb:[],
   grid:[],
   stats:[R('Rally wins','','','','2'),R('Podiums','','','','6'),R('Stage wins','','','','51'),R('Stages led','','','','50')],
   points:[R('Gilles Panizzi','mitsubishi','up','+10','20'),R('Markko Märtin','ford','down','+3','11'),R('Sébastien Loeb','citroen','=','+6','10'),
@@ -1857,8 +1885,13 @@ function loadMode(m){
   $('extrasUI').hidden=$('rowChecks').hidden=!!M.stats;
   $('collageUI').hidden=!M.collage;document.querySelectorAll('.noCol').forEach(e=>e.classList.toggle('colHide',!!M.collage));
   $('tabScreen').classList.toggle('colHide',!!M.collage);document.querySelector('.stage').classList.toggle('col',!!M.collage);
-  $('ig1').textContent=M.collage?'Export all slides 1080×1350':'Instagram post 1080×1350';$('ig2').textContent=M.collage?'All slides 2160×2700':'Instagram 2160×2700';
-  if(M.collage){$('rowsUI').hidden=$('quoteUI').hidden=true;COL=JSON.parse(JSON.stringify((s&&s.collage)||COL_DEFAULT));if(!COL.bgMode)COL.bgMode='custom';if(!COL.accentMode)COL.accentMode='custom';COL_SEL=-1;COL_SLIDE=0;COL_HIST.length=0;colUI();if(ready)colLoadImgs();}
+  $('ig1').textContent=M.thumb?'YouTube thumbnail 1280×720':M.collage?'Export all slides 1080×1350':'Instagram post 1080×1350';$('ig2').textContent=M.thumb?'Full HD 1920×1080':M.collage?'All slides 2160×2700':'Instagram 2160×2700';
+  document.querySelectorAll('.colOnly').forEach(e=>e.classList.toggle('colHide',!!M.thumb));document.querySelectorAll('.thumbOnly').forEach(e=>e.classList.toggle('colHide',!M.thumb));
+  document.querySelector('.stage').classList.toggle('yt',!!M.thumb);$('tabIg').classList.toggle('colHide',!!M.thumb);$('tabYt').hidden=!M.thumb;
+  $('colHead').textContent=M.thumb?'Thumbnail':'Slides';
+  $('colPanoHdr').innerHTML=M.thumb?'Background picture':'Background picture across all slides <small>(one wide photo that carries on as you swipe)</small>';
+  if(M.collage){COL_H=M.thumb?810:1800;delete COL_IMG.pano;}
+  if(M.collage){$('rowsUI').hidden=$('quoteUI').hidden=true;COL=JSON.parse(JSON.stringify((s&&s.collage)||(M.thumb?THUMB_DEFAULT:COL_DEFAULT)));if(!COL.bgMode)COL.bgMode='custom';if(!COL.accentMode)COL.accentMode='custom';COL_SEL=-1;COL_SLIDE=0;COL_HIST.length=0;colUI();if(ready)colLoadImgs();}
   if(M.strips){SS=normStrips(s&&s.strips,M.grid?GRID_DEFAULT:STRIPS_DEFAULT);STRIP_IMG.length=0;buildStripUI();if(ready)loadStripImgs();}
   const q={...QUOTE_DEFAULT,...((s&&s.quote)||{})};
   $('qText').value=q.text;$('qSub').value=q.sub;$('qStyle').value=q.style;$('qPlace').value=q.place;
@@ -1885,11 +1918,11 @@ function setPhoto(file){
 let ready=false;
 function redraw(fromImage){
   if(!ready)return;const st=readState(),cv=$('cv');
-  setFormat(MODES[MODE].collage||$('previewIg').checked?'ig':'screen');
+  setFormat(MODES[MODE].thumb?'thumb':MODES[MODE].collage||$('previewIg').checked?'ig':'screen');
   if(cv.height!==H)cv.height=H;
-  $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');
+  $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');$('tabYt').classList.toggle('on',FMT==='thumb');
   $('sbMode').textContent=MODES[MODE].label;$('sbSize').textContent=W+' × '+H;
-  $('sbExp').textContent=FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
+  $('sbExp').textContent=FMT==='thumb'?'1280×720 · 1920×1080':FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
   render(cv.getContext('2d'),st);if(!fromImage)save(st);teamColUI();colThumbs();
 }
 
@@ -1935,7 +1968,18 @@ function onGridKey(e){
   if(t){t.focus();if(t.tagName==='INPUT')t.select();}
 }
 
+// YouTube takes thumbnails up to 2 MB: the 1280x720 one is a PNG when it fits, otherwise the best JPEG that does
+async function thumbExport(h){
+  const c=document.createElement('canvas');c.width=Math.round(h*16/9);c.height=h;
+  withFormat('thumb',()=>{const x=c.getContext('2d'),k=h/COL_H;x.scale(k,k);render(x,readState());});
+  const name=`${MODES[MODE].file}_${c.width}x${c.height}`,blob=(t,q)=>new Promise(r=>c.toBlob(r,t,q));
+  let b=await blob('image/png');
+  if(h>720||b.size<=2e6){await saveBlob(b,name+'.png');return;}
+  let q=.95;do{b=await blob('image/jpeg',q);q-=.05;}while(b.size>2e6&&q>.5);
+  await saveBlob(b,name+'.jpg');saveMsg($('saveMsg').textContent+' JPEG, as the PNG was over YouTube\'s 2 MB limit.');
+}
 function exportPNG(scale,fmt='screen'){
+  if(MODES[MODE].thumb){thumbExport(scale>1?1080:720);return;}
   if(MODES[MODE].collage){colExport(scale>1?2:1);return;}
   withFormat(fmt,()=>{
     const c=document.createElement('canvas');c.width=W*scale;c.height=H*scale;
@@ -2049,7 +2093,7 @@ async function openProject(file){
     for(let i=0;i<STRIP_MAX;i++){const d=pics.strips[i];
       await idb('readwrite',st=>d?st.put(d,pre+i):st.delete(pre+i)).catch(()=>{});}
   }
-  if(pics.collage)for(const [id,d] of Object.entries(pics.collage)){delete COL_IMG[id];if(d)await idb('readwrite',st=>st.put(d,colKey(id))).catch(()=>{});}
+  if(pics.collage)for(const [id,d] of Object.entries(pics.collage)){delete COL_IMG[id];if(d)await idb('readwrite',st=>st.put(d,colKey(id,m))).catch(()=>{});}
   if(proj.logo&&PS_LOGOS[proj.logo])$('logo').value=proj.logo;
   $('previewIg').checked=proj.format==='ig';
   loadMode(m);
@@ -2065,7 +2109,8 @@ async function openProject(file){
    follow the Colours theme unless set by hand; text can use the pack's glitch / gold title looks and
    the name tiles from the headline card. */
 const PHOTO_MAX=8000;   // longest side a loaded picture is kept at (big enough for a full-width carousel background in HD)
-const COL_W=1440,COL_H=1800,COL_SNAP=18;
+let COL_W=1440,COL_H=1800;const COL_SNAP=18;   // COL_H is 810 in thumbnail mode
+const CUT_MAX=3000;   // longest side a cut-out (transparent PNG) is kept at
 const COL_DEFAULT={slides:3,bgMode:'theme',bg:'#0c1714',bg2:'#06100d',accentMode:'theme',accent:'#2fe08a',items:[
   {t:'text',text:'RECAP 2026',x:90,y:80,size:150,color:'white',style:'plain',box:false,rot:0,align:'left'},
   {t:'logo',x:1060,y:96,size:110,ink:'white',rot:0},
@@ -2075,9 +2120,17 @@ const COL_DEFAULT={slides:3,bgMode:'theme',bg:'#0c1714',bg2:'#06100d',accentMode
   {t:'text',text:'Starting the season in Kenya with a demanding safari adventure',x:90,y:1530,size:44,color:'white',style:'plain',box:false,rot:0,align:'left'},
   {t:'text',text:'Swipe »',x:1200,y:1690,size:40,color:'white',style:'plain',box:false,rot:0,align:'left'}
 ]};
+// thumbnail mode starts from this (1440x810)
+const THUMB_DEFAULT={slides:1,bgMode:'theme',bg:'#0c1714',bg2:'#06100d',accentMode:'theme',accent:'#2fe08a',fadeL:80,showTime:true,items:[
+  {t:'photo',id:'tdemo1',x:520,y:0,w:920,h:810,rot:0,border:0,zoom:1,fx:.5,fy:.5,shadow:false},
+  {t:'logo',x:70,y:56,size:70,ink:'white',rot:0},
+  {t:'text',text:'RALLY\nRECAP',x:64,y:190,size:180,color:'white',style:'plain',box:false,rot:0,align:'left',stroke:10,strokeCol:'#000000',shadowK:'hard'},
+  {t:'text',text:'WHO WON IT?',x:70,y:600,size:70,color:'#111111',style:'plain',box:true,boxCol:'accent',rot:-2,align:'left'},
+  {t:'shape',shape:'arrow',x:600,y:430,w:250,h:130,color:'#ff2a2a',line:16,stroke:6,strokeCol:'#ffffff',shadowK:'hard',alpha:100,rot:-18}
+]};
 let COL=JSON.parse(JSON.stringify(COL_DEFAULT)),COL_SLIDE=0,COL_SEL=-1,COL_T=THEMES.siteDark,COL_GUIDES=[];
 const COL_IMG={};   // photo id -> image (pictures kept in IndexedDB as colPhoto_<id>)
-const colKey=id=>'colPhoto_'+id;
+const colKey=(id,m=MODE)=>'colPhoto_'+id+(id==='pano'&&MODES[m]&&MODES[m].thumb?'_thumb':'');   // the background picture is kept apart per mode
 const colNewId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 // accent: the theme's strip colour, the gold highlight, or a picked colour
 function colAccent(){
@@ -2093,7 +2146,7 @@ function colNames(it){return String(it.text||'').split('\n').map(l=>l.split('|')
   const b=(badge||'').toLowerCase(),key=BADGES[b]?b:(BADGE_KEYS.find(k=>BADGES[k].name.toLowerCase()===b)||'');
   return {name,flag:flag||'',badge:key};});}
 function colSize(it){
-  if(it.t==='photo')return [it.w,it.h];
+  if(it.t==='photo'||it.t==='shape')return [it.w,it.h];
   if(it.t==='logo'){const lg=PS_IMG[$('logo').value]||PS_IMG.media;return lg?[it.size*lg.width/lg.height,it.size]:[it.size,it.size];}
   if(it.t==='names'){const ns=colNames(it),g=Math.round(it.size*.25),ws=ns.map(n=>nameChip(measureCtx,0,0,it.size,n,COL_T,true));
     if(!ns.length)return [it.size*4,it.size];
@@ -2104,13 +2157,30 @@ function colSize(it){
 function colDrawItem(ctx,it){
   const [w,h]=colSize(it);
   ctx.save();ctx.translate(it.x+w/2,it.y+h/2);ctx.rotate((it.rot||0)*Math.PI/180);ctx.translate(-w/2,-h/2);
-  if(it.t==='photo'){
+  if(it.t==='photo'&&it.cutout&&COL_IMG[it.id]){   // cut-out: no frame, outline traced round the figure, shadow under it
+    const s=it.stroke||0;
+    if(it.shadow!==false){ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=30;ctx.shadowOffsetY=10;}
+    ctx.drawImage(colCutout(ctx,it,COL_IMG[it.id],w,h),-s,-s,w+2*s,h+2*s);ctx.shadowColor='transparent';
+  }else if(it.t==='photo'){
     const b=it.border||0;
+    if(it.stroke>0){ctx.lineWidth=it.stroke;ctx.strokeStyle=it.strokeCol||'#ffffff';ctx.strokeRect(-it.stroke/2,-it.stroke/2,w+it.stroke,h+it.stroke);}
     if(it.shadow!==false){ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=30;ctx.shadowOffsetY=10;}
     ctx.fillStyle=b?(it.borderCol||'#ffffff'):'#20262a';ctx.fillRect(0,0,w,h);ctx.shadowColor='transparent';
     const im=COL_IMG[it.id];
     if(im)drawCover(ctx,im,{x:b,y:b,w:w-2*b,h:h-2*b},it.zoom||1,it.fx??.5,it.fy??.5);
     else if(ctx.canvas.id==='cv'||ctx.canvas.dataset.thumb){ctx.fillStyle='#3a4248';ctx.fillRect(b,b,w-2*b,h-2*b);ctx.fillStyle='#9aa4aa';ctx.font='700 40px "WRC Clean"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Drop a picture here',w/2,h/2);}
+  }else if(it.t==='shape'){
+    const filled=it.shape==='arrow'||it.shape==='bar',lw=it.line||16,s=it.stroke||0;
+    ctx.globalAlpha=(it.alpha??100)/100;ctx.beginPath();
+    if(it.shape==='arrow'){const sh=h*.4,hd=Math.min(w*.5,h*.95);
+      ctx.moveTo(0,(h-sh)/2);ctx.lineTo(w-hd,(h-sh)/2);ctx.lineTo(w-hd,0);ctx.lineTo(w,h/2);ctx.lineTo(w-hd,h);ctx.lineTo(w-hd,(h+sh)/2);ctx.lineTo(0,(h+sh)/2);ctx.closePath();}
+    else if(it.shape==='ring')ctx.ellipse(w/2,h/2,Math.max(1,w/2-lw/2),Math.max(1,h/2-lw/2),0,0,Math.PI*2);
+    else if(it.shape==='box')ctx.rect(lw/2,lw/2,w-lw,h-lw);
+    else ctx.rect(0,0,w,h);
+    colShadow(ctx,it,Math.min(w,h));ctx.lineJoin='round';
+    if(s>0){ctx.strokeStyle=it.strokeCol||'#ffffff';ctx.lineWidth=filled?2*s:lw+2*s;ctx.stroke();ctx.shadowColor='transparent';}
+    if(filled){ctx.fillStyle=colInk(it.color||'#ff2a2a');ctx.fill();}else{ctx.lineJoin='miter';ctx.strokeStyle=colInk(it.color||'#ff2a2a');ctx.lineWidth=lw;ctx.stroke();}
+    ctx.shadowColor='transparent';ctx.globalAlpha=1;
   }else if(it.t==='logo'){
     const lg=PS_IMG[$('logo').value]||PS_IMG.media;
     if(lg){ctx.filter=(it.ink==='white'?'invert(1) ':'')+(it.ink==='own'?'':'drop-shadow(0 2px 6px rgba(0,0,0,.45))');ctx.drawImage(lg,0,0,w,h);ctx.filter='none';}
@@ -2124,14 +2194,52 @@ function colDrawItem(ctx,it){
       const lw=ctx.measureText(l).width,x=it.align==='center'?(w-lw)/2-pad:it.align==='right'?w-lw-2*pad:0,y=i*lh;
       const base=y+(it.box?(lh-Math.round(it.size*.12))/2+cap/2:cap);
       if(it.box&&l){ctx.fillStyle=colInk(it.boxCol||'accent');ctx.fillRect(x,y,lw+pad*2,lh-Math.round(it.size*.12));}
-      if(it.style==='glitch'){drawGlitchTitle(ctx,l,x+pad,base,it.size,ink,tk(COL_T,'speck'));ctx.font=`700 ${it.size}px "WRC Clean"`;ctx.textAlign='left';ctx.textBaseline='alphabetic';return;}
-      if(!it.box){ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=14;}
+      const glitch=it.style==='glitch';
+      if(it.shadowK==='hard'||(!it.box&&!glitch&&it.shadowK!=='none'))colShadow(ctx,it,it.size);
+      if(it.stroke>0&&it.style!=='outline'&&l){ctx.lineJoin='round';ctx.lineWidth=it.stroke*2;ctx.strokeStyle=it.strokeCol||'#000000';ctx.strokeText(l,x+pad,base);ctx.shadowColor='transparent';}
+      if(glitch){drawGlitchTitle(ctx,l,x+pad,base,it.size,ink,tk(COL_T,'speck'));ctx.shadowColor='transparent';ctx.font=`700 ${it.size}px "WRC Clean"`;ctx.textAlign='left';ctx.textBaseline='alphabetic';return;}
       if(it.style==='outline'){ctx.lineWidth=Math.max(2,Math.round(it.size*.03));ctx.strokeStyle=ink;ctx.strokeText(l,x+pad,base);}
       else{ctx.fillStyle=it.style==='gold'?vgrad(ctx,base-cap,base,tk(COL_T,'hl')):ink;ctx.fillText(l,x+pad,base);}
       ctx.shadowColor='transparent';
     });
   }
   ctx.restore();
+}
+// shadow for text and shapes: soft (the default), hard (offset, no blur: the thumbnail look) or none
+function colShadow(ctx,it,size){
+  const k=it.shadowK||'soft';
+  if(k==='hard'){ctx.shadowColor='rgba(0,0,0,.85)';ctx.shadowBlur=0;ctx.shadowOffsetX=ctx.shadowOffsetY=Math.max(3,Math.round(size*.06));}
+  else if(k==='soft'){ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=14;ctx.shadowOffsetX=ctx.shadowOffsetY=0;}
+}
+// a cut-out drawn at the target's resolution, with its outline: the figure's silhouette stamped round a circle under it
+const COL_CUT={};
+function colCutout(ctx,it,im,w,h){
+  const t=ctx.getTransform(),res=Math.max(.25,Math.hypot(t.a,t.b)),s=it.stroke||0,col=it.strokeCol||'#ffffff';
+  const key=[w,h,s,col,it.zoom||1,it.fx??.5,it.fy??.5,PIC_TINT,SHADE_RGB,res.toFixed(3),im.src.length].join('|');
+  if(COL_CUT[it.id]&&COL_CUT[it.id].key===key)return COL_CUT[it.id].c;
+  const pw=Math.ceil(w*res),ph=Math.ceil(h*res),S=Math.round(s*res);
+  const pic=document.createElement('canvas');pic.width=pw;pic.height=ph;
+  {const p=pic.getContext('2d');p.imageSmoothingQuality='high';p.scale(res,res);const tint=PIC_TINT;PIC_TINT=0;drawCover(p,im,{x:0,y:0,w,h},it.zoom||1,it.fx??.5,it.fy??.5);PIC_TINT=tint;
+    if(tint>0){p.setTransform(1,0,0,1,0,0);p.globalCompositeOperation='source-atop';p.fillStyle=`rgba(${SHADE_RGB},${tint})`;p.fillRect(0,0,pw,ph);}}
+  const c=document.createElement('canvas');c.width=pw+2*S;c.height=ph+2*S;const x=c.getContext('2d');
+  if(S>0){const sil=document.createElement('canvas');sil.width=pw;sil.height=ph;const q=sil.getContext('2d');
+    q.drawImage(pic,0,0);q.globalCompositeOperation='source-in';q.fillStyle=col;q.fillRect(0,0,pw,ph);
+    const n=Math.max(16,Math.min(72,Math.round(S*1.6)));for(let i=0;i<n;i++){const a=i/n*Math.PI*2;x.drawImage(sil,S+Math.cos(a)*S,S+Math.sin(a)*S);}}
+  x.drawImage(pic,S,S);COL_CUT[it.id]={key,c};return c;
+}
+// is this picture a cut-out? (more than 2% see-through, so not just a soft edge)
+function hasAlpha(im){
+  const k=Math.min(1,256/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height).data;let n=0;
+  for(let i=3;i<d.length;i+=4)if(d[i]<200)n++;
+  return n>d.length/4*.02;
+}
+// where YouTube puts the video length (bottom right), so nothing important goes under it
+function ytTime(ctx,x0,w,h){
+  const bh=Math.round(h*.094),bw=Math.round(bh*2.1),m=Math.round(w*.022);
+  ctx.save();ctx.fillStyle='rgba(0,0,0,.8)';ctx.beginPath();ctx.roundRect(x0+w-m-bw,h-m-bh,bw,bh,bh*.22);ctx.fill();
+  ctx.fillStyle='#ffffff';ctx.font=`600 ${Math.round(bh*.6)}px "Segoe UI",Roboto,Arial,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('12:34',x0+w-m-bw/2,h-m-bh/2+1);ctx.restore();
 }
 function drawCollage(ctx,st){
   const c=st.collage||COL,k=COL_SLIDE;COL_T=themeOf(st);
@@ -2144,8 +2252,11 @@ function drawCollage(ctx,st){
   if(pano&&c.panoDark>0){ctx.fillStyle=`rgba(0,0,0,${c.panoDark/100})`;ctx.fillRect(0,0,PW,COL_H);}
   for(const [f,y0,y1] of [[c.fadeTop,0,COL_H*.38],[c.fadeBot,COL_H,COL_H*.5]])if(f>0){   // shade from the top / bottom edge, for the text
     const g=ctx.createLinearGradient(0,y0,0,y1);g.addColorStop(0,`rgba(0,0,0,${f/100})`);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,Math.min(y0,y1),PW,Math.abs(y1-y0));}
+  for(const [f,x0,x1] of [[c.fadeL,0,COL_W*.62],[c.fadeR,PW,PW-COL_W*.62]])if(f>0){   // and from the left / right edge
+    const g=ctx.createLinearGradient(x0,0,x1,0);g.addColorStop(0,`rgba(0,0,0,${f/100})`);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(Math.min(x0,x1),0,Math.abs(x1-x0),COL_H);}
   c.items.forEach(it=>colDrawItem(ctx,it));
   if(ctx.canvas.id==='cv'){
+    if(MODES[st.mode].thumb&&c.showTime!==false)ytTime(ctx,k*COL_W,COL_W,COL_H);
     ctx.strokeStyle='#ff3df0';ctx.lineWidth=3;COL_GUIDES.forEach(([a,v])=>{ctx.beginPath();if(a==='x'){ctx.moveTo(v,0);ctx.lineTo(v,COL_H);}else{ctx.moveTo(k*COL_W,v);ctx.lineTo((k+1)*COL_W,v);}ctx.stroke();});
     if(COL_SEL>=0&&c.items[COL_SEL]){   // selection frame + handles, preview only
       const it=c.items[COL_SEL],[w,h]=colSize(it);
@@ -2183,9 +2294,13 @@ function colSetPhoto(id,file){
   if(!file||!/^image\//.test(file.type))return;
   const url=URL.createObjectURL(file),im=new Image();
   im.onload=()=>{
-    const sc=Math.min(1,PHOTO_MAX/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    const cut=/png|webp|gif|avif/.test(file.type)&&hasAlpha(im),sc=Math.min(1,(cut?CUT_MAX:PHOTO_MAX)/Math.max(im.width,im.height)),c=document.createElement('canvas');
     c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);{const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);};URL.revokeObjectURL(url);
-    const data=c.toDataURL('image/jpeg',.95);
+    const data=cut?c.toDataURL('image/png'):c.toDataURL('image/jpeg',.95);
+    const it=COL.items.find(o=>o.t==='photo'&&o.id===id);
+    if(it){it.cutout=cut;if(cut){   // a cut-out frame takes the figure's shape, fitted inside the frame it was dropped on
+      const r=c.width/c.height,cx=it.x+it.w/2,cy=it.y+it.h/2;if(it.w/it.h>r)it.w=Math.round(it.h*r);else it.h=Math.round(it.w/r);
+      it.x=Math.round(cx-it.w/2);it.y=Math.round(cy-it.h/2);it.zoom=1;it.fx=it.fy=.5;}colUI();}
     loadImg(data).then(img=>{COL_IMG[id]=img;redraw();});idb('readwrite',st=>st.put(data,colKey(id))).catch(()=>{});
   };
   im.src=url;
@@ -2198,7 +2313,7 @@ function colCopy(){
   const c={...it,slideX:it.x-Math.floor((it.x+colSize(it)[0]/2)/COL_W)*COL_W};
   try{localStorage.setItem('colClip',JSON.stringify(c));}catch(e){}
   if(it.t==='photo')getIdb(colKey(it.id)).then(d=>idb('readwrite',st=>d?st.put(d,'colClipPhoto'):st.delete('colClipPhoto'))).catch(()=>{});
-  saveMsg({photo:'Photo',logo:'Logo',names:'Name tiles',text:'Text'}[it.t]+' copied.');
+  saveMsg({photo:'Photo',logo:'Logo',names:'Name tiles',text:'Text',shape:'Shape'}[it.t]+' copied.');
 }
 async function colPaste(){
   let c=null;try{c=JSON.parse(localStorage.getItem('colClip'));}catch(e){}
@@ -2214,7 +2329,7 @@ function colAddPhotos(files,at){
   let fs=[...files].filter(f=>/^image\//.test(f.type));
   COL.items.forEach(it=>{if(it.t==='photo'&&!COL_IMG[it.id]&&fs.length&&Math.floor((it.x+it.w/2)/COL_W)===COL_SLIDE)colSetPhoto(it.id,fs.shift());});
   fs.forEach((f,n)=>{
-    const id=colNewId(),w=760,h=560,x=(at?at.x-w/2:COL_SLIDE*COL_W+200)+n*60,y=(at?at.y-h/2:500)+n*60;
+    const T=MODES[MODE].thumb,id=colNewId(),w=T?620:760,h=T?460:560,x=(at?at.x-w/2:COL_SLIDE*COL_W+200)+n*60,y=(at?at.y-h/2:Math.round(COL_H*.28))+n*60;
     COL.items.push({t:'photo',id,x,y,w,h,rot:n%2?3:-3,border:16,zoom:1,fx:.5,fy:.5});colSetPhoto(id,f);COL_SEL=COL.items.length-1;
   });
   colUI();redraw();
@@ -2222,17 +2337,22 @@ function colAddPhotos(files,at){
 async function colLoadImgs(){if(COL.pano&&!COL_IMG.pano){try{const d=await getIdb(colKey('pano'));if(d)COL_IMG.pano=await loadImg(d);}catch(e){}}for(const it of COL.items)if(it.t==='photo'&&!COL_IMG[it.id]){try{const d=await idb('readonly',st=>st.get(colKey(it.id)));if(d)COL_IMG[it.id]=await loadImg(d);}catch(e){}}redraw(true);}
 function colAdd(kind){
   colPush();
-  const x=COL_SLIDE*COL_W+120,base={rot:0,align:'left',style:'plain'};
-  const it=kind==='title'?{...base,t:'text',text:'TITLE',x,y:120,size:150,color:'white',box:false}
-    :kind==='glitch'?{...base,t:'text',text:'CHAMPIONS',x,y:1250,size:190,color:'white',style:'glitch',box:false}
-    :kind==='headline'?{...base,t:'text',text:'HEADLINE',x,y:1300,size:110,color:'accent',box:false}
-    :kind==='caption'?{...base,t:'text',text:'PODIUM\nIN PORTUGAL',x,y:1200,size:56,color:'#111111',box:true,boxCol:'accent'}
-    :kind==='names'?{t:'names',text:'Elfyn Evans | GB | toyota\nScott Martin | GB',x,y:1450,size:62,stack:false,rot:0}
-    :kind==='logo'?{t:'logo',x:x+800,y:96,size:110,ink:'white',rot:0}
+  const x=COL_SLIDE*COL_W+120,base={rot:0,align:'left',style:'plain'},y=v=>Math.round(v*COL_H/1800),T=MODES[MODE].thumb;   // heights are authored for the 4:5 slide
+  const it=kind==='title'?{...base,t:'text',text:'TITLE',x,y:y(120),size:150,color:'white',box:false,...(T?{stroke:10,strokeCol:'#000000',shadowK:'hard'}:{})}
+    :kind==='glitch'?{...base,t:'text',text:'CHAMPIONS',x,y:y(1250),size:190,color:'white',style:'glitch',box:false}
+    :kind==='headline'?{...base,t:'text',text:'HEADLINE',x,y:y(1300),size:110,color:'accent',box:false}
+    :kind==='caption'?{...base,t:'text',text:'PODIUM\nIN PORTUGAL',x,y:y(1200),size:56,color:'#111111',box:true,boxCol:'accent'}
+    :kind==='names'?{t:'names',text:'Elfyn Evans | GB | toyota\nScott Martin | GB',x,y:y(1450),size:62,stack:false,rot:0}
+    :kind==='logo'?{t:'logo',x:x+800,y:y(96),size:110,ink:'white',rot:0}
     :kind==='full'?{t:'photo',id:colNewId(),x:COL_SLIDE*COL_W,y:0,w:COL_W,h:COL_H,rot:0,border:0,zoom:1,fx:.5,fy:.5,shadow:false}
-    :kind==='photo'?{t:'photo',id:colNewId(),x:x+200,y:500,w:760,h:560,rot:-3,border:16,zoom:1,fx:.5,fy:.5}
-    :{...base,t:'text',text:'Text',x,y:900,size:50,color:'white',box:false};
-  if(kind==='full')COL.items.unshift(it),COL_SEL=0;else COL.items.push(it),COL_SEL=COL.items.length-1;
+    :kind==='photo'?{t:'photo',id:colNewId(),x:x+200,y:y(500),w:T?620:760,h:T?460:560,rot:-3,border:16,zoom:1,fx:.5,fy:.5}
+    :kind==='arrow'?{t:'shape',shape:'arrow',x:x+460,y:y(800),w:280,h:140,color:'#ff2a2a',line:16,stroke:6,strokeCol:'#ffffff',shadowK:'hard',alpha:100,rot:0}
+    :kind==='ring'||kind==='box'?{t:'shape',shape:kind,x:x+420,y:y(560),w:kind==='ring'?380:460,h:kind==='ring'?380:300,color:'#ff2a2a',line:18,stroke:4,strokeCol:'#ffffff',shadowK:'soft',alpha:100,rot:0}
+    :kind==='bar'?{t:'shape',shape:'bar',x:COL_SLIDE*COL_W,y:y(1380),w:COL_W,h:Math.round(COL_H*.18),color:'accent',line:16,stroke:0,strokeCol:'#000000',shadowK:'none',alpha:85,rot:0}
+    :{...base,t:'text',text:'Text',x,y:y(900),size:50,color:'white',box:false};
+  if(kind==='full')COL.items.unshift(it),COL_SEL=0;
+  else if(kind==='bar'){let i=COL.items.findIndex(o=>o.t!=='photo');if(i<0)i=COL.items.length;COL.items.splice(i,0,it);COL_SEL=i;}   // behind the text, over the pictures
+  else COL.items.push(it),COL_SEL=COL.items.length-1;
   colUI();redraw();
 }
 // ready-made photo layouts for the current slide (empty frames to drop pictures into)
@@ -2242,7 +2362,14 @@ const COL_LAYOUTS={
   stack:[[140,360,900,660,-5,18],[480,760,860,620,4,18],[160,1150,760,520,-2,18]],
   grid:[[60,330,640,620,0,10],[740,330,640,620,0,10],[60,990,640,620,0,10],[740,990,640,620,0,10]],
   split:[[0,0,1440,900,0,0],[0,900,1440,900,0,0]],
-  sides:[[0,0,720,1800,0,0],[720,0,720,1800,0,0]]
+  sides:[[0,0,720,1800,0,0],[720,0,720,1800,0,0]],
+  // thumbnail (1440x810)
+  tHero:[[0,0,1440,810,0,0]],
+  tRight:[[520,0,920,810,0,0]],
+  tLeft:[[0,0,920,810,0,0]],
+  tSplit:[[0,0,720,810,0,0],[720,0,720,810,0,0]],
+  tTrio:[[0,0,480,810,0,0],[480,0,480,810,0,0],[960,0,480,810,0,0]],
+  tInset:[[0,0,1440,810,0,0],[880,96,480,330,4,12]]
 };
 function colLayout(name){
   colPush();const o=COL_SLIDE*COL_W;
@@ -2264,15 +2391,19 @@ function colUI(){
   $('colAccentMode').value=COL.accentMode||'custom';$('colAccent').value=COL.accent;$('colAccent').hidden=$('colAccentMode').value!=='custom';
   $('colPanoZoom').value=COL.panoZoom||1;$('colPanoFx').value=COL.panoFx??.5;$('colPanoFy').value=COL.panoFy??.5;$('colPanoDark').value=COL.panoDark||0;
   $('colFadeTop').value=COL.fadeTop||0;$('colFadeBot').value=COL.fadeBot||0;$('colPanoDel').disabled=!COL.pano;
+  $('colFadeL').value=COL.fadeL||0;$('colFadeR').value=COL.fadeR||0;$('colShowTime').checked=COL.showTime!==false;
   const it=COL.items[COL_SEL],box=$('colItem');box.hidden=!it;['colDel','colUp','colDown','colDup','colCopy'].forEach(id=>$(id).disabled=!it);
   if(!it)return;
   box.querySelectorAll('[data-for]').forEach(e=>e.hidden=!e.dataset.for.split(' ').includes(it.t));
-  $('colKind').textContent={photo:'Photo',logo:'Logo',names:'Name tiles',text:'Text'}[it.t];
+  $('colKind').textContent=it.t==='shape'?({arrow:'Arrow',ring:'Circle',box:'Box',bar:'Colour bar'}[it.shape]||'Shape'):it.t==='photo'&&it.cutout?'Cut-out photo':{photo:'Photo',logo:'Logo',names:'Name tiles',text:'Text'}[it.t];
   $('ciText').value=it.text||'';$('ciNames').value=it.t==='names'?it.text||'':'';$('ciSize').value=it.size||50;$('ciChip').value=it.size||62;$('ciStack').checked=!!it.stack;
   $('ciColor').value=/^#/.test(it.color)?'custom':(it.color||'white');$('ciCustom').value=/^#/.test(it.color)?it.color:'#ffffff';$('ciCustom').hidden=$('ciColor').value!=='custom';
   $('ciStyle').value=it.style||'plain';$('ciBox').checked=!!it.box;$('ciBoxCol').value=it.boxCol&&/^#/.test(it.boxCol)?it.boxCol:'accent';$('ciAlign').value=it.align||'left';
   $('ciRot').value=it.rot||0;$('ciBorder').value=it.border||0;$('ciZoom').value=it.zoom||1;$('ciFx').value=it.fx??.5;$('ciFy').value=it.fy??.5;$('ciShadow').checked=it.shadow!==false;
-  if(it.t==='photo'&&document.activeElement!==$('ciScale')){$('ciW').value=it.w;$('ciH').value=it.h;$('ciScale').value=100;colScaleBase=[it.w,it.h];}
+  $('ciShape').value=it.shape||'arrow';$('ciLine').value=it.line||16;$('ciAlpha').value=it.alpha??100;$('ciShadowK').value=it.shadowK||'soft';
+  $('ciStroke').value=it.stroke||0;$('ciStrokeCol').value=it.strokeCol||(it.t==='text'?'#000000':'#ffffff');
+  $('ciStrokeHint').textContent=it.t==='photo'?(it.cutout?'(traced round the figure)':'(round the frame)'):'';
+  if((it.t==='photo'||it.t==='shape')&&document.activeElement!==$('ciScale')){$('ciW').value=it.w;$('ciH').value=it.h;$('ciScale').value=100;colScaleBase=[it.w,it.h];}
   $('ciInk').value=it.ink||'white';$('ciLogoSize').value=it.size||110;
 }
 let colScaleBase=null;   // the photo's size when the Photo size slider was grabbed (slider then shows 100%)
@@ -2284,10 +2415,14 @@ function colFromUI(){
   if(it.t==='text'){it.text=$('ciText').value;it.size=+$('ciSize').value;it.color=$('ciColor').value==='custom'?$('ciCustom').value:$('ciColor').value;it.style=$('ciStyle').value;
     it.box=$('ciBox').checked;it.boxCol=$('ciBoxCol').value;it.align=$('ciAlign').value;$('ciCustom').hidden=$('ciColor').value!=='custom';}
   if(it.t==='names'){it.text=$('ciNames').value;it.size=+$('ciChip').value;it.stack=$('ciStack').checked;}
-  if(it.t==='photo'){const cx=it.x+it.w/2,cy=it.y+it.h/2,f=+$('ciScale').value/100;
+  if(it.t==='text'||it.t==='shape'||it.t==='photo'){it.stroke=+$('ciStroke').value;it.strokeCol=$('ciStrokeCol').value;}
+  if(it.t==='text'||it.t==='shape')it.shadowK=$('ciShadowK').value;
+  if(it.t==='shape'){it.shape=$('ciShape').value;it.color=$('ciColor').value==='custom'?$('ciCustom').value:$('ciColor').value;$('ciCustom').hidden=$('ciColor').value!=='custom';
+    it.line=+$('ciLine').value;it.alpha=+$('ciAlpha').value;}
+  if(it.t==='photo'||it.t==='shape'){const cx=it.x+it.w/2,cy=it.y+it.h/2,f=+$('ciScale').value/100;
     let w=+$('ciW').value,h=+$('ciH').value;if(document.activeElement===$('ciScale')&&colScaleBase){w=colScaleBase[0]*f;h=colScaleBase[1]*f;}
-    it.w=Math.max(80,Math.round(w));it.h=Math.max(80,Math.round(h));it.x=Math.round(cx-it.w/2);it.y=Math.round(cy-it.h/2);$('ciW').value=it.w;$('ciH').value=it.h;
-    it.border=+$('ciBorder').value;it.zoom=+$('ciZoom').value;it.fx=+$('ciFx').value;it.fy=+$('ciFy').value;it.shadow=$('ciShadow').checked;}
+    it.w=Math.max(40,Math.round(w));it.h=Math.max(40,Math.round(h));it.x=Math.round(cx-it.w/2);it.y=Math.round(cy-it.h/2);$('ciW').value=it.w;$('ciH').value=it.h;}
+  if(it.t==='photo'){it.border=+$('ciBorder').value;it.zoom=+$('ciZoom').value;it.fx=+$('ciFx').value;it.fy=+$('ciFy').value;it.shadow=$('ciShadow').checked;}
   if(it.t==='logo'){it.ink=$('ciInk').value;it.size=+$('ciLogoSize').value;}
   redraw();
 }
@@ -2296,13 +2431,25 @@ let colThumbT=0;
 function colThumbs(){
   const strip=$('colStrip');if(!MODES[MODE].collage){strip.hidden=true;return;}
   strip.hidden=false;clearTimeout(colThumbT);
+  const kind=MODES[MODE].thumb?'yt':'col';if(strip.dataset.kind!==kind){strip.innerHTML='';strip.dataset.kind=kind;}
   colThumbT=setTimeout(()=>{
+    if(kind==='yt'){ytPreviews(strip);return;}
     while(strip.children.length>COL.slides)strip.lastChild.remove();
     while(strip.children.length<COL.slides){const c=document.createElement('canvas');c.width=144;c.height=180;c.dataset.thumb=1;const n=strip.children.length;c.onclick=()=>{COL_SLIDE=+c.dataset.k;COL_SEL=-1;colUI();redraw();};strip.appendChild(c);}
     const keep=COL_SLIDE,st=readState();
     withFormat('ig',()=>[...strip.children].forEach((c,k)=>{c.dataset.k=k;c.classList.toggle('on',k===keep);COL_SLIDE=k;const x=c.getContext('2d');x.setTransform(.1,0,0,.1,0,0);render(x,st);}));
     COL_SLIDE=keep;
   },120);
+}
+// the thumbnail at the sizes YouTube shows it, at real screen size, with the video length badge
+const YT_SIZES=[[360,'Home feed'],[168,'Up next']];
+function ytPreviews(strip){
+  const dpr=window.devicePixelRatio||1,st=readState();
+  if(!strip.children.length)YT_SIZES.forEach(([w,l])=>{
+    const h=Math.round(w*9/16),d=document.createElement('div'),c=document.createElement('canvas'),s=document.createElement('span');
+    d.className='ytCard';c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);c.style.width=w+'px';c.style.height=h+'px';
+    s.innerHTML=`<b>${l}</b> · ${w}×${h}`;d.append(c,s);strip.append(d);});
+  strip.querySelectorAll('canvas').forEach(c=>{const x=c.getContext('2d'),k=c.width/COL_W;x.setTransform(k,0,0,k,0,0);render(x,st);x.setTransform(1,0,0,1,0,0);ytTime(x,0,c.width,c.height);});
 }
 function initCollageUI(cv,toCanvas){
   const on=()=>MODES[MODE].collage,pano=e=>{const p=toCanvas(e);return {x:p.x+COL_SLIDE*COL_W,y:p.y};};
@@ -2313,9 +2460,10 @@ function initCollageUI(cv,toCanvas){
   [['colBg','bg'],['colBg2','bg2'],['colAccent','accent']].forEach(([id,k])=>$(id).addEventListener('input',()=>{COL[k]=$(id).value;redraw();}));
   $('colPano').addEventListener('change',()=>{const f=$('colPano').files[0];$('colPano').value='';if(!f)return;colPush();COL.pano=true;COL.panoZoom=1;COL.panoFx=.5;COL.panoFy=.5;colSetPhoto('pano',f);colUI();});
   $('colPanoDel').onclick=()=>{colPush();COL.pano=false;delete COL_IMG.pano;idb('readwrite',st=>st.delete(colKey('pano'))).catch(()=>{});colUI();redraw();};
-  [['colPanoZoom','panoZoom'],['colPanoFx','panoFx'],['colPanoFy','panoFy'],['colPanoDark','panoDark'],['colFadeTop','fadeTop'],['colFadeBot','fadeBot']].forEach(([id,k])=>{
+  [['colPanoZoom','panoZoom'],['colPanoFx','panoFx'],['colPanoFy','panoFy'],['colPanoDark','panoDark'],['colFadeTop','fadeTop'],['colFadeBot','fadeBot'],['colFadeL','fadeL'],['colFadeR','fadeR']].forEach(([id,k])=>{
     $(id).addEventListener('pointerdown',()=>colPush());$(id).addEventListener('input',()=>{COL[k]=+$(id).value;redraw();});});
   $('colPic').addEventListener('change',()=>{colAddPhotos($('colPic').files);$('colPic').value='';});
+  $('colShowTime').addEventListener('change',()=>{COL.showTime=$('colShowTime').checked;redraw();});
   document.querySelectorAll('[data-coladd]').forEach(b=>b.onclick=()=>colAdd(b.dataset.coladd));
   document.querySelectorAll('[data-collayout]').forEach(b=>b.onclick=()=>colLayout(b.dataset.collayout));
   $('colDel').onclick=()=>{if(COL_SEL<0)return;colPush();COL.items.splice(COL_SEL,1);COL_SEL=-1;colUI();redraw();};
@@ -2329,8 +2477,8 @@ function initCollageUI(cv,toCanvas){
     const fs=[...(e.clipboardData?.files||[])].filter(f=>/^image\//.test(f.type));e.preventDefault();
     if(fs.length)colAddPhotos(fs);else colPaste();});
   $('ciPic').addEventListener('change',()=>{const it=COL.items[COL_SEL];if(it&&it.t==='photo')colSetPhoto(it.id,$('ciPic').files[0]);$('ciPic').value='';});
-  ['ciText','ciNames','ciSize','ciChip','ciStack','ciColor','ciCustom','ciStyle','ciBox','ciBoxCol','ciAlign','ciRot','ciBorder','ciZoom','ciFx','ciFy','ciShadow','ciScale','ciW','ciH','ciInk','ciLogoSize'].forEach(id=>{
-    $(id).addEventListener('input',colFromUI);$(id).addEventListener('change',()=>{colEditing=false;if(id==='ciScale'){$(id).blur();colUI();}});});
+  ['ciText','ciNames','ciSize','ciChip','ciStack','ciColor','ciCustom','ciStyle','ciBox','ciBoxCol','ciAlign','ciRot','ciBorder','ciZoom','ciFx','ciFy','ciShadow','ciScale','ciW','ciH','ciInk','ciLogoSize','ciShape','ciLine','ciAlpha','ciStroke','ciStrokeCol','ciShadowK'].forEach(id=>{
+    $(id).addEventListener('input',colFromUI);$(id).addEventListener('change',()=>{colEditing=false;if(id==='ciScale'){$(id).blur();colUI();}if(id==='ciShape')colUI();});});
   let drag=null;
   cv.addEventListener('pointerdown',e=>{
     if(!on())return;const pt=pano(e),h=colHit(pt);
@@ -2354,7 +2502,7 @@ function initCollageUI(cv,toCanvas){
     }else if(drag.mode==='size'){
       const cx=drag.ox+drag.ow/2,cy=drag.oy+drag.oh/2,a=-(it.rot||0)*Math.PI/180,lx=(pt.x-cx)*Math.cos(a)-(pt.y-cy)*Math.sin(a),ly=(pt.x-cx)*Math.sin(a)+(pt.y-cy)*Math.cos(a);
       const sx=drag.sx2||1,sy=drag.sy2||1;
-      if(it.t==='photo'){const nw=Math.max(80,drag.ow/2+sx*lx),nh=e.shiftKey?nw*drag.oh/drag.ow:Math.max(80,drag.oh/2+sy*ly),r=(it.rot||0)*Math.PI/180;
+      if(it.t==='photo'||it.t==='shape'){const nw=Math.max(40,drag.ow/2+sx*lx),nh=e.shiftKey?nw*drag.oh/drag.ow:Math.max(80,drag.oh/2+sy*ly),r=(it.rot||0)*Math.PI/180;
         // keep the opposite corner where it was, rotation included
         const ax=-sx*drag.ow/2,ay=-sy*drag.oh/2,ox=cx+ax*Math.cos(r)-ay*Math.sin(r),oy=cy+ax*Math.sin(r)+ay*Math.cos(r),bx=sx*nw/2,by=sy*nh/2,
           ncx=ox+bx*Math.cos(r)-by*Math.sin(r),ncy=oy+bx*Math.sin(r)+by*Math.cos(r);

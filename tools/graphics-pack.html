@@ -262,7 +262,7 @@
       </div>
       <div id="heroBox" class="grid2">
         <div><label>Letter case</label><select id="hxCase"><option value="upper">ALL CAPS</option><option value="asis">As typed</option><option value="title">Title Case</option><option value="lower">lower case</option></select></div>
-        <div><label>Number width <small>(narrow = tall look)</small></label><input type="range" id="hxNumW" min="0.5" max="1" step="0.01" value="0.72"></div>
+        <div><label>Number width <small>(narrow = tall look)</small></label><input type="range" id="hxNumW" min="0.5" max="1" step="0.01" value="1"></div>
         <div><label>Text size</label><input type="range" id="hxTxt" min="50" max="200" value="100"></div>
         <div><label>Text width</label><input type="range" id="hxTw" min="20" max="70" value="33"></div>
         <div><label>Number colour</label><input type="color" id="hxNumCol" value="#ffffff" style="padding:0;height:28px"></div>
@@ -1938,7 +1938,7 @@ function readHead(){
   return {kicker:$('hKicker').value,tile:$('hTile').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,ink:$('hInk').value,shadeCol:$('hShadeAuto').checked?'':$('hShadeCol').value,order:$('hOrder').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
     names:[...$('hNames').children].map(d=>({name:d.querySelector('[data-h=name]').value.trim(),flag:d.querySelector('[data-h=flag]').value,badge:d.querySelector('[data-h=badge]').value}))};
 }
-const HERO_DEFAULT={tcase:'upper',numW:.72,txt:100,tw:33,numCol:'#ffffff',txtCol:'#ffffff',starCol:'#ffffff',capCol:'#ffffff',glowOn:false,glowCol:'#e3101b',glowH:22};
+const HERO_DEFAULT={tcase:'upper',numW:1,txt:100,tw:33,numCol:'#ffffff',txtCol:'#ffffff',starCol:'#ffffff',capCol:'#ffffff',glowOn:false,glowCol:'#e3101b',glowH:22};
 const HERO_IDS={tcase:'hxCase',numW:'hxNumW',txt:'hxTxt',tw:'hxTw',numCol:'hxNumCol',txtCol:'hxTxtCol',starCol:'hxStarCol',capCol:'hxCapCol',glowOn:'hxGlowOn',glowCol:'hxGlowCol',glowH:'hxGlowH'};
 function readHero(){const o={};for(const [k,id] of Object.entries(HERO_IDS)){const e=$(id);o[k]=e.type==='checkbox'?e.checked:e.type==='range'?+e.value:e.value;}return o;}
 function loadHero(h){h={...HERO_DEFAULT,...(h||{})};for(const [k,id] of Object.entries(HERO_IDS)){const e=$(id);if(e.type==='checkbox')e.checked=!!h[k];else e.value=h[k];}}

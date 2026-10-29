@@ -585,7 +585,8 @@ function hslRgb(h,s,l){h=((h%360)+360)%360/360;if(!s)return [l,l,l].map(v=>Math.
 function customTheme(hex,dark){
   const key=hex+(dark?'d':'');if(CUSTOM_THEMES[key])return CUSTOM_THEMES[key];
   const [th,ts]=rgbHsl(...hexRgb(hex)),src=dark?THEMES.siteDark:THEMES.site,sh=154,ss=.81;
-  const conv=(r,g,b)=>{const [h,s,l]=rgbHsl(r,g,b);if(s<.12)return [r,g,b];return l<.35?hslRgb(th,Math.max(.9,ts),.26+l*.45):hslRgb(th,Math.min(1,Math.max(s,.55)*ts/ss),l);};
+  const tl=rgbHsl(...hexRgb(hex))[2],grey=ts<.12;   // black / white / grey picks give a neutral theme, not red
+  const conv=(r,g,b)=>{const [h,s,l]=rgbHsl(r,g,b);if(grey)return hslRgb(0,0,Math.min(1,l*(.3+tl*1.4)));if(s<.12)return [r,g,b];return l<.35?hslRgb(th,Math.max(.9,ts),.26+l*.45):hslRgb(th,Math.min(1,Math.max(s,.55)*ts/ss),l);};
   const map=v=>{
     if(typeof v==='string'){
       if(/^#[0-9a-f]{3,6}$/i.test(v))return '#'+conv(...hexRgb(v)).map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -2690,6 +2691,7 @@ async function colExport(scale){
   loadMode(m);
   $('mode').addEventListener('change',()=>{loadMode($('mode').value);redraw();});
   ['title','foot','rally','start','theme','themeCol','themeBlend','themeCol2','blendDir','pTint','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
+  ['themeCol','themeCol2','blendDir','themeBlend'].forEach(id=>$(id).addEventListener('change',()=>redraw()));   // colour dialogs can report only on close
   $('theme').addEventListener('input',()=>{$('themeColBox').hidden=$('themeBlendBox').hidden=!/^custom/.test($('theme').value);});
   ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hTile','hStyle','hAbove','hBelow','hPos','hInk','hShadeAuto','hShadeCol','hOrder','hSize','hFade','hxCase','hxNumW','hxTxt','hxTw','hxNumCol','hxTxtCol','hxStarCol','hxCapCol','hxGlowOn','hxGlowCol','hxGlowH','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
     .forEach(id=>$(id).addEventListener('input',()=>redraw()));

@@ -187,7 +187,7 @@
       <h2>Picture &amp; text</h2>
       <div class="grid2">
         <div><label>Picture</label><input type="file" id="qPic" accept="image/*"></div>
-        <div class="qTxt"><label>Style</label><select id="qStyle"><option value="quote">Quote (“ mark)</option><option value="announce">Announcement</option></select></div>
+        <div class="qTxt"><label>Style</label><select id="qStyle"><option value="bold">Bold quote (big caps + name tag)</option><option value="quote">Quote (“ mark)</option><option value="announce">Announcement</option></select></div>
         <div class="qTxt"><label>Text box</label><select id="qPlace"><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option><option value="center">Centre</option><option value="free">Free (drag on preview)</option></select></div>
         <div class="qTxt"><label>Text size</label><input type="range" id="qSize" min="26" max="80" value="44"></div>
         <div class="qTxt"><label>Box width</label><input type="range" id="qBw" min="25" max="100" value="100"></div>
@@ -213,7 +213,8 @@
       </div>
       <div class="qTxt"><label style="display:block;margin-top:8px">Headline</label>
       <textarea id="qText" style="font-family:inherit;font-size:13px;min-height:70px"></textarea>
-      <label style="display:block;margin-top:8px">Text under the headline <small>(optional, smaller box)</small></label>
+      <div class="qBold"><label style="display:block;margin-top:8px">Name tag <small>(bold quote: who said it)</small></label><input id="qWho" placeholder="Josh McErlean"></div>
+      <label style="display:block;margin-top:8px">Text under the headline <small>(optional, smaller box; under the name tag in a bold quote)</small></label>
       <textarea id="qSub" style="font-family:inherit;font-size:13px;min-height:70px"></textarea></div>
       <div class="note qTxt">You can also drop a picture on the preview, and drag the text box around on it. Footer = name or source (the logo replaces it when it's in the footer), footer right = rally or date; leave footer right empty to drop its darker cell. The picture takes the room of any band you turn off. Line breaks in the text are kept; long text shrinks to fit.</div>
     </div>
@@ -227,6 +228,7 @@
         <div><label>Big word size</label><input type="range" id="hSize" min="60" max="300" value="190"></div>
         <div><label>Shade behind the text</label><input type="range" id="hFade" min="0" max="95" value="65"></div>
         <div><label>Text colour</label><select id="hInk"><option value="white">White (dark pictures)</option><option value="black">Black (light pictures)</option></select></div>
+        <div><label>Logo tile above the word</label><select id="hTile"></select></div>
         <div><label>Name tiles order</label><select id="hOrder"><option value="flag">Flag, then car</option><option value="car">Car, then flag</option></select></div>
       </div>
       <div class="note">Drag the headline on the preview to move the whole block freely. <button type="button" id="hReset">Reset positions</button></div>
@@ -238,7 +240,7 @@
     <div id="statsUI" hidden>
       <h2>Stat panel</h2>
       <div class="grid2">
-        <div><label>Style</label><select id="sxStyle"><option value="ladder">Ladder (label + value cells)</option><option value="big">Big numbers</option></select></div>
+        <div><label>Style</label><select id="sxStyle"><option value="ladder">Ladder (label + value cells)</option><option value="big">Big numbers</option><option value="hero">One huge number (hero stat)</option></select></div>
         <div><label>Position</label><select id="sxPos"><option value="right">Right</option><option value="left">Left</option><option value="bottom">Bottom</option><option value="center">Middle</option><option value="free">Free (drag on preview)</option></select></div>
         <div><label>Size</label><input type="range" id="sxSize" min="24" max="90" value="46"></div>
         <div><label>Shade behind the stats</label><input type="range" id="sxFade" min="0" max="95" value="45"></div>
@@ -258,6 +260,7 @@
       </div>
       <label style="display:block;margin-top:8px">Headline above the stats <small>(optional; line breaks are kept)</small></label>
       <textarea id="sxHead" style="font-family:inherit;font-size:13px;min-height:52px"></textarea>
+      <div class="note">Hero stat: row 1 Value is the huge number and row 1 Stat the text beside it (put *stars* round words to make them heavier); row 2 Stat is the small line under the number. A highlight colour other than Automatic also glows up from the bottom.</div>
       <div class="note">The stats are the rows above (Stat | Value); the highlighted row gets its own colour. Drag the stats or the headline on the preview to place them anywhere (the headline then comes loose from the stats); the sliders do the same. "Automatic" colours follow the style: dark labels and light values for the ladder, white labels and gold numbers for big numbers.</div>
     </div>
     <div id="stripsUI" hidden>
@@ -702,7 +705,7 @@ const HEAD_DEFAULT={kicker:'CHAMPIONS',style:'white',above:'2026 FIA World Rally
 const STATS_DEFAULT={style:'ladder',pos:'right',size:46,fade:45,head:'',hStyle:'plain',hSize:54,hPos:'stats',fx:1,fy:.5,hfx:.5,hfy:0,
   labelCol:'auto',valueCol:'auto',hlCol:'auto',headCol:'auto',custom:'#e8412c',alpha:100};
 const OPT_DEFAULT={gap:'',tally:'',photo:'none',share:45,zoom:1,fx:.5,fy:.5,teamCol:false,twoCol:false,cells:'light',cellCustom:'#1d2a33',cellAlpha:100};
-const QUOTE_DEFAULT={text:'Something new is coming to Powerslide Media.\nStay tuned.',sub:'',style:'announce',place:'bottom',size:44,zoom:1,fx:.5,fy:.5,bw:100,bh:0,px:0,py:1,showHead:true,showFoot:true,logoPos:'header',logoSize:1,logoInk:'white',credit:'',creditPos:'br',boxColor:'light',boxCustom:'#888888',align:'auto'};
+const QUOTE_DEFAULT={text:'Next year\'s Rally2 car might not be so bad, so we\'ll eye up our opportunities.',sub:'is open to all opportunities\nfor the 2027 WRC',who:'Josh McErlean',style:'bold',place:'free',size:44,zoom:1,fx:.5,fy:.5,bw:50,bh:0,px:0,py:.6,showHead:true,showFoot:true,logoPos:'header',logoSize:1,logoInk:'white',credit:'',creditPos:'br',boxColor:'light',boxCustom:'#888888',align:'auto'};
 const FIELD_W={pos:'70px',name:'minmax(0,1fr)',flag:'88px',badge:'100px',move:'52px',a:'64px',b:'72px'};
 
 const R=(name,badge,move,a,b,pos)=>({pos:pos||'',name,flag:'',badge,move:move||'',a:a||'',b:b||''});
@@ -909,6 +912,7 @@ let QBOX=null;   // where the box group was last drawn, for dragging on the prev
 function drawQuoteBox(ctx,q,T){
   if(ctx.canvas.id==="cv")QBOX=null;   // exports draw on their own canvas
   const text=(q.text||'').trim(),sub=(q.sub||'').trim();if(!text&&!sub)return;
+  if(q.style==='bold')return drawBoldQuote(ctx,q,T);
   const [p0,p1]=L.panel,k=L.rowH/62,mark=q.style==='quote';
   const pad=Math.round(24*k),margin=Math.round(28*k),markW=mark?Math.round(87*k):Math.round(14*k);
   const full=XR-X0,bw=Math.round(full*Math.min(100,Math.max(25,q.bw||100))/100);
@@ -942,6 +946,46 @@ function drawQuoteBox(ctx,q,T){
   }
   if(sh){cell(ctx,tx,sy,tw,sh,lightFill(ctx,sy,sh,T),T);lines(sb,sy,sh);}
   if(ctx.canvas.id==="cv")QBOX={x:bx,y:by,w:bw,h:total,full,maxH,top:p0+margin};
+}
+// Bold quote (after the DirtFish quote cards): big white capitals with drawn “ ” marks over a picture
+// darkened from the left, a name tag in a highlight cell and a small spaced caption under it
+function drawBoldQuote(ctx,q,T){
+  const [p0,p1]=L.panel,k=L.rowH/62,margin=Math.round(28*k),full=XR-X0,maxH=(p1-p0)-margin*2;
+  const bw=Math.round(full*Math.min(100,Math.max(25,q.bw||50))/100);
+  const text=(q.text||'').trim().toLocaleUpperCase(),who=(q.who||'').trim().toLocaleUpperCase(),sub=(q.sub||'').trim().toLocaleUpperCase();
+  const sp=(z,f)=>{try{ctx.letterSpacing=Math.round(z*f)+'px';}catch(e){}};
+  let z=Math.round((q.size||44)*k*1.7),ls,lh,mw,wz,sz,sl,th,wh,sh,gap,tot;
+  for(;;){
+    mw=Math.round(z*.62);lh=Math.round(z*1.04);
+    ctx.font=`700 ${z}px "WRC Clean"`;sp(z,.01);ls=text?wrapLines(ctx,text,bw-mw*1.3):[];
+    wz=Math.round(z*.6);sz=Math.max(12,Math.round(z*.4));gap=Math.round(z*.42);
+    ctx.font=`700 ${sz}px "WRC Clean"`;sp(sz,.08);sl=sub?wrapLines(ctx,sub,bw):[];
+    th=ls.length*lh;wh=who?Math.round(wz*1.45):0;sh=sl.length*Math.round(sz*1.35);
+    tot=th+(who?gap+wh:0)+(sl.length?Math.round(gap*.6)+sh:0);
+    if(tot<=maxH||z<=18)break;z-=2;
+  }
+  sp(0,0);
+  const bx=Math.round(X0+(full-bw)*clamp01(q.px)),by=Math.round(p0+margin+(maxH-tot)*clamp01(q.py));
+  const x0=RAIL[0]+RAIL[1],x1=RAILR[0];
+  if(bx+bw/2<(x0+x1)/2)shadePic(ctx,.85,'x',x0,Math.min(x1,bx+bw+300*k));else shadePic(ctx,.85,'x',x1,Math.max(x0,bx-300*k));
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=16*k;ctx.shadowOffsetY=3*k;
+  ctx.fillStyle='#ffffff';ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.font=`700 ${z}px "WRC Clean"`;sp(z,.01);
+  const cap=Math.round(z*.74),ms=Math.round(z*.4);
+  ls.forEach((l,i)=>{
+    const base=by+i*lh+cap,x=bx+(i===0?mw:0);ctx.fillText(l,x,base);
+    if(i===0)drawQuoteMark(ctx,bx+mw*.45,base-cap+ms*.95,ms,'#ffffff');
+    if(i===ls.length-1){const ex=x+ctx.measureText(l).width+mw*.5;
+      ctx.save();ctx.translate(ex,base-cap+ms*.55);ctx.rotate(Math.PI);drawQuoteMark(ctx,0,0,ms,'#ffffff');ctx.restore();}
+  });
+  ctx.restore();sp(0,0);
+  let y=by+th;
+  if(who){y+=gap;ctx.font=`700 ${wz}px "WRC Clean"`;sp(wz,.04);const pad=Math.round(wz*.3),ww=Math.round(ctx.measureText(who).width+pad*2);
+    const P=paint(ctx,y,wh,!q.boxColor||q.boxColor==='light'?'gold':q.boxColor,T,{color:q.boxCustom});
+    ctx.fillStyle=P.fill;ctx.fillRect(bx,y,ww,wh);ctx.fillStyle=P.ink;ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(who,bx+pad,y+wh/2+2*k);sp(0,0);y+=wh;}
+  if(sl.length){y+=Math.round(gap*.6);const slh=Math.round(sz*1.35);ctx.save();ctx.font=`700 ${sz}px "WRC Clean"`;sp(sz,.08);
+    ctx.fillStyle='rgba(255,255,255,.92)';ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=8*k;ctx.textBaseline='top';ctx.textAlign='left';
+    sl.forEach((l,i)=>ctx.fillText(l,bx,y+i*slh));ctx.restore();}
+  if(ctx.canvas.id==="cv")QBOX={x:bx,y:by,w:bw,h:tot,full,maxH,top:p0+margin};
 }
 // small dark label in a corner of the picture, e.g. "Photo: name / agency"
 // Quote mode: the logo placed in a corner of the picture, white (or black) with a soft shadow
@@ -1599,7 +1643,7 @@ function drawHeadline(ctx,st,T){
   const word=(hd.kicker||'').trim(),above=(hd.above||'').trim(),below=(hd.below||'').trim();
   const names=(hd.names||[]).filter(n=>n&&(n.name||'').trim());
   const m=Math.round(40*k),maxW=XR-X0,cx=Math.round((X0+XR)/2),gap=Math.round(18*k),cg=Math.round(14*k),boxy=hd.style==='band'||hd.style==='strip',pad=Math.round(28*k);
-  let wz=Math.round((hd.size||190)*k),aZ=Math.round(28*k),bZ=Math.round(40*k),chH=Math.round(56*k),bl,cr,ws,KH,H0;
+  let wz=Math.round((hd.size||190)*k),aZ=Math.round(28*k),bZ=Math.round(40*k),chH=Math.round(56*k),bl,cr,ws,KH,H0,tH=0;
   const measure=()=>{
     ctx.font=`700 ${wz}px "WRC Clean"`;
     while(wz>30&&ctx.measureText(word).width+(boxy?pad*2:0)>maxW){wz-=2;ctx.font=`700 ${wz}px "WRC Clean"`;}
@@ -1608,7 +1652,8 @@ function drawHeadline(ctx,st,T){
     ws=names.map(n=>nameChip(ctx,0,0,chH,n,T,true));cr=[[]];let cur=0;
     ws.forEach((w,i)=>{if(cr[cr.length-1].length&&cur+cg+w>maxW){cr.push([]);cur=0;}cr[cr.length-1].push(i);cur+=(cur?cg:0)+w;});
     cr=cr.filter(r=>r.length).map(r=>({ix:r,w:r.reduce((a,i)=>a+ws[i],0)+cg*(r.length-1)}));
-    const parts=[above?Math.round(aZ*1.2):0,KH,bl.length*Math.round(bZ*1.22),cr.length?cr.length*(chH+5)+(cr.length-1)*cg:0].filter(Boolean);
+    tH=BADGES[hd.tile]?Math.round(wz*.85):0;
+    const parts=[above?Math.round(aZ*1.2):0,tH,KH,bl.length*Math.round(bZ*1.22),cr.length?cr.length*(chH+5)+(cr.length-1)*cg:0].filter(Boolean);
     H0=parts.reduce((a,b)=>a+b,0)+gap*(parts.length-1);
   };
   measure();
@@ -1628,6 +1673,10 @@ function drawHeadline(ctx,st,T){
     ctx.fillStyle=INK;ctx.textAlign='center';ctx.textBaseline='top';soft(8);ctx.fillText(above.toLocaleUpperCase(),cx,y0);ctx.restore();});
     y+=Math.round(aZ*1.2)+gap;
   }
+  if(tH){const y0=y,tx=Math.round(cx-tH/2);part('tile',tx,y0,tH,tH,()=>{
+    ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=20*k;ctx.shadowOffsetY=5*k;rr(ctx,tx,y0,tH,tH,Math.round(tH*.16));ctx.fillStyle='#000';ctx.fill();ctx.restore();
+    ctx.save();rr(ctx,tx,y0,tH,tH,Math.round(tH*.16));ctx.clip();drawTile(ctx,tx-Math.round(tH*.2),y0,Math.round(tH*1.4),tH,hd.tile,T);ctx.restore();});
+    y+=tH+gap;}
   if(word){part('word',Math.round(cx-tw0()/2-pad),y,Math.round(tw0()+pad*2),KH,()=>{
     ctx.font=`700 ${wz}px "WRC Clean"`;const tw=ctx.measureText(word).width,base=y+(boxy?Math.round(pad/2):0)+Math.round(wz*.78);
     if(hd.style==='glitch')drawGlitchTitle(ctx,word,cx-tw/2,base,wz,INK,90);
@@ -1658,6 +1707,7 @@ let STATS_RECTS=[];   // stats block / headline on the preview, for dragging
 function drawStats(ctx,st,T){
   const sx={...STATS_DEFAULT,...(st.sx||{})},big=sx.style==='big',prev=ctx.canvas.id==='cv';
   if(prev)STATS_RECTS=[];
+  if(sx.style==='hero')return drawHeroStat(ctx,st,T,sx,prev);
   const rows=st.rows.map((r,i)=>({l:(r.name||'').trim(),v:(r.b||'').trim(),i})).filter(r=>r.l||r.v).slice(0,10);
   const htxt=(sx.head||'').trim();if(!rows.length&&!htxt)return;
   const [p0,p1]=L.panel,k=L.rowH/62,m=Math.round(40*k),pos=sx.pos||'right',x0=RAIL[0]+RAIL[1],x1=RAILR[0];
@@ -1740,6 +1790,50 @@ function drawStats(ctx,st,T){
   }
 }
 
+// Hero stat (after the DirtFish "96%" cards): one huge number, the text beside it with *starred* words drawn
+// heavier, a small spaced line under the number, and an optional colour glow from the bottom
+function drawHeroStat(ctx,st,T,sx,prev){
+  const r0=st.rows[0]||{},r1=st.rows[1]||{},num=(r0.b||'').trim(),txt=(r0.name||'').trim().toLocaleUpperCase(),cap=((r1.name||'')+' '+(r1.b||'')).trim().toLocaleUpperCase();
+  if(!num&&!txt)return;
+  const [p0,p1]=L.panel,k=L.rowH/62,m=Math.round(40*k),x0=RAIL[0]+RAIL[1],x1=RAILR[0],maxW=XR-X0,maxH=p1-p0-2*m,room={x:X0,y:p0+m,w:maxW,h:maxH};
+  const cc={color:sx.custom},col=(v,d)=>!v||v==='auto'?d:v,valueC=col(sx.valueCol,'white'),labelC=col(sx.labelCol,'white'),hlC=col(sx.hlCol,'gold');
+  if(sx.hlCol&&sx.hlCol!=='auto'){const gh=Math.round((p1-p0)*.22),P=paint(ctx,p1-gh,gh,sx.hlCol,T,cc);
+    const o=document.createElement('canvas');o.width=ctx.canvas.width;o.height=ctx.canvas.height;const ox=o.getContext('2d');ox.setTransform(ctx.getTransform());
+    ox.fillStyle=P.fill;ox.fillRect(x0,p1-gh,x1-x0,gh);
+    const g=ox.createLinearGradient(0,p1-gh,0,p1);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');
+    ox.globalCompositeOperation='destination-out';ox.fillStyle=g;ox.fillRect(x0,p1-gh,x1-x0,gh);
+    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(o,0,0);ctx.restore();}
+  const sp=(z,f)=>{try{ctx.letterSpacing=Math.round(z*f)+'px';}catch(e){}};
+  // split "*bold* rest" into coloured runs, wrapped word by word
+  const runs=[];txt.split(/(\*[^*]*\*)/).forEach(p=>{const hl=/^\*.*\*$/.test(p);(hl?p.slice(1,-1):p).split(/(\n|\s+)/).forEach(w=>{if(w==='\n')runs.push({nl:1});else if(w.trim())runs.push({w,hl});});});
+  let vz=Math.round((sx.size||46)*k*9),D;
+  for(;;){
+    const z=Math.max(12,Math.round(vz*.105)),cz=Math.max(11,Math.round(vz*.075)),tw=Math.round(Math.min(maxW*.45,z*15));
+    ctx.font=`700 ${vz}px "WRC Clean"`;sp(vz,-.03);const nw=num?ctx.measureText(num).width:0,nh=num?Math.round(vz*.76):0;
+    ctx.font=`700 ${z}px "WRC Clean"`;sp(z,.08);const spw=ctx.measureText(' ').width,lines=[[]];let cw=0;
+    runs.forEach(r=>{if(r.nl){lines.push([]);cw=0;return;}const w=ctx.measureText(r.w).width;if(cw&&cw+spw+w>tw){lines.push([]);cw=0;}lines[lines.length-1].push({...r,x:cw?cw+spw:0});cw+=(cw?spw:0)+w;});
+    const tl=lines.filter(l=>l.length),lh=Math.round(z*1.3),th=tl.length*lh;
+    ctx.font=`700 ${cz}px "WRC Clean"`;sp(cz,.08);const ch=cap?Math.round(cz*1.6):0;
+    const gx=Math.round(vz*.1),w=nw+(tl.length?gx+tw:0),h=Math.max(nh+ch,th);
+    D={vz,z,cz,nw,nh,tl,lh,th,ch,gx,tw,w,h};
+    if((w<=maxW&&h<=maxH)||vz<=60)break;vz=Math.round(vz*.94);
+  }
+  sp(0,0);
+  const pos=sx.pos||'free';let gx,top;
+  if(pos==='free'){gx=Math.round(room.x+Math.max(0,room.w-D.w)*clamp01(sx.fx));top=Math.round(room.y+Math.max(0,room.h-D.h)*clamp01(sx.fy));}
+  else{gx=Math.round(pos==='left'?X0:pos==='right'?XR-D.w:X0+(maxW-D.w)/2);top=Math.round(pos==='bottom'?p1-m-D.h:p0+(p1-p0-D.h)/2);}
+  const up=top+D.h/2<(p0+p1)/2;
+  shadePic(ctx,(sx.fade||0)/100,'y',up?p0:p1,up?Math.min(p1,top+D.h+220*k):Math.max(p0,top-220*k));
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=18*k;ctx.shadowOffsetY=3*k;ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  if(num){ctx.font=`700 ${D.vz}px "WRC Clean"`;sp(D.vz,-.03);ctx.fillStyle=paint(ctx,top,D.nh,valueC,T,cc).fill;ctx.fillText(num,gx,top+D.nh);}
+  if(D.ch){ctx.font=`700 ${D.cz}px "WRC Clean"`;sp(D.cz,.08);ctx.fillStyle=paint(ctx,top+D.nh,D.ch,labelC,T,cc).fill;ctx.textAlign='center';ctx.fillText(cap,gx+D.nw/2,top+D.nh+D.ch);ctx.textAlign='left';}
+  const tx=gx+D.nw+D.gx,ty=top+Math.round(D.nh*.04);ctx.font=`700 ${D.z}px "WRC Clean"`;sp(D.z,.08);
+  D.tl.forEach((l,i)=>l.forEach(r=>{const f=paint(ctx,ty,D.th,labelC,T,cc).fill,yy=ty+i*D.lh+Math.round(D.z*.78);ctx.fillStyle=f;ctx.fillText(r.w,tx+r.x,yy);
+    if(r.hl){ctx.strokeStyle=f;ctx.lineWidth=Math.max(1,D.z*.07);ctx.lineJoin='round';ctx.strokeText(r.w,tx+r.x,yy);}}));
+  ctx.restore();sp(0,0);
+  if(prev)STATS_RECTS.push({kind:'stats',x:gx,y:top,w:D.w,h:D.h,room});
+}
+
 /* ---------- UI ---------- */
 const $=id=>document.getElementById(id);
 const badgeOptions='<option value="">— none —</option>'+BADGE_KEYS.map(k=>`<option value="${k}">${BADGES[k].name}</option>`).join('');
@@ -1801,7 +1895,7 @@ function readState(){
   return {mode:MODE,title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,collage:MODES[MODE].collage?JSON.parse(JSON.stringify(COL)):undefined,tint:+$('pTint').value,
           logo:$('logo').value,valAlign:$('valAlign').value,hl:$('hl').value===''?-1:+$('hl').value,
           show:{flag:$('showFlag').checked,badge:$('showBadge').checked,move:$('showMove').checked},rows:readRows(),
-          quote:{text:$('qText').value,sub:$('qSub').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
+          quote:{text:$('qText').value,sub:$('qSub').value,who:$('qWho').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
                 bw:+$('qBw').value,bh:+$('qBh').value,px:+$('qPx').value,py:+$('qPy').value,
                 showHead:$('qHead').checked,showFoot:$('qFootOn').checked,logoPos:$('qLogoPos').value,logoSize:+$('qLogoSize').value,logoInk:$('qLogoInk').value,
                 credit:$('qCredit').value,creditPos:$('qCreditPos').value,boxColor:$('qColor').value,boxCustom:$('qCustom').value,align:$('qAlign').value},
@@ -1823,7 +1917,7 @@ function buildHeadNames(names){
   }
 }
 function readHead(){
-  return {kicker:$('hKicker').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,ink:$('hInk').value,shadeCol:$('hShadeAuto').checked?'':$('hShadeCol').value,order:$('hOrder').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
+  return {kicker:$('hKicker').value,tile:$('hTile').value,style:$('hStyle').value,above:$('hAbove').value,below:$('hBelow').value,pos:$('hPos').value,ink:$('hInk').value,shadeCol:$('hShadeAuto').checked?'':$('hShadeCol').value,order:$('hOrder').value,size:+$('hSize').value,fade:+$('hFade').value,off:JSON.parse(JSON.stringify(HEAD_OFF)),
     names:[...$('hNames').children].map(d=>({name:d.querySelector('[data-h=name]').value.trim(),flag:d.querySelector('[data-h=flag]').value,badge:d.querySelector('[data-h=badge]').value}))};
 }
 function extrasUI(){const p=$('tPhoto').value;document.querySelectorAll('.tPic').forEach(d=>d.hidden=p==='none');$('tShareLbl').textContent=p==='behind'?'Darken the picture':'Picture share';
@@ -1871,7 +1965,7 @@ function loadMode(m){
   $('stripL').value=(s&&s.stripL)||'';$('stripR').value=(s&&s.stripR)||'';
   $('tallyBox').hidden=m==='results';$('gapLbl').textContent=m==='results'?'Time column shows':m==='points'?'Total column shows':'Value 2 shows';
   const hd={...HEAD_DEFAULT,...((s&&s.head)||{})};
-  $('hKicker').value=hd.kicker;$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;$('hOrder').value=hd.order||'flag';$('hInk').value=hd.ink||'white';$('hShadeAuto').checked=!hd.shadeCol;if(hd.shadeCol)$('hShadeCol').value=hd.shadeCol;HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
+  $('hKicker').value=hd.kicker;$('hTile').value=BADGES[hd.tile]?hd.tile:'';$('hStyle').value=hd.style;$('hAbove').value=hd.above;$('hBelow').value=hd.below;$('hPos').value=hd.pos;$('hSize').value=hd.size;$('hFade').value=hd.fade;$('hOrder').value=hd.order||'flag';$('hInk').value=hd.ink||'white';$('hShadeAuto').checked=!hd.shadeCol;if(hd.shadeCol)$('hShadeCol').value=hd.shadeCol;HEAD_OFF=JSON.parse(JSON.stringify(hd.off||{}));buildHeadNames(hd.names||[]);
   const sx={...STATS_DEFAULT,...((s&&s.sx)||{})};
   $('sxStyle').value=sx.style;$('sxPos').value=sx.pos;$('sxSize').value=sx.size;$('sxFade').value=sx.fade;$('sxHead').value=sx.head;$('sxHStyle').value=sx.hStyle;$('sxHSize').value=sx.hSize;
   $('sxHPos').value=sx.hPos;$('sxFx').value=sx.fx;$('sxFy').value=sx.fy;$('sxHFx').value=sx.hfx;$('sxHFy').value=sx.hfy;$('sxAlpha').value=sx.alpha;
@@ -1894,7 +1988,7 @@ function loadMode(m){
   if(M.collage){$('rowsUI').hidden=$('quoteUI').hidden=true;COL=JSON.parse(JSON.stringify((s&&s.collage)||(M.thumb?THUMB_DEFAULT:COL_DEFAULT)));if(!COL.bgMode)COL.bgMode='custom';if(!COL.accentMode)COL.accentMode='custom';COL_SEL=-1;COL_SLIDE=0;COL_HIST.length=0;colUI();if(ready)colLoadImgs();}
   if(M.strips){SS=normStrips(s&&s.strips,M.grid?GRID_DEFAULT:STRIPS_DEFAULT);STRIP_IMG.length=0;buildStripUI();if(ready)loadStripImgs();}
   const q={...QUOTE_DEFAULT,...((s&&s.quote)||{})};
-  $('qText').value=q.text;$('qSub').value=q.sub;$('qStyle').value=q.style;$('qPlace').value=q.place;
+  $('qText').value=q.text;$('qSub').value=q.sub;$('qWho').value=q.who||'';$('qStyle').value=q.style;$('qPlace').value=q.place;
   if(!(s&&s.quote&&'bw' in s.quote)&&BOX_PRESETS[q.place])[q.px,q.py,q.bw]=BOX_PRESETS[q.place];   // saved before box sliders existed
   $('qBw').value=q.bw;$('qBh').value=q.bh;$('qPx').value=q.px;$('qPy').value=q.py;
   $('qHead').checked=q.showHead;$('qFootOn').checked=q.showFoot;$('qLogoPos').value=q.logoPos;$('qLogoSize').value=q.logoSize;$('qLogoInk').value=q.logoInk;picLogoUI();$('qCredit').value=q.credit;$('qCreditPos').value=q.creditPos;
@@ -2549,6 +2643,7 @@ async function colExport(scale){
   $('hl').innerHTML='<option value="">none</option>'+Array.from({length:MAX_ROWS},(_,i)=>i+1).map(n=>`<option value="${n-1}">${n}</option>`).join('');
   $('logo').innerHTML=Object.keys(PS_LOGOS).map(k=>`<option value="${k}">${PS_LOGO_NAMES[k]}</option>`).join('');
   $('mode').innerHTML=Object.keys(MODES).map(k=>`<option value="${k}">${MODES[k].label}</option>`).join('');
+  $('hTile').innerHTML=badgeOptions;
   $('tCells').innerHTML=opts({...BOX_COLORS,light:'Theme (default)'},'light');
   document.querySelectorAll('.sxCol').forEach(e=>e.innerHTML=opts({auto:'Automatic',...BOX_COLORS},'auto'));
   $('tally').innerHTML='<option value="">No (numbers)</option>'+Object.entries(ICONS).map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
@@ -2560,7 +2655,7 @@ async function colExport(scale){
   $('mode').addEventListener('change',()=>{loadMode($('mode').value);redraw();});
   ['title','foot','rally','start','theme','themeCol','pTint','logo','hl','valAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('theme').addEventListener('input',()=>{$('themeColBox').hidden=!/^custom/.test($('theme').value);});
-  ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hStyle','hAbove','hBelow','hPos','hInk','hShadeAuto','hShadeCol','hOrder','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
+  ['stripL','stripR','gapMode','tally','tShare','tZoom','tFx','tFy','teamCol','hKicker','hTile','hStyle','hAbove','hBelow','hPos','hInk','hShadeAuto','hShadeCol','hOrder','hSize','hFade','sxStyle','sxPos','sxSize','sxFade','sxHead','sxHStyle','sxHSize','sxHPos','sxAlpha','sxCustom','tCellCustom','tCellAlpha']
     .forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('tPhoto').addEventListener('input',()=>{extrasUI();redraw();});
   ['tCells','sxLabelCol','sxValueCol','sxHlCol','sxHeadCol'].forEach(id=>$(id).addEventListener('input',()=>{extrasUI();redraw();}));
@@ -2588,7 +2683,8 @@ async function colExport(scale){
   // drop a .wrcproj anywhere on the window to open it
   document.addEventListener('dragover',e=>{if([...e.dataTransfer.items].some(i=>i.kind==='file'))e.preventDefault();});
   document.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&/\.(wrcproj|json)$/i.test(f.name)){e.preventDefault();e.stopPropagation();openProject(f);}},true);
-  ['qText','qSub','qStyle','qPlace','qSize','qZoom','qFx','qFy','qLogoPos','qLogoSize','qLogoInk','qHead','qFootOn','qBw','qBh','qCredit','qCreditPos','qColor','qCustom','qAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
+  $('qStyle').addEventListener('change',()=>{if($('qStyle').value==='bold'){$('qBw').value=50;$('qPx').value=0;$('qPy').value=.6;$('qPlace').value='free';}});
+  ['qText','qSub','qWho','qStyle','qPlace','qSize','qZoom','qFx','qFy','qLogoPos','qLogoSize','qLogoInk','qHead','qFootOn','qBw','qBh','qCredit','qCreditPos','qColor','qCustom','qAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('qLogoPos').addEventListener('input',picLogoUI);
   $('qColor').addEventListener('input',()=>{$('qCustomBox').hidden=$('qColor').value!=='custom';});
   $('qPic').addEventListener('change',()=>{setPhoto($('qPic').files[0]);$('qPic').value='';});

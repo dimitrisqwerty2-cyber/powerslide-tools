@@ -97,7 +97,7 @@
   .chiprow{display:grid;grid-template-columns:92px minmax(0,1.15fr) minmax(0,1fr) 104px 30px 24px 24px 24px;gap:3px;margin-top:4px;align-items:center}
   .chiprow button{padding:0}
   .strip details summary{margin-top:8px;font-size:11px;color:var(--muted);cursor:pointer}
-  .strip textarea,#quoteUI textarea,#headUI textarea,#statsUI textarea{min-height:52px;font-family:inherit;font-size:12px}
+  .strip textarea,#quoteUI textarea,#headUI textarea,#statsUI textarea,#proUI textarea{min-height:52px;font-family:inherit;font-size:12px}
   #quoteUI.noText .qTxt{display:none!important}
   .statusbar{flex:none;display:flex;align-items:center;gap:18px;height:22px;padding:0 12px;background:#333;border-top:1px solid var(--line);font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden}
   .statusbar b{font-weight:600;color:#cfcfcf}
@@ -118,6 +118,7 @@
   <div class="doctabs">
     <div class="doctab on" id="tabScreen">Screen <small>1440×1080</small></div>
     <div class="doctab" id="tabIg">Instagram 4:5 <small>1080×1350</small></div>
+    <div class="doctab" id="tabStory">Story 9:16 <small>1080×1920</small></div>
     <div class="doctab" id="tabYt" hidden>YouTube 16:9 <small>1280×720</small></div>
   </div>
   <div class="sp" style="flex:1"></div>
@@ -180,7 +181,7 @@
     <h2>Rows</h2>
     <div class="row hdr" id="hdr"></div>
     <div id="rows"></div>
-    <div class="note">Enter / ↑ ↓ change row, ← → change column. Flag "auto" uses the driver (or rally) name. Rows 9–10 only appear in the Instagram format. With Two columns all 20 rows are used in both formats, split evenly.</div>
+    <div class="note">Enter / ↑ ↓ change row, ← → change column. Flag "auto" uses the driver (or rally) name. Rows 9–10 only appear in the Instagram and Story formats. With Two columns all 20 rows are used in both formats, split evenly.</div>
     <h2>Bulk paste</h2>
     <textarea id="bulk"></textarea>
     <div class="btns"><button id="applyBulk">Apply paste</button></div>
@@ -278,6 +279,71 @@
       <div class="note">Hero stat: row 1 Value is the huge number and row 1 Stat the text beside it; put *stars* round words to set them in bold, the rest is in the regular weight. Row 2 Stat is the small line under the number. Drag the block on the preview to move it.</div>
       <div class="note">The stats are the rows above (Stat | Value); the highlighted row gets its own colour. Drag the stats or the headline on the preview to place them anywhere (the headline then comes loose from the stats); the sliders do the same. "Automatic" colours follow the style: dark labels and light values for the ladder, white labels and gold numbers for big numbers.</div>
     </div>
+    <div id="proUI" hidden>
+      <h2 id="proHead">Event preview</h2>
+      <div data-pro="preview">
+        <div class="grid2">
+          <div><label>Round line</label><input data-p="round" placeholder="Round 14 of 14"></div>
+          <div><label>Flag <small>(auto = from the event name)</small></label><select data-p="flag" class="flagSel"></select></div>
+          <div style="grid-column:1/-1"><label>Event name <small>(Enter = new line)</small></label><textarea data-p="name"></textarea></div>
+          <div><label>Dates</label><input data-p="dates" placeholder="6 – 9 November"></div>
+          <div><label>Place</label><input data-p="place" placeholder="Toyota City"></div>
+          <div><label>Countdown number <small>(empty = none)</small></label><input data-p="count" placeholder="3"></div>
+          <div><label>Countdown label</label><input data-p="countLbl" placeholder="Days to go"></div>
+          <div><label>Block position</label><select data-p="pos"><option value="bottom">Bottom</option><option value="center">Middle</option><option value="top">Top</option></select></div>
+          <div><label>Alignment</label><select data-p="align"><option value="left">Left</option><option value="center">Centred</option></select></div>
+          <div><label>Event name size</label><input type="range" data-p="size" min="60" max="260"></div>
+          <div><label>Shade behind the text</label><input type="range" data-p="fade" min="0" max="95"></div>
+          <div><label>Key numbers look</label><select data-p="facts"><option value="cells">Cells with a gold stripe</option><option value="plain">Plain numbers</option></select></div>
+        </div>
+        <div class="note">The rows (Fact | Value) are the key numbers along the bottom, up to four: stages, distance, surface, last year's winner. Put a number in Countdown for a "3 DAYS TO GO" block. The picture is the one under Picture below.</div>
+      </div>
+      <div data-pro="h2h">
+        <div class="grid2">
+          <div style="grid-column:1/-1"><label>Line above the table</label><input data-p="kicker" placeholder="Season so far"></div>
+          <div><label>Driver A <small>(left)</small></label><input data-p="aName"></div>
+          <div><label>Driver B <small>(right)</small></label><input data-p="bName"></div>
+          <div><label>A flag / car</label><div style="display:flex;gap:4px"><select data-p="aFlag" class="flagSel"></select><select data-p="aBadge" class="badgeSel"></select></div></div>
+          <div><label>B flag / car</label><div style="display:flex;gap:4px"><select data-p="bFlag" class="flagSel"></select><select data-p="bBadge" class="badgeSel"></select></div></div>
+          <div><label>Picture A <small>(or drop it on the left)</small></label><div style="display:flex;gap:4px"><input type="file" data-slot="0" accept="image/*"><button type="button" data-slotdel="0">✕</button></div></div>
+          <div><label>Picture B <small>(or drop it on the right)</small></label><div style="display:flex;gap:4px"><input type="file" data-slot="1" accept="image/*"><button type="button" data-slotdel="1">✕</button></div></div>
+          <div><label>Text size</label><input type="range" data-p="size" min="24" max="80"></div>
+          <div><label>Shade under the names</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="checks"><label><input type="checkbox" data-p="bars">Share bar under each row</label><label><input type="checkbox" data-p="teamBars">Bars in team colours (different teams)</label></div>
+        <div class="note">Rows are Stat | Driver A | Driver B | Better. Better ▲ = the higher number wins (wins, points), ▼ = the lower one wins (average finish, gaps, s/km); the winning cell turns gold. Leave it empty for no winner. With no picture the car's brand tile stands in.</div>
+      </div>
+      <div data-pro="podium">
+        <div class="grid2">
+          <div><label>Picture 1st</label><div style="display:flex;gap:4px"><input type="file" data-slot="0" accept="image/*"><button type="button" data-slotdel="0">✕</button></div></div>
+          <div><label>Picture 2nd</label><div style="display:flex;gap:4px"><input type="file" data-slot="1" accept="image/*"><button type="button" data-slotdel="1">✕</button></div></div>
+          <div><label>Picture 3rd</label><div style="display:flex;gap:4px"><input type="file" data-slot="2" accept="image/*"><button type="button" data-slotdel="2">✕</button></div></div>
+          <div><label>Step height</label><input type="range" data-p="size" min="50" max="140"></div>
+          <div><label>Darken the background picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="checks"><label><input type="checkbox" data-p="tiles">Brand tile when a step has no picture</label></div>
+        <div class="note">Rows 1–3 are the podium (Name, Flag, Badge, Time or gap). Drop a picture straight onto a step's place on the preview; a transparent PNG stays a cut-out on the glow.</div>
+      </div>
+      <div data-pro="driver">
+        <div class="grid2">
+          <div><label>Label <small>(gold chip)</small></label><input data-p="kicker" list="dKickers"><datalist id="dKickers"><option>Driver of the day</option><option>Confirmed</option><option>New signing</option><option>Meet the driver</option><option>Rookie</option><option>Champion</option><option>Pole position</option></datalist></div>
+          <div><label>Race number</label><input data-p="num"></div>
+          <div><label>First name</label><input data-p="first"></div>
+          <div><label>Last name</label><input data-p="last"></div>
+          <div><label>Team</label><input data-p="team"></div>
+          <div><label>Flag / car</label><div style="display:flex;gap:4px"><select data-p="flag" class="flagSel"></select><select data-p="badge" class="badgeSel"></select></div></div>
+          <div><label>Number</label><select data-p="numPos"><option value="block">Over the name</option><option value="behind">Huge, behind the picture</option><option value="none">None</option></select></div>
+          <div><label>Number look</label><select data-p="numStyle"><option value="outline">Outline</option><option value="white">White</option><option value="gold">Gold</option><option value="team">Team colour</option></select></div>
+          <div><label>Text side</label><select data-p="side"><option value="left">Left</option><option value="right">Right</option></select></div>
+          <div><label>Text position</label><select data-p="vpos"><option value="center">Middle</option><option value="bottom">Bottom</option><option value="top">Top</option></select></div>
+          <div><label>Text size</label><input type="range" data-p="size" min="50" max="150"></div>
+          <div><label>Shade behind the text</label><input type="range" data-p="fade" min="0" max="95"></div>
+          <div><label>Key numbers look</label><select data-p="facts"><option value="cells">Cells with a gold stripe</option><option value="plain">Plain numbers</option></select></div>
+        </div>
+        <div class="note">The rows (Stat | Value) are the key numbers under the name, up to four. A transparent PNG of the driver stays a cut-out: it sits on the theme glow and the "behind" number shows round it; use Picture ← → below to slide it to the other side from the text.</div>
+      </div>
+      <div class="note">Drag the text blocks on the preview to move them. <button type="button" id="proReset">Reset positions</button></div>
+    </div>
     <div id="stripsUI" hidden>
       <h2>Strips</h2>
       <div class="grid2">
@@ -370,6 +436,30 @@
       <div class="note thumbOnly">YouTube shows thumbnails small, so keep to a few big words with an outline, one face or car, and nothing important in the bottom-right corner (the video length goes there). The cards under the preview show it at feed size. Drop a transparent PNG (a driver or car cut out) and it goes in without a frame; give it an Outline to lift it off the background. Click to select, drag to move (snaps to the edges, middle and other items; Alt places freely), corner squares resize, the round handle rotates. Shift+drag or scroll on a photo moves / zooms it in its frame. Ctrl+Z undo, Ctrl+D duplicate, Ctrl+C / Ctrl+V copy and paste, arrows nudge. The YouTube 1280×720 export is a PNG when it's under YouTube's 2 MB limit, otherwise a JPEG that fits.</div>
       <div class="note colOnly">The slides sit side by side as one long picture, so anything over a slide edge carries on onto the next slide; the strip under the preview shows them all. Click to select, drag to move (it snaps to the slide's edges, middle and other items; hold Alt to place freely), drag any corner square to resize, or use Photo size / Width / height (Shift keeps a photo's shape), the round handle to rotate. Shift+drag or scroll on a photo moves / zooms the picture in its frame. Drop pictures on the preview: on a frame they replace its picture, elsewhere they fill this slide's empty frames first. Ctrl+Z undo, Ctrl+D duplicate, arrows nudge, PageUp/PageDown change slide.</div>
     </div>
+    <h2>Brand kit</h2>
+    <div id="brandUI">
+      <div class="grid2">
+        <div><label>Handle</label><input data-b="handle" placeholder="@powerslidemedia"></div>
+        <div><label>Website</label><input data-b="site" placeholder="powerslideblog.com"></div>
+        <div><label>Handle and website in the bottom strip</label><select data-b="signoff"><option value="off">Off</option><option value="left">Left</option><option value="center">Centred</option><option value="right">Right</option></select></div>
+        <div><label>Content tag <small>(empty = none)</small></label><input data-b="tag" list="bTags" placeholder="BREAKING"><datalist id="bTags"><option>BREAKING</option><option>LIVE</option><option>RESULT</option><option>PREVIEW</option><option>STATS</option><option>OFFICIAL</option><option>CONFIRMED</option><option>REPORT</option><option>FEATURE</option><option>RUMOUR</option></datalist></div>
+        <div><label>Tag colour</label><select data-b="tagStyle" id="bTagStyle"></select></div>
+        <div><label>Tag place</label><select data-b="tagPos"><option value="header">Header, right</option><option value="pic-tl">Picture, top left</option><option value="pic-tr">Picture, top right</option></select></div>
+        <div><label><input type="checkbox" data-b="accentOn">Brand accent instead of gold</label><input type="color" data-b="accent" class="bAcc" value="#fe4d02"></div>
+        <div><label>Logo bug <small>(corner watermark)</small></label><select data-b="bug"><option value="off">Off</option><option value="tl">Top left</option><option value="tr">Top right</option><option value="bl">Bottom left</option><option value="br">Bottom right</option></select></div>
+        <div class="bBug"><label>Bug shows</label><select data-b="bugKind"><option value="icon">Powerslide icon</option><option value="logo">The chosen logo</option><option value="handle">The handle</option></select></div>
+        <div class="bBug"><label>Bug colour</label><select data-b="bugInk"><option value="white">White</option><option value="black">Black</option></select></div>
+        <div class="bBug"><label>Bug size</label><input type="range" data-b="bugSize" min="40" max="250" value="100"></div>
+        <div class="bBug"><label>Bug opacity</label><input type="range" data-b="bugAlpha" min="10" max="100" value="85"></div>
+        <div><label><input type="checkbox" data-b="partnerOn">Partner / sponsor lockup</label><input type="file" id="bPartner" accept="image/*" class="bPart"></div>
+        <div class="bPart"><label>Partner line</label><input data-b="partnerLbl" placeholder="Presented by"></div>
+        <div class="bPart"><label>Partner place</label><select data-b="partnerPos"><option value="footer">Footer, right end</option><option value="pic-br">Picture, bottom right</option><option value="pic-bl">Picture, bottom left</option></select></div>
+        <div class="bPart"><label>Partner logo colour</label><select data-b="partnerInk"><option value="own">Own colours</option><option value="white">White</option><option value="black">Black</option></select></div>
+        <div class="bPart"><label>&nbsp;</label><button type="button" id="bPartnerDel" style="width:100%">Remove partner logo</button></div>
+      </div>
+      <div class="checks"><label><input type="checkbox" data-b="guides" checked>Safe-zone guides on the preview <small>(never exported)</small></label></div>
+      <div class="note">The brand kit is the same in every mode, so every post carries the same sign-off, tag, bug and accent. The guides show where Instagram's story header and reply bar sit (Story) and the middle 3:4 the profile grid shows (Instagram 4:5).</div>
+    </div>
     <h2>Project</h2>
     <div class="grid2">
       <div><label>Project name</label><input id="projName" placeholder="taken from the title if empty"></div>
@@ -385,7 +475,11 @@
       <button class="primary" id="ig1">Instagram post 1080×1350</button>
       <button id="ig2">Instagram 2160×2700</button>
     </div>
-    <div class="checks noCol"><label><input type="checkbox" id="previewIg">Preview Instagram 4:5 layout</label></div>
+    <div class="btns noCol">
+      <button class="primary" id="story1">Story 1080×1920</button>
+      <button id="story2">Story 2160×3840</button>
+    </div>
+    <div class="checks noCol"><label><input type="checkbox" id="previewIg">Preview Instagram 4:5 layout</label><label><input type="checkbox" id="previewStory">Preview Story 9:16 layout</label></div>
     <div class="note" id="saveDirRow">Saving to: <b id="saveDirName"></b>
       <div class="btns" style="margin-top:6px"><button id="saveDirPick">Choose save folder…</button><button id="saveDirClear" hidden>Use Downloads again</button></div>
       <div id="saveMsg"></div>
@@ -559,6 +653,10 @@ const QUOTE_L = {
 };
 // YouTube thumbnail: 16:9 on the same 1440 width (the collage editor on one slide), exported at 1280x720 / 1920x1080
 FORMATS.thumb={H:810, L:{...FORMATS.screen.L, panel:[60,750]}};
+// Instagram / Facebook story 9:16 on the 1440 width (1440x2560, exported at 0.75 → 1080x1920). The logo and title sit
+// below the story's own header and the footer above its reply bar; 10 rows as in the 4:5 post
+FORMATS.story={H:2560, L:{topBot:600, strip1:[600,642], panel:[642,1889], strip2:[1889,1927], foot:[1927,2097], div:496, rowTop:650, pitch:125, rowH:106, txt:59, footTxt:54, hs:1.9, rows:10}};
+QUOTE_L.story={...FORMATS.story.L, topBot:520, strip1:[520,562], panel:[562,1955], strip2:[1955,1993], foot:[1993,2107]};
 const tileW=()=>Math.round(TILE_W*L.rowH/62);
 const MAX_ROWS=20;   // 10 per column; rows 11-20 only with Two columns
 const W=1440;let H=1080, L=FORMATS.screen.L, FMT='screen';
@@ -710,6 +808,32 @@ const MODES = {
     fields:[['name','Stat'],['b','Value']], right:[{k:'b',w:'auto',align:'center'}],
     paste:'Stat | Value\nRally wins | 2\nStage wins | 51'
   },
+  // the F1 / WRC race-week poster: round and flag, the event name, dates and place, key numbers, an optional countdown
+  preview: {
+    label:'Event preview / countdown (race week)', title:'Up next', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_preview',
+    show:{flag:false,badge:false,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'preview', proLabel:'Event preview',
+    fields:[['name','Fact'],['b','Value']], right:[], bulk:['name','b'], paste:'Fact | Value\nStages | 20\nStage km | 302.36'
+  },
+  // F1's "head to head" and the WRC team-mate battles: two drivers, the stats between them
+  h2h: {
+    label:'Head to head (two drivers)', title:'Head to head', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_h2h',
+    show:{flag:false,badge:false,move:true}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'h2h', proLabel:'Head to head', slots:2,
+    fields:[['name','Stat'],['a','Driver A'],['b','Driver B'],['move','Better']], right:[], bulk:['name','a','b','move'],
+    paste:'Stat | Driver A | Driver B | Better (up / down)\nRally wins | 3 | 2 | up\nAvg. finish | 2.9 | 3.4 | down'
+  },
+  // the result-day podium: 2 - 1 - 3 on steps, a picture or brand tile over each name
+  podium: {
+    label:'Podium (top three)', title:'Podium', foot:'Powerslide Media', rally:'Rally Japan', theme:'siteDark', file:'wrc_podium',
+    show:{flag:true,badge:true,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'podium', proLabel:'Podium', slots:3,
+    fields:[['name','Driver'],['flag','Flag'],['badge','Badge'],['b','Time / gap']], right:[], bulk:['name','badge','b','flag'],
+    paste:'Name | Badge | Time or gap | Flag\nSébastien Ogier | Toyota | 3:21:44.2'
+  },
+  // driver profile: line-up reveals, signings, driver of the day
+  driver: {
+    label:'Driver card (profile, signing, driver of the day)', title:'Driver', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_driver',
+    show:{flag:false,badge:false,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'driver', proLabel:'Driver card',
+    fields:[['name','Stat'],['b','Value']], right:[], bulk:['name','b'], paste:'Stat | Value\nStarts | 121\nWins | 11'
+  },
   // after the Toksport season recaps: free collage over a carousel of slides
   collage: {
     label:'Recap collage (Instagram carousel)', title:'Recap', foot:'', rally:'', theme:'siteDark', file:'wrc_collage',
@@ -745,6 +869,10 @@ const DEFAULTS = {
   collage:[],
   thumb:[],
   grid:[],
+  preview:[R('Stages','','','','20'),R('Stage km','','','','302.36'),R('Surface','','','','Tarmac')],
+  h2h:[R('Rally wins','','up','3','2'),R('Podiums','','up','8','6'),R('Stage wins','','up','41','51'),R('Avg. finish','','down','2.9','3.4'),R('Pace s/km','','down','0.36','0.23')],
+  podium:[R('Sébastien Ogier','toyota','','','3:21:44.2'),R('Elfyn Evans','toyota','','','+12.6'),R('Thierry Neuville','hyundai','','','+41.0')],
+  driver:[R('Starts','','','','121'),R('Wins','','','','11'),R('Podiums','','','','42')],
   stats:[R('Rally wins','','','','2'),R('Podiums','','','','6'),R('Stage wins','','','','51'),R('Stages led','','','','50')],
   points:[R('Gilles Panizzi','mitsubishi','up','+10','20'),R('Markko Märtin','ford','down','+3','11'),R('Sébastien Loeb','citroen','=','+6','10'),
           R('Carlos Sainz','citroen','up','+5','10'),R('François Duval','ford','up','+8','8'),R('Toni Gardemeister','skoda','down','','6'),
@@ -898,7 +1026,8 @@ function wrapLines(ctx,text,maxW){
 function drawPhoto(ctx,q){
   const im=PHOTO.img,[p0,p1]=L.panel,h=p1-p0;if(!im)return;
   const x0=RAIL[0]+RAIL[1],w=RAILR[0]-x0;
-  const s=Math.max(w/im.width,h/im.height)*(q.zoom||1),dw=im.width*s,dh=im.height*s;
+  if(PHOTO.cutOf!==im){PHOTO.cutOf=im;PHOTO.cut=hasAlpha(im);}   // a cut-out is fitted whole, on the theme glow
+  const s=(PHOTO.cut?Math.min(w/im.width,h/im.height):Math.max(w/im.width,h/im.height))*(q.zoom||1),dw=im.width*s,dh=im.height*s;
   ctx.save();ctx.beginPath();ctx.rect(x0,p0,w,h);ctx.clip();
   ctx.drawImage(im,x0+(w-dw)*q.fx,p0+(h-dh)*q.fy,dw,dh);if(PIC_TINT>0){ctx.fillStyle=`rgba(${SHADE_RGB},${PIC_TINT})`;ctx.fillRect(x0,p0,w,h);}ctx.restore();
 }
@@ -1483,7 +1612,7 @@ function render(ctx,st){
   {const c=st.head&&st.head.shadeCol;SHADE_RGB=c?hexRgb(c).join(','):'0,0,0';PIC_TINT=(st.tint||0)/100;}
   BLEND=blendOf(st);
   if(MODES[st.mode].collage){ctx.clearRect(0,0,W,H);drawCollage(ctx,st);return;}
-  const M=MODES[st.mode],T=themeOf(st),q=M.quote?st.quote:(M.strips?st.strips:null);
+  const M=MODES[st.mode],T=accentTheme(themeOf(st),st.brand),q=M.quote?st.quote:(M.strips?st.strips:null);
   if(q)L=quoteLayout(q);   // setFormat() puts the stock layout back on the next draw
   if(ctx.canvas.id==='cv')QBOX=null;
   const head=!q||q.showHead,foot=!q||q.showFoot,logoAt=q?q.logoPos:'header';
@@ -1507,16 +1636,19 @@ function render(ctx,st){
   }
   drawStripText(ctx,st,T);
   if(M.strips)drawStrips(ctx,st,T);
+  else if(M.pro){drawProMode(ctx,st,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
   else if(M.headline){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawHeadline(ctx,st,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
   else if(M.stats){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawStats(ctx,st,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
   else if(M.quote){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawQuoteBox(ctx,st.quote,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
   else drawTable(ctx,st,T);
   // footer: caption against the divider, optional text in the darker right-hand cell
-  if(!foot)return;
-  const fy=(L.foot[0]+L.foot[1])/2;
-  ctx.textBaseline='middle';ctx.font=`700 ${L.footTxt}px "WRC Clean"`;
-  if(logoAt!=='footer'){ctx.fillStyle=tk(T,'footInk');ctx.textAlign='right';ctx.fillText(st.foot||'',L.div-18,fy);}
-  if(M.rightCell&&st.rally){ctx.fillStyle=tk(T,'rightInk');ctx.textAlign='left';ctx.fillText(st.rally,L.div+22,fy);}
+  if(foot){
+    const fy=(L.foot[0]+L.foot[1])/2;
+    ctx.textBaseline='middle';ctx.font=`700 ${L.footTxt}px "WRC Clean"`;
+    if(logoAt!=='footer'){fitText(ctx,st.foot||'',L.div-40,L.footTxt);ctx.fillStyle=tk(T,'footInk');ctx.textAlign='right';ctx.fillText(st.foot||'',L.div-18,fy);}
+    if(M.rightCell&&st.rally){ctx.font=`700 ${L.footTxt}px "WRC Clean"`;ctx.fillStyle=tk(T,'rightInk');ctx.textAlign='left';ctx.fillText(st.rally,L.div+22,fy);}
+  }
+  drawBrand(ctx,st,T,{head,foot,logoMid,dark:!!(M.rightCell&&st.rally)});
 }
 
 /* ---------- table extras: gaps, team colours, icon counts, a picture, two columns ----------
@@ -1868,6 +2000,382 @@ function drawHeroStat(ctx,st,T,sx,prev){
 }
 
 /* ---------- UI ---------- */
+/* ---------- brand kit ----------
+   One brand layer over every mode (the collage and thumbnail editors have their own): a content tag
+   (BREAKING, RESULT, PREVIEW…), the handle / website sign-off in the bottom strip, a logo bug in a corner,
+   a partner lockup and an accent colour in the gold highlight's place. Kept once for all modes, the way
+   the F1 / WRC / MotoGP feeds carry the same marks on every post. */
+const BRAND_DEFAULT={handle:'',site:'',signoff:'off',tag:'',tagStyle:'red',tagPos:'header',accentOn:false,accent:'#fe4d02',
+  bug:'off',bugKind:'icon',bugInk:'white',bugAlpha:85,bugSize:100,partnerOn:false,partnerLbl:'Presented by',partnerPos:'footer',partnerInk:'own',guides:true};
+const TAG_STYLES={red:'Red',live:'Live (red with a dot)',gold:'Gold',strip:'Theme strip',dark:'Dark',white:'White',blue:'Blue',green:'Green',accent:'Brand accent'};
+const PARTNER={img:null};
+function readBrand(){const o={};document.querySelectorAll('#brandUI [data-b]').forEach(e=>{o[e.dataset.b]=e.type==='checkbox'?e.checked:e.type==='range'?+e.value:e.value;});return o;}
+function loadBrand(b){b={...BRAND_DEFAULT,...(b||{})};document.querySelectorAll('#brandUI [data-b]').forEach(e=>{const v=b[e.dataset.b];if(e.type==='checkbox')e.checked=!!v;else if(v!==undefined)e.value=v;});brandUI();}
+function brandUI(){const b=readBrand();
+  document.querySelectorAll('#brandUI .bAcc').forEach(e=>e.hidden=!b.accentOn);
+  document.querySelectorAll('#brandUI .bBug').forEach(e=>e.hidden=b.bug==='off');
+  document.querySelectorAll('#brandUI .bPart').forEach(e=>e.hidden=!b.partnerOn);}
+function setPartner(file){
+  if(!file||!/^image\//.test(file.type))return;
+  const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{
+    const s=Math.min(1,1200/Math.max(im.width||1200,im.height||1200)),c=document.createElement('canvas');
+    c.width=Math.round((im.width||1200)*s);c.height=Math.round((im.height||400)*s);{const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);}
+    URL.revokeObjectURL(url);const data=c.toDataURL('image/png');
+    loadImg(data).then(i=>{PARTNER.img=i;document.querySelector('#brandUI [data-b=partnerOn]').checked=true;brandUI();redraw();});
+    idb('readwrite',st=>st.put(data,'brandPartner')).catch(()=>{});
+  };
+  im.src=url;
+}
+// the accent takes the gold highlight's place: highlighted rows, gold chips and bands, the podium's top step
+const ACC_T=new WeakMap();
+function accentTheme(T,b){
+  if(!b||!b.accentOn)return T;let m=ACC_T.get(T);if(!m)ACC_T.set(T,m={});if(m[b.accent])return m[b.accent];
+  const c=hexRgb(b.accent);
+  return m[b.accent]={...T,hl:[[0,shade(c,.2)],[.6,shade(c,0)],[1,shade(c,-.16)]],inkHl:lum(c)>.6?'#1c1c1c':'#ffffff'};
+}
+// text helpers: width with letter spacing (less the space after the last letter), and drawn text with a soft shadow
+function twOf(s,z,w=700,ls=0){
+  measureCtx.font=`${w} ${z}px "WRC Clean"`;try{measureCtx.letterSpacing=ls+'px';}catch(e){}
+  const v=measureCtx.measureText(s||'').width;try{measureCtx.letterSpacing='0px';}catch(e){}return s?v-ls:0;
+}
+function proText(ctx,s,x,y,z,o={}){
+  if(!s)return;ctx.save();ctx.font=`${o.w||700} ${z}px "WRC Clean"`;ctx.textAlign=o.align||'left';ctx.textBaseline=o.base||'alphabetic';
+  if(o.ls){try{ctx.letterSpacing=o.ls+'px';}catch(e){}if(o.align==='center')x+=o.ls/2;else if(o.align==='right')x+=o.ls;}
+  if(o.shadow!==false){const b=o.blur||14;ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=b;ctx.shadowOffsetY=b/4;}
+  ctx.fillStyle=o.ink||'#ffffff';ctx.fillText(s,x,y);ctx.restore();
+}
+// a label in a theme cell (gold kicker, content tag); returns its width
+function proChip(ctx,text,x,y,h,style,T,align,o){
+  o=o||{};const t=String(text||'').toLocaleUpperCase(),z=Math.round(h*.52),pad=Math.round(h*.42),ls=Math.round(z*.1),dot=o.dot?Math.round(h*.24):0,dg=dot?Math.round(h*.24):0;
+  const w=Math.round(twOf(t,z,700,ls)+pad*2+dot+dg);if(o.dry)return w;
+  const x0=align==='center'?Math.round(x-w/2):align==='right'?x-w:x,P=paint(ctx,y,h,style,T,o);
+  cell(ctx,x0,y,w,h,P.fill,T);
+  if(dot){ctx.fillStyle=P.ink;ctx.beginPath();ctx.arc(x0+pad+dot/2,y+h/2,dot/2,0,Math.PI*2);ctx.fill();}
+  proText(ctx,t,x0+pad+dot+dg,y+h/2+2*h/62,z,{ink:P.ink,base:'middle',ls,shadow:false});
+  return w;
+}
+function drawBrand(ctx,st,T,o){
+  const b={...BRAND_DEFAULT,...(st.brand||{})},k=L.rowH/62,[p0,p1]=L.panel,x0=RAIL[0]+RAIL[1],x1=RAILR[0];
+  // content tag
+  const tag=(b.tag||'').trim();
+  if(tag){const h=Math.round(46*k),m=Math.round(24*k);let pos=b.tagPos;if(pos==='header'&&!o.head)pos='pic-tl';
+    const style=b.tagStyle==='live'?'red':b.tagStyle==='accent'?'custom':b.tagStyle,opt={color:b.accent,dot:b.tagStyle==='live'};
+    if(pos==='header')proChip(ctx,tag,XR,Math.round((o.logoMid??L.topBot/2)-h/2),h,style,T,'right',opt);
+    else proChip(ctx,tag,pos==='pic-tr'?x1-m:x0+m,p0+m,h,style,T,pos==='pic-tr'?'right':'left',opt);}
+  // logo bug
+  if(b.bug!=='off'){const s=(b.bugSize||100)/100,m=Math.round(26*k),ink=b.bugInk==='black'?'#111111':'#ffffff';
+    ctx.save();ctx.globalAlpha=Math.min(1,Math.max(.1,(b.bugAlpha??85)/100));
+    if(b.bugKind==='handle'){const t=(b.handle||'').trim(),z=Math.round(30*k*s);
+      if(t){const w=twOf(t,z),x=b.bug[1]==='r'?x1-m-w:x0+m,y=b.bug[0]==='b'?p1-m:p0+m+Math.round(z*.78);proText(ctx,t,x,y,z,{ink,shadow:b.bugInk!=='black',blur:8});}}
+    else{const lg=PS_IMG[b.bugKind==='icon'?'icon':st.logo]||PS_IMG.media;
+      if(lg){let h=(b.bugKind==='icon'?84:56)*k*s,w=h*lg.width/lg.height;if(w>(x1-x0)*.5){w=(x1-x0)*.5;h=w*lg.height/lg.width;}
+        const x=b.bug[1]==='r'?x1-m-w:x0+m,y=b.bug[0]==='b'?p1-m-h:p0+m;
+        ctx.filter=b.bugInk==='black'?'brightness(0)':'brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.5))';ctx.drawImage(lg,x,y,w,h);}}
+    ctx.restore();}
+  // partner lockup
+  if(b.partnerOn&&PARTNER.img){const im=PARTNER.img,lbl=(b.partnerLbl||'').trim().toLocaleUpperCase();let pos=b.partnerPos;if(pos==='footer'&&!o.foot)pos='pic-br';
+    const filt=b.partnerInk==='white'?'brightness(0) invert(1)':b.partnerInk==='black'?'brightness(0)':'none';
+    if(pos==='footer'){const [f0,f1]=L.foot,fh=f1-f0;let h=fh*.52,w=h*im.width/im.height;const maxW=(XR-L.div)*.4;if(w>maxW){w=maxW;h=w*im.height/im.width;}
+      const x=XR-w,z=Math.round(fh*.19);ctx.save();ctx.filter=filt;ctx.drawImage(im,x,f0+(fh-h)/2,w,h);ctx.restore();
+      proText(ctx,lbl,x-Math.round(16*k),(f0+f1)/2+1,z,{ink:tk(T,o.dark?'rightInk':'footInk'),base:'middle',align:'right',ls:Math.round(z*.12),shadow:false});}
+    else{const m=Math.round(22*k),pad=Math.round(14*k),z=Math.round(17*k),lsp=Math.round(z*.12);let h=Math.round(54*k),w=h*im.width/im.height;const maxW=(x1-x0)*.3;if(w>maxW){w=maxW;h=w*im.height/im.width;}
+      const lh=lbl?Math.round(z*1.6):0,cw=Math.round(Math.max(w,lbl?twOf(lbl,z,700,lsp):0)+pad*2),ch=Math.round(h+lh+pad*2),x=pos==='pic-bl'?x0+m:x1-m-cw,y=p1-m-ch;
+      ctx.fillStyle=T.dark;ctx.fillRect(x,y,cw,ch);ctx.fillStyle=tk(T,'hi');ctx.fillRect(x,y,cw,2);
+      proText(ctx,lbl,x+cw/2,y+pad+Math.round(z*.8),z,{ink:tk(T,'rightInk'),align:'center',ls:lsp,shadow:false});
+      ctx.save();ctx.filter=filt;ctx.drawImage(im,x+(cw-w)/2,y+pad+lh,w,h);ctx.restore();}}
+  // handle / website sign-off in the bottom strip
+  if(b.signoff!=='off'){const t=[b.handle,b.site].map(s=>(s||'').trim()).filter(Boolean).join('   ·   ');
+    if(t){const [a,c]=L.strip2,z=Math.round((c-a)*.5),ls=Math.round(z*.12);proText(ctx,t,b.signoff==='left'?X0:b.signoff==='center'?W/2:XR,(a+c)/2+1,z,{ink:'rgba(255,255,255,.95)',base:'middle',align:b.signoff,ls,blur:4});}}
+  if(b.guides)drawGuides(ctx);
+}
+// safe zones, on the preview only (never exported): the story's own header and reply bar, the profile grid's 3:4 crop
+function drawGuides(ctx){
+  if(ctx.canvas.id!=='cv'||(FMT!=='story'&&FMT!=='ig'))return;
+  ctx.save();ctx.setLineDash([14,10]);ctx.lineWidth=3;ctx.strokeStyle='rgba(0,229,255,.9)';ctx.fillStyle='rgba(0,229,255,.1)';
+  const lab=(t,x,y)=>{ctx.save();ctx.setLineDash([]);ctx.font='600 24px "Segoe UI",sans-serif';ctx.textBaseline='top';ctx.fillStyle='rgba(0,0,0,.6)';
+    const w=ctx.measureText(t).width;ctx.fillRect(x-6,y-4,w+12,34);ctx.fillStyle='#7ff3ff';ctx.fillText(t,x,y);ctx.restore();};
+  ctx.beginPath();
+  if(FMT==='story'){const t=Math.round(H*250/1920),bt=Math.round(H*340/1920);
+    ctx.fillRect(0,0,W,t);ctx.fillRect(0,H-bt,W,bt);ctx.moveTo(0,t);ctx.lineTo(W,t);ctx.moveTo(0,H-bt);ctx.lineTo(W,H-bt);ctx.stroke();
+    lab('Story header: keep text below this line',24,t-46);lab('Reply bar: keep text above this line',24,H-bt+14);}
+  else{const x=Math.round((W-H*3/4)/2);
+    ctx.fillRect(0,0,x,H);ctx.fillRect(W-x,0,x,H);ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.moveTo(W-x,0);ctx.lineTo(W-x,H);ctx.stroke();
+    lab('Profile grid shows the middle 3:4',x+14,14);}
+  ctx.restore();
+}
+
+/* ---------- event preview, head to head, podium, driver card ----------
+   The staples of the F1 / WRC / MotoGP / WEC feeds: the race-week poster (with a countdown), the two-driver
+   comparison, the top-three podium and the driver profile card. Built from the pack's own pieces: theme
+   cells with the drop edge, the gold highlight, flag and brand tiles, WRC Clean. Text blocks can be dragged
+   on the preview; picture places take a dropped photo (drag it to move, scroll to zoom; a transparent PNG
+   stays a cut-out). */
+const PRO_DEFAULT={
+  preview:{round:'Round 14 of 14',flag:'',name:'Rally Japan',dates:'6 – 9 November',place:'Toyota City',count:'',countLbl:'Days to go',pos:'bottom',align:'left',size:150,fade:65,facts:'cells'},
+  h2h:{kicker:'Season so far',aName:'Elfyn Evans',aFlag:'',aBadge:'toyota',bName:'Sébastien Ogier',bFlag:'',bBadge:'toyota',bars:true,teamBars:false,size:44,fade:55},
+  podium:{tiles:true,size:100,fade:30},
+  driver:{kicker:'Driver of the day',num:'33',numPos:'block',numStyle:'outline',first:'Elfyn',last:'Evans',team:'Toyota Gazoo Racing',flag:'',badge:'toyota',side:'left',vpos:'center',size:100,fade:70,facts:'cells'}
+};
+let PRO_RECTS=[],SLOT_RECTS=[],PRO_OFF={},PRO_CROP=[],SLOT_LOAD=0;
+const SLOT_IMG=[];
+const slotKey=(i,m=MODE)=>'slot_'+m+'_'+i;
+function readPro(){const M=MODES[MODE],o={};if(!M.pro)return null;
+  document.querySelectorAll(`#proUI [data-pro="${M.pro}"] [data-p]`).forEach(e=>{o[e.dataset.p]=e.type==='checkbox'?e.checked:e.type==='range'?+e.value:e.value;});return o;}
+function loadPro(name,p){document.querySelectorAll(`#proUI [data-pro="${name}"] [data-p]`).forEach(e=>{const v=p[e.dataset.p];if(e.type==='checkbox')e.checked=!!v;else e.value=v??'';});}
+async function loadSlotImgs(){
+  const m=MODE,n=MODES[m].slots||0,tok=++SLOT_LOAD;SLOT_IMG.length=0;
+  for(let i=0;i<n;i++){const d=await getIdb(slotKey(i,m));if(tok!==SLOT_LOAD)return;SLOT_IMG[i]=d?await loadImg(d).catch(()=>null):null;}
+  if(tok===SLOT_LOAD)redraw(true);
+}
+function setSlotPhoto(i,file){
+  if(!file||!/^image\//.test(file.type))return;
+  const m=MODE,url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{
+    const cut=hasAlpha(im),s=Math.min(1,(cut?CUT_MAX:PHOTO_MAX)/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);{const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);}
+    URL.revokeObjectURL(url);const data=cut?c.toDataURL('image/png'):c.toDataURL('image/jpeg',.92);
+    loadImg(data).then(img=>{if(MODE!==m)return;SLOT_IMG[i]=img;PRO_CROP[i]={z:1,fx:.5,fy:cut?1:.5};redraw();});
+    idb('readwrite',st=>st.put(data,slotKey(i,m))).catch(()=>{});
+  };
+  im.src=url;
+}
+function clearSlot(i){SLOT_IMG[i]=null;idb('readwrite',st=>st.delete(slotKey(i))).catch(()=>{});redraw();}
+// a picture place: cover-filled and cropped by its own zoom / position (a cut-out sits on the theme glow)
+function drawSlot(ctx,st,i,x,y,w,h){
+  if(ctx.canvas.id==='cv')SLOT_RECTS.push({i,x,y,w,h});
+  const im=SLOT_IMG[i];if(!im)return false;
+  const c={z:1,fx:.5,fy:.5,...((((st.pro||{}).crop)||[])[i]||{})};
+  drawCover(ctx,im,{x,y,w,h},c.z,c.fx,c.fy);return true;
+}
+// a part of the layout that can be dragged on the preview (its offset is kept in the mode's settings)
+function proPart(ctx,st,key,x,y,w,h,fn){
+  const [dx,dy]=(((st.pro||{}).off)||{})[key]||[0,0];
+  ctx.save();ctx.translate(dx,dy);fn();ctx.restore();
+  if(ctx.canvas.id==='cv')PRO_RECTS.push({key,x:x+dx,y:y+dy,w,h});
+}
+function shadeRect(ctx,x,y,w,h,a,share){
+  if(!(a>0))return;const g=ctx.createLinearGradient(0,y+h,0,y+h*(1-share));
+  g.addColorStop(0,`rgba(${SHADE_RGB},${a})`);g.addColorStop(1,`rgba(${SHADE_RGB},0)`);
+  ctx.save();ctx.fillStyle=g;ctx.fillRect(x,y,w,h);ctx.restore();
+}
+// rounded brand tile, as on the headline card (stands in for a missing picture)
+function bigTile(ctx,key,cx,cy,s,T){
+  if(!BADGES[key]||s<20)return;const x=Math.round(cx-s/2),y=Math.round(cy-s/2),r=Math.round(s*.16),k=s/100;
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=20*k;ctx.shadowOffsetY=5*k;rr(ctx,x,y,s,s,r);ctx.fillStyle='#000';ctx.fill();ctx.restore();
+  ctx.save();rr(ctx,x,y,s,s,r);ctx.clip();drawTile(ctx,x-Math.round(s*.2),y,Math.round(s*1.4),s,key,T);ctx.restore();
+}
+// flag and brand tiles + a name cell, as in the table rows; fills w when stretch, else its own width; returns the width
+function proPlate(ctx,T,x,y,h,name,fl,bd,w,stretch,style,dry){
+  const tw=Math.round(h*TILE_W/62),g=Math.round(h*GAP/62),pad=Math.round(h*.3),tiles=(fl?tw+g:0)+(bd?tw+g:0),room=Math.max(0,w-tiles);
+  let fs=Math.round(h*.56);while(fs>14&&twOf(name,fs)+pad*2>room)fs--;
+  const cw=name?(stretch?room:Math.min(room,Math.round(twOf(name,fs)+pad*2))):0,tot=(name?tiles:tiles-g)+cw;if(dry)return tot;
+  let cx=x;
+  if(fl){drawFlagTile(ctx,cx,y,tw,h,fl,T);ctx.fillStyle=T.drop;ctx.fillRect(cx,y+h,tw,5);cx+=tw+g;}
+  if(bd){drawTile(ctx,cx,y,tw,h,bd,T);ctx.fillStyle=T.drop;ctx.fillRect(cx,y+h,tw,5);cx+=tw+g;}
+  if(name){const P=paint(ctx,y,h,style||'light',T,{badge:bd});cell(ctx,cx,y,cw,h,P.fill,T);
+    ctx.save();ctx.beginPath();ctx.rect(cx,y,cw,h);ctx.clip();proText(ctx,name,cx+pad,y+h/2+2*h/62,fs,{ink:P.ink,base:'middle',shadow:false});ctx.restore();}
+  return tot;
+}
+// key numbers in a row of cells (a value over a small label), as on the F1 circuit cards; returns the height
+function proFacts(ctx,T,facts,x,y,w,z,look,align,dry){
+  if(!facts.length)return 0;
+  const k=L.rowH/62,n=facts.length,g=Math.round(12*k),cw=(w-(n-1)*g)/n,pad=Math.round(z*.42),cells=look!=='plain',stripe=cells?Math.max(4,Math.round(6*k)):0;
+  const lz=Math.max(12,Math.round(z*.4)),ls=Math.round(lz*.14),h=stripe+pad*2+Math.round(z*.78)+Math.round(z*.34)+Math.round(lz*.78);
+  if(dry)return h;
+  facts.forEach((f,i)=>{
+    const cx=Math.round(x+i*(cw+g)),c=Math.round(cw),mid=!cells&&align==='center',tx=mid?cx+c/2:cx+pad,al=mid?'center':'left';
+    if(cells){ctx.fillStyle=vgrad(ctx,y,y+stripe,tk(T,'hl'));ctx.fillRect(cx,y,c,stripe);cell(ctx,cx,y+stripe,c,h-stripe,T.dark,T);}
+    else if(i){ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(cx-Math.round(g/2)-1,y+pad,2,h-pad*2);}
+    let vz=z;while(vz>14&&twOf(f.v,vz)>c-pad*2)vz--;
+    const vb=y+stripe+pad+Math.round(z*.78);
+    proText(ctx,f.v,tx,vb,vz,{align:al,shadow:!cells});
+    const lt=f.l.toLocaleUpperCase();let lz2=lz;while(lz2>10&&twOf(lt,lz2,700,ls)>c-pad*2)lz2--;
+    proText(ctx,lt,tx,vb+Math.round(z*.34)+Math.round(lz*.78),lz2,{ink:'rgba(255,255,255,.8)',align:al,ls,shadow:!cells});
+  });
+  return h;
+}
+const factRows=st=>st.rows.map(r=>({l:(r.name||'').trim(),v:(r.b||'').trim()})).filter(f=>f.l||f.v).slice(0,4);
+
+// race-week poster: round + flag, the event name big, dates and place, key numbers; an optional countdown block
+function drawPreview(ctx,st,T){
+  const pv={...PRO_DEFAULT.preview,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(44*k),cen=pv.align==='center',facts=factRows(st);
+  const name=(pv.name||'').trim().toLocaleUpperCase(),round=(pv.round||'').trim(),cnt=(pv.count||'').trim();
+  const line=[pv.dates,pv.place].map(s=>(s||'').trim()).filter(Boolean).join('  ·  ').toLocaleUpperCase();
+  const fl=resolveFlag({name:(pv.name||'').trim(),flag:pv.flag||'',pos:''});
+  const cntW=cnt?Math.round((XR-X0)*.24):0,maxW=XR-X0-(cnt?cntW+Math.round(40*k):0),ax=cen?Math.round(X0+maxW/2):X0,al=cen?'center':'left';
+  let s=1,D;
+  const measure=()=>{
+    const g=Math.round(22*k*s),rh=round||fl?Math.round(52*k*s):0,fz=Math.round(52*k*s);
+    let dz=Math.round(32*k*s);while(line&&dz>12&&twOf(line,dz,700,Math.round(dz*.1))+dz*1.3>maxW)dz--;
+    let nz=Math.round((pv.size||150)*k*s);ctx.font=`700 ${nz}px "WRC Clean"`;let ls=name?wrapLines(ctx,name,maxW):[];
+    while(nz>24&&ls.some(l=>ctx.measureText(l).width>maxW)){nz-=2;ctx.font=`700 ${nz}px "WRC Clean"`;ls=wrapLines(ctx,name,maxW);}
+    const lh=Math.round(nz*.92),nh=ls.length?Math.round((ls.length-1)*lh+nz*.8):0,dh=line?Math.round(dz*1.75):0;
+    const fw=Math.min(maxW,Math.round(facts.length*340*k*s)),fh=proFacts(ctx,T,facts,0,0,fw,fz,pv.facts,al,true);
+    const parts=[rh,nh,dh,fh].filter(Boolean);
+    D={g,rh,dz,dh,fz,nz,ls,lh,nh,fw,fh,H:parts.reduce((a,b)=>a+b,0)+g*(parts.length-1)+(fh&&parts.length>1?g:0)};
+  };
+  measure();while(D.H>p1-p0-2*m&&s>.35){s*=.92;measure();}
+  const top=Math.round(pv.pos==='top'?p0+m:pv.pos==='center'?p0+(p1-p0-D.H)/2:p1-m-D.H),a=(pv.fade||0)/100;
+  if(pv.pos==='bottom')shadePic(ctx,a,'y',p1,Math.max(p0,top-260*k));else if(pv.pos==='top')shadePic(ctx,a,'y',p0,Math.min(p1,top+D.H+260*k));else shadePic(ctx,a);
+  proPart(ctx,st,'block',X0,top,maxW,D.H,()=>{
+    let y=top;const g=D.g;
+    if(D.rh){const tw=Math.round(D.rh*TILE_W/62),gg=Math.round(D.rh*GAP/62),cw=round?proChip(ctx,round,0,0,D.rh,'gold',T,'left',{dry:true}):0,tot=(fl?tw:0)+(fl&&round?gg:0)+cw;
+      let x=cen?Math.round(ax-tot/2):X0;
+      if(fl){drawFlagTile(ctx,x,y,tw,D.rh,fl,T);ctx.fillStyle=T.drop;ctx.fillRect(x,y+D.rh,tw,5);x+=tw+gg;}
+      if(round)proChip(ctx,round,x,y,D.rh,'gold',T,'left');
+      y+=D.rh+g;}
+    if(D.nh){D.ls.forEach((l,i)=>proText(ctx,l,ax,y+Math.round(D.nz*.8)+i*D.lh,D.nz,{align:al,blur:26*k}));y+=D.nh+g;}
+    if(D.dh){const lsp=Math.round(D.dz*.1),w=Math.round(twOf(line,D.dz,700,lsp)+D.dz*1.3),x=cen?Math.round(ax-w/2):X0,P=paint(ctx,y,D.dh,'strip',T);
+      cell(ctx,x,y,w,D.dh,P.fill,T);proText(ctx,line,x+Math.round(D.dz*.65),y+D.dh/2+2*k,D.dz,{ink:P.ink,base:'middle',ls:lsp,shadow:false});y+=D.dh+g;}
+    if(D.fh){if(y>top)y+=g;proFacts(ctx,T,facts,cen?Math.round(ax-D.fw/2):X0,y,D.fw,D.fz,pv.facts,al);}
+  });
+  if(cnt){
+    const lab=(pv.countLbl||'').trim().toLocaleUpperCase(),ch=Math.round(Math.min(cntW*1.08,p1-p0-2*m)),cx=XR-cntW;
+    let cy=pv.pos==='top'?top:pv.pos==='center'?Math.round(p0+(p1-p0-ch)/2):top+D.H-ch;cy=Math.max(p0+m,Math.min(p1-m-ch,cy));
+    proPart(ctx,st,'count',cx,cy,cntW,ch,()=>{
+      cell(ctx,cx,cy,cntW,ch,vgrad(ctx,cy,cy+ch,tk(T,'hl')),T);const ink=tk(T,'inkHl');
+      let nz=Math.round(ch*(lab?.6:.7));while(nz>20&&twOf(cnt,nz)>cntW*.84)nz-=2;
+      const lsp=Math.round(ch*.012);let lz=Math.round(ch*.1);while(lz>10&&twOf(lab,lz,700,lsp)>cntW*.86)lz--;
+      const b0=cy+(ch-(nz*.78+(lab?lz*1.6:0)))/2+nz*.78;
+      proText(ctx,cnt,cx+cntW/2,Math.round(b0),nz,{ink,align:'center',shadow:false});
+      if(lab)proText(ctx,lab,cx+cntW/2,Math.round(b0+lz*1.6),lz,{ink,align:'center',ls:lsp,shadow:false});
+    });
+  }
+}
+
+// two drivers side by side, the stats between them: the better value of each row in gold, a share bar under it
+const h2hVal=s=>parseVal(String(s||'').replace(/\s*(%|s|km|pts?|s\/km)$/i,''));
+function drawH2H(ctx,st,T){
+  const hh={...PRO_DEFAULT.h2h,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,x0=RAIL[0]+RAIL[1],x1=RAILR[0],ph=p1-p0;
+  const sw=Math.round((x1-x0)*.3),m=Math.round(30*k),a=(hh.fade||0)/100,plH=Math.round(58*k);
+  const P2=[[hh.aName,hh.aFlag,hh.aBadge],[hh.bName,hh.bFlag,hh.bBadge]].map(([n,f,b])=>{n=(n||'').trim();return {name:n,fl:resolveFlag({name:n,flag:f||'',pos:''}),bd:BADGES[b]?b:''};});
+  // under each picture: the flag and car tiles, then the name across the picture's width
+  [x0,x1-sw].forEach((sx,i)=>{
+    const d=P2[i],gT=Math.round(plH*GAP/62),tilesH=d.fl||d.bd?plH+5+gT:0,stackH=tilesH+(d.name?plH+5:0),y0=p1-m-stackH;
+    if(!drawSlot(ctx,st,i,sx,p0,sw,ph)&&d.bd)bigTile(ctx,d.bd,sx+sw/2,p0+(ph-stackH-m)*.48,Math.round(Math.min(sw*.6,(ph-stackH)*.5)),T);
+    shadeRect(ctx,sx,p0,sw,ph,a,.55);
+    if(tilesH)proPlate(ctx,T,sx+m,y0,plH,'',d.fl,d.bd,sw-2*m,false);
+    if(d.name)proPlate(ctx,T,sx+m,y0+tilesH,plH,d.name,'','',sw-2*m,true,'light');
+  });
+  const cx0=x0+sw+Math.round(28*k),cx1=x1-sw-Math.round(28*k),cw=cx1-cx0,cx=Math.round((cx0+cx1)/2);
+  const rows=st.rows.map(r=>({l:(r.name||'').trim(),a:(r.a||'').trim(),b:(r.b||'').trim(),mv:normMove(r.move)})).filter(r=>r.l||r.a||r.b).slice(0,10);
+  const kick=(hh.kicker||'').trim().toLocaleUpperCase();
+  let z=Math.round((hh.size||44)*k),D;
+  const measure=()=>{
+    const ksp=Math.round(z*.15);let kz=Math.round(z*1.25);while(kick&&kz>14&&twOf(kick,kz,700,ksp)>cw)kz--;
+    const kh=kick?Math.round(kz*.8):0,vs=Math.round(z*1.3),rh=Math.round(z*1.5),bh=hh.bars?Math.max(4,Math.round(z*.2)):0,rg=Math.round(z*.36),sp=Math.round(z*.6);
+    const th=rows.length?rows.length*(rh+5+(bh?bh+Math.round(z*.16):0))+(rows.length-1)*rg:0;
+    D={kz,ksp,kh,vs,rh,bh,rg,sp,th,H:(kh?kh+sp:0)+vs+(th?sp+th:0)};
+  };
+  measure();while(D.H>ph-2*m&&z>14){z-=2;measure();}
+  const top=Math.round(p0+(ph-D.H)/2);
+  proPart(ctx,st,'table',cx0,top,cw,D.H,()=>{
+    let y=top;
+    if(D.kh){proText(ctx,kick,cx,y+D.kh,D.kz,{align:'center',ls:D.ksp,blur:16*k});y+=D.kh+D.sp;}
+    proChip(ctx,'VS',cx,y,D.vs,'gold',T,'center');y+=D.vs+D.sp;
+    const vw=Math.round(cw*.27),gg=Math.round(6*k),lw=cw-2*vw-2*gg;
+    rows.forEach(r=>{
+      const va=h2hVal(r.a),vb=h2hVal(r.b),ok=isFinite(va)&&isFinite(vb);
+      const win=ok&&va!==vb&&(r.mv==='up'||r.mv==='down')?(((r.mv==='up')===(va>vb))?0:1):-1;
+      [[cx0,r.a,0],[cx1-vw,r.b,1]].forEach(([x,v,i])=>{const P=paint(ctx,y,D.rh,win===i?'gold':'light',T);cell(ctx,x,y,vw,D.rh,P.fill,T);
+        let vz=z;while(vz>12&&twOf(v,vz)>vw-16*k)vz--;proText(ctx,v,x+vw/2,y+D.rh/2+2*k,vz,{ink:P.ink,align:'center',base:'middle',shadow:false});});
+      const lx=cx0+vw+gg,lt=r.l.toLocaleUpperCase(),lsp=Math.round(z*.06);cell(ctx,lx,y,lw,D.rh,T.dark,T);
+      let lz=Math.round(z*.74);while(lz>11&&twOf(lt,lz,700,lsp)>lw-16*k)lz--;
+      proText(ctx,lt,lx+lw/2,y+D.rh/2+2*k,lz,{ink:tk(T,'rightInk'),align:'center',base:'middle',ls:lsp,shadow:false});
+      y+=D.rh+5;
+      if(D.bh){y+=Math.round(z*.16);
+        if(ok&&va>=0&&vb>=0&&va+vb>0){const wa=Math.round(cw*va/(va+vb)),[ca,cb]=h2hBarCols(ctx,T,hh,P2,y,D.bh);
+          ctx.fillStyle=ca;ctx.fillRect(cx0,y,Math.max(0,wa-2),D.bh);ctx.fillStyle=cb;ctx.fillRect(cx0+wa+2,y,Math.max(0,cw-wa-2),D.bh);}
+        else{ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(cx0,y,cw,D.bh);}
+        y+=D.bh;}
+      y+=D.rg;
+    });
+  });
+}
+function h2hBarCols(ctx,T,hh,P2,y,h){
+  const team=i=>{const b=P2[i].bd;return b?(TEAM_OVR[b]||BADGES[b].bg[0]):null;};
+  if(hh.teamBars){const a=team(0),b=team(1);if(a&&b&&a.toLowerCase()!==b.toLowerCase())return [a,b];}
+  return [vgrad(ctx,y,y+h,tk(T,'hl')),vgrad(ctx,y,y+h,[[0,T.strip[0]],[1,T.strip[1]]])];
+}
+
+// the top three on steps (2 - 1 - 3), a picture or the brand tile above each name plate
+function drawPodium(ctx,st,T){
+  const pd={...PRO_DEFAULT.podium,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(34*k),g=Math.round(22*k),s=(pd.size||100)/100;
+  shadePic(ctx,(pd.fade||0)/100);
+  const show=st.show||{},cw=Math.round((XR-X0-2*g)/3),avail=p1-p0-2*m,plH=Math.round(58*k);
+  const stepH=[.36,.27,.2].map(f=>Math.round(avail*Math.min(.5,f*s)));
+  [1,0,2].forEach((ri,col)=>{
+    const r=st.rows[ri]||{},x=X0+col*(cw+g),name=(r.name||'').trim(),time=(r.b||'').trim();
+    const fl=show.flag?resolveFlag(r):'',bd=show.badge&&BADGES[r.badge]?r.badge:'';
+    // flag and car tiles over a full-width name cell, sitting on the step
+    const gT=Math.round(plH*GAP/62),tilesH=fl||bd?plH+5+gT:0,sh=stepH[ri],sT=p1-m-sh,plY=sT-Math.round(14*k)-plH-5,tY=plY-tilesH,aY=p0+m,aH=tY-Math.round(16*k)-aY;
+    if(aH>40&&!drawSlot(ctx,st,ri,x,aY,cw,aH)&&pd.tiles&&bd)bigTile(ctx,bd,x+cw/2,aY+aH*.55,Math.round(Math.min(cw*.5,aH*.75)),T);
+    if(tilesH)proPlate(ctx,T,x,tY,plH,'',fl,bd,cw,false);
+    if(name)proPlate(ctx,T,x,plY,plH,name,'','',cw,true,'light');
+    const P=ri===0?{fill:vgrad(ctx,sT,sT+sh,tk(T,'hl')),ink:tk(T,'inkHl')}:{fill:cellFill(ctx,sT,sh,false,.92,T),ink:tk(T,'ink')};
+    cell(ctx,x,sT,cw,sh,P.fill,T);
+    const pad=Math.round(sh*.1);let tz=time?Math.round(Math.min(40*k,sh*.15)):0;while(tz>12&&twOf(time,tz)>cw-24*k)tz--;
+    const nz=Math.max(20,Math.round(Math.min(cw*.5,(sh-pad*2-tz*1.5)/.78))),bh=nz*.78+(time?tz*1.35:0),nb=Math.round(sT+(sh-bh)/2+nz*.78);
+    proText(ctx,String(ri+1),x+cw/2,nb,nz,{ink:P.ink,align:'center',shadow:false});
+    if(time)proText(ctx,time,x+cw/2,nb+Math.round(tz*1.35),tz,{ink:P.ink,align:'center',shadow:false});
+  });
+}
+
+// driver profile: kicker, race number, first name over the LAST NAME, team plate, key numbers; the number can sit
+// huge behind the picture instead (shows round a cut-out PNG)
+function numDraw(ctx,num,x,base,z,align,dv,T,alpha){
+  ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;ctx.font=`700 ${z}px "WRC Clean"`;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.lineJoin='round';
+  const bd=BADGES[dv.badge]?dv.badge:'',gold=()=>vgrad(ctx,base-z*.78,base,tk(T,'hl'));
+  if(dv.numStyle==='outline'){ctx.lineWidth=Math.max(3,Math.round(z*.022));ctx.strokeStyle='#ffffff';ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=z*.05;ctx.strokeText(num,x,base);}
+  else{ctx.fillStyle=dv.numStyle==='gold'?gold():dv.numStyle==='team'?(bd?(TEAM_OVR[bd]||BADGES[bd].bg[0]):gold()):'#ffffff';
+    ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=z*.06;ctx.shadowOffsetY=z*.015;ctx.fillText(num,x,base);}
+  ctx.restore();
+}
+function drawDriver(ctx,st,T,phase){
+  const dv={...PRO_DEFAULT.driver,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,right=dv.side==='right',num=(dv.num||'').trim();
+  if(phase==='behind'){
+    if(!num||dv.numPos!=='behind')return;let z=Math.round((p1-p0)*.9);while(z>40&&twOf(num,z)>(XR-X0)*.44)z-=4;
+    numDraw(ctx,num,Math.round(right?X0+(XR-X0)*.3:X0+(XR-X0)*.7),Math.round((p0+p1)/2+z*.39),z,'center',dv,T,.92);return;
+  }
+  const facts=factRows(st),first=(dv.first||'').trim(),last=(dv.last||'').trim().toLocaleUpperCase(),kick=(dv.kicker||'').trim(),team=(dv.team||'').trim();
+  const fl=resolveFlag({name:[dv.first,dv.last].map(s=>(s||'').trim()).join(' ').trim(),flag:dv.flag||'',pos:''}),bd=BADGES[dv.badge]?dv.badge:'';
+  const bw=Math.round((XR-X0)*.56),m=Math.round(48*k),g=Math.round(22*k),inBlock=num&&dv.numPos==='block';
+  let sc=(dv.size||100)/100,D;
+  const measure=()=>{
+    const kh=kick?Math.round(48*k*sc):0;let nz=inBlock?Math.round(210*k*sc):0;while(nz>30&&twOf(num,nz)>bw)nz-=4;
+    let fz=first?Math.round(62*k*sc):0;while(fz>16&&twOf(first,fz,400)>bw)fz--;
+    let lz=last?Math.round(128*k*sc):0;while(lz>24&&twOf(last,lz)>bw)lz-=2;
+    const th=team||fl||bd?Math.round(54*k*sc):0,fz2=Math.round(46*k*sc),fw=Math.min(bw,Math.round(facts.length*260*k*sc)),fh=proFacts(ctx,T,facts,0,0,fw,fz2,dv.facts,'left',true);
+    const nameH=(fz?Math.round(fz*.8):0)+(fz&&lz?Math.round(g*.35):0)+(lz?Math.round(lz*.8):0);
+    const parts=[kh,nz?Math.round(nz*.78):0,nameH,th?th+5:0,fh].filter(Boolean);
+    D={kh,nz,fz,lz,th,fz2,fw,fh,H:parts.reduce((a,b)=>a+b,0)+g*(parts.length-1)};
+  };
+  measure();while(D.H>p1-p0-2*m&&sc>.3){sc*=.92;measure();}
+  const top=Math.round(dv.vpos==='top'?p0+m:dv.vpos==='bottom'?p1-m-D.H:p0+(p1-p0-D.H)/2),al=right?'right':'left',tx=right?XR:X0,bx=right?XR-bw:X0;
+  const a=(dv.fade||0)/100,x0=RAIL[0]+RAIL[1],x1=RAILR[0];
+  if(right)shadePic(ctx,a,'x',x1,Math.max(x0,bx-260*k));else shadePic(ctx,a,'x',x0,Math.min(x1,bx+bw+260*k));
+  proPart(ctx,st,'block',bx,top,bw,D.H,()=>{
+    let y=top;
+    if(D.kh){proChip(ctx,kick,tx,y,D.kh,'gold',T,al);y+=D.kh+g;}
+    if(D.nz){numDraw(ctx,num,tx,y+Math.round(D.nz*.78),D.nz,al,dv,T);y+=Math.round(D.nz*.78)+g;}
+    if(D.fz){proText(ctx,first,tx,y+Math.round(D.fz*.78),D.fz,{w:400,align:al,blur:18*k});y+=Math.round(D.fz*.8)+(D.lz?Math.round(g*.35):0);}
+    if(D.lz){proText(ctx,last,tx,y+Math.round(D.lz*.78),D.lz,{align:al,blur:22*k});y+=Math.round(D.lz*.8);}
+    if(D.fz||D.lz)y+=g;
+    if(D.th){const w=proPlate(ctx,T,0,0,D.th,team,fl,bd,bw,false,'light',true);proPlate(ctx,T,right?XR-w:X0,y,D.th,team,fl,bd,bw,false,'light');y+=D.th+5+g;}
+    if(D.fh)proFacts(ctx,T,facts,right?XR-D.fw:X0,y,D.fw,D.fz2,dv.facts,'left');
+  });
+}
+function drawProMode(ctx,st,T){
+  const M=MODES[st.mode];if(ctx.canvas.id==='cv'){PRO_RECTS=[];SLOT_RECTS=[];}
+  if(M.pro==='driver')drawDriver(ctx,st,T,'behind');
+  drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);
+  if(M.pro==='preview')drawPreview(ctx,st,T);
+  else if(M.pro==='h2h')drawH2H(ctx,st,T);
+  else if(M.pro==='podium')drawPodium(ctx,st,T);
+  else drawDriver(ctx,st,T);
+}
+
 const $=id=>document.getElementById(id);
 const badgeOptions='<option value="">— none —</option>'+BADGE_KEYS.map(k=>`<option value="${k}">${BADGES[k].name}</option>`).join('');
 const flagOptions='<option value="">auto</option><option value="-">none</option>'+FLAG_KEYS.map(k=>`<option value="${k}">${k} · ${FLAGS[k][1]}</option>`).join('');
@@ -1936,6 +2444,7 @@ function readState(){
           stripL:$('stripL').value,stripR:$('stripR').value,
           opt:{gap:$('gapMode').value,tally:$('tally').value,photo:$('tPhoto').value,share:+$('tShare').value,zoom:+$('tZoom').value,fx:+$('tFx').value,fy:+$('tFy').value,
                teamCol:$('teamCol').checked,teamCols:{...TEAM_OVR},twoCol:$('twoCol').checked,cells:$('tCells').value,cellCustom:$('tCellCustom').value,cellAlpha:+$('tCellAlpha').value},
+          pro:MODES[MODE].pro?{...readPro(),off:JSON.parse(JSON.stringify(PRO_OFF)),crop:JSON.parse(JSON.stringify(PRO_CROP))}:undefined,brand:readBrand(),
           head:readHead(),sx:{style:$('sxStyle').value,pos:$('sxPos').value,size:+$('sxSize').value,fade:+$('sxFade').value,head:$('sxHead').value,hStyle:$('sxHStyle').value,hSize:+$('sxHSize').value,
             hPos:$('sxHPos').value,fx:+$('sxFx').value,fy:+$('sxFy').value,hfx:+$('sxHFx').value,hfy:+$('sxHFy').value,
             labelCol:$('sxLabelCol').value,valueCol:$('sxValueCol').value,hlCol:$('sxHlCol').value,headCol:$('sxHeadCol').value,custom:$('sxCustom').value,alpha:+$('sxAlpha').value,hero:readHero()}};
@@ -1974,7 +2483,7 @@ function setTablePhoto(file){
   im.src=url;
 }
 const KEY=m=>'wrcTpl2_'+m;
-function save(st){try{localStorage.setItem(KEY(st.mode),JSON.stringify(st));localStorage.setItem('wrcTpl_mode',st.mode);localStorage.setItem('wrcTpl_logo',st.logo);}catch(e){}}
+function save(st){try{localStorage.setItem(KEY(st.mode),JSON.stringify(st));localStorage.setItem('wrcTpl_brand',JSON.stringify(st.brand));localStorage.setItem('wrcTpl_mode',st.mode);localStorage.setItem('wrcTpl_logo',st.logo);}catch(e){}}
 function restore(m){
   try{
     const s=JSON.parse(localStorage.getItem(KEY(m))||'null');if(s)return s;
@@ -2011,9 +2520,9 @@ function loadMode(m){
   $('title').value=s?s.title:M.title;$('foot').value=s?s.foot:M.foot;$('rally').value=s?(s.rally||''):M.rally;
   $('start').value=s?(s.start||''):'';$('theme').value=(s&&s.theme)||M.theme;if(s&&s.themeCol)$('themeCol').value=s.themeCol;$('themeBlend').checked=!!(s&&s.blend);if(s&&s.themeCol2)$('themeCol2').value=s.themeCol2;$('blendDir').value=(s&&s.blendDir)||'diag';$('pTint').value=(s&&s.tint)||0;$('themeColBox').hidden=$('themeBlendBox').hidden=!/^custom/.test($('theme').value);
   $('hl').value=s?(s.hl<0?'':String(s.hl)):'0';
-  $('rowsUI').hidden=$('hlBox').hidden=!!(M.strips||(M.quote&&!M.stats));$('quoteUI').hidden=!M.quote;$('stripsUI').hidden=!M.strips;
-  $('headUI').hidden=!M.headline;$('statsUI').hidden=!M.stats;$('quoteUI').classList.toggle('noText',!!(M.headline||M.stats));
-  $('extrasUI').hidden=$('rowChecks').hidden=!!M.stats;
+  $('rowsUI').hidden=!!(M.strips||(M.quote&&!M.stats&&!M.pro));$('hlBox').hidden=$('rowsUI').hidden||!!M.pro;$('quoteUI').hidden=!M.quote;$('stripsUI').hidden=!M.strips;
+  $('headUI').hidden=!M.headline;$('statsUI').hidden=!M.stats;$('quoteUI').classList.toggle('noText',!!(M.headline||M.stats||M.pro));
+  $('extrasUI').hidden=!!(M.stats||M.pro);$('rowChecks').hidden=!!(M.stats||(M.pro&&M.pro!=='podium'));
   $('collageUI').hidden=!M.collage;document.querySelectorAll('.noCol').forEach(e=>e.classList.toggle('colHide',!!M.collage));
   $('tabScreen').classList.toggle('colHide',!!M.collage);document.querySelector('.stage').classList.toggle('col',!!M.collage);
   $('ig1').textContent=M.thumb?'YouTube thumbnail 1280×720':M.collage?'Export all slides 1080×1350':'Instagram post 1080×1350';$('ig2').textContent=M.thumb?'Full HD 1920×1080':M.collage?'All slides 2160×2700':'Instagram 2160×2700';
@@ -2031,6 +2540,13 @@ function loadMode(m){
   $('qHead').checked=q.showHead;$('qFootOn').checked=q.showFoot;$('qLogoPos').value=q.logoPos;$('qLogoSize').value=q.logoSize;$('qLogoInk').value=q.logoInk;picLogoUI();$('qCredit').value=q.credit;$('qCreditPos').value=q.creditPos;
   $('qSize').value=q.size;$('qZoom').value=q.zoom;$('qFx').value=q.fx;$('qFy').value=q.fy;
   $('qColor').value=q.boxColor;$('qCustom').value=q.boxCustom;$('qAlign').value=q.align;$('qCustomBox').hidden=q.boxColor!=='custom';
+  $('proUI').hidden=!M.pro;$('tabStory').classList.toggle('colHide',!!M.collage);
+  if(M.pro){
+    document.querySelectorAll('#proUI [data-pro]').forEach(e=>e.hidden=e.dataset.pro!==M.pro);$('proHead').textContent=M.proLabel;
+    const p={...PRO_DEFAULT[M.pro],...((s&&s.pro)||{})};loadPro(M.pro,p);
+    PRO_OFF=JSON.parse(JSON.stringify(p.off||{}));PRO_CROP=JSON.parse(JSON.stringify(p.crop||[]));
+    SLOT_IMG.length=0;if(ready)loadSlotImgs();
+  }
 }
 // Pictures are scaled to at most 3000 px and kept as JPEG so the last one survives a reload.
 function setPhoto(file){
@@ -2040,7 +2556,9 @@ function setPhoto(file){
     const s=Math.min(1,PHOTO_MAX/Math.max(im.width,im.height)),c=document.createElement('canvas');
     c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);{const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);};
     URL.revokeObjectURL(url);
-    const data=c.toDataURL('image/jpeg',.92);
+    let src=c;const cut=hasAlpha(c);
+    if(cut&&Math.max(c.width,c.height)>1800){const f=1800/Math.max(c.width,c.height),c2=document.createElement('canvas');c2.width=Math.round(c.width*f);c2.height=Math.round(c.height*f);c2.getContext('2d').drawImage(c,0,0,c2.width,c2.height);src=c2;}
+    const data=cut?src.toDataURL('image/png'):c.toDataURL('image/jpeg',.92);
     loadImg(data).then(i=>{PHOTO.img=i;$('qZoom').value=1;$('qFx').value=.5;$('qFy').value=.5;redraw();});
     try{localStorage.setItem('wrcTpl_photo',data);}catch(e){try{localStorage.removeItem('wrcTpl_photo');}catch(_){}}
   };
@@ -2049,11 +2567,11 @@ function setPhoto(file){
 let ready=false;
 function redraw(fromImage){
   if(!ready)return;const st=readState(),cv=$('cv');
-  setFormat(MODES[MODE].thumb?'thumb':MODES[MODE].collage||$('previewIg').checked?'ig':'screen');
+  setFormat(MODES[MODE].thumb?'thumb':MODES[MODE].collage?'ig':$('previewStory').checked?'story':$('previewIg').checked?'ig':'screen');
   if(cv.height!==H)cv.height=H;
-  $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');$('tabYt').classList.toggle('on',FMT==='thumb');
+  $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');$('tabYt').classList.toggle('on',FMT==='thumb');$('tabStory').classList.toggle('on',FMT==='story');
   $('sbMode').textContent=MODES[MODE].label;$('sbSize').textContent=W+' × '+H;
-  $('sbExp').textContent=FMT==='thumb'?'1280×720 · 1920×1080':FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
+  $('sbExp').textContent=FMT==='thumb'?'1280×720 · 1920×1080':FMT==='story'?'1080×1920 · 2160×3840':FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
   render(cv.getContext('2d'),st);if(!fromImage)save(st);teamColUI();colThumbs();
 }
 
@@ -2070,7 +2588,7 @@ function matchFlag(s){
   return FLAG_KEYS.find(k=>fold(FLAGS[k][1])===f)||FLAG_KEYS.find(k=>fold(FLAGS[k][1]).startsWith(f))||'';
 }
 function parseBulk(text){
-  const order={points:['name','badge','a','b','move','flag'],results:['name','badge','move','b','flag'],custom:['pos','name','badge','a','b','move','flag'],stats:['name','b']}[MODE];
+  const order=MODES[MODE].bulk||{points:['name','badge','a','b','move','flag'],results:['name','badge','move','b','flag'],custom:['pos','name','badge','a','b','move','flag'],stats:['name','b']}[MODE];
   return text.split(/\r?\n/).filter(l=>l.trim()).slice(0,MAX_ROWS).map(l=>{
     const p=l.split(/\s*[|\t;]\s*/);const o={pos:'',name:'',flag:'',badge:'',move:'',a:'',b:''};
     order.forEach((k,i)=>{const v=(p[i]||'').trim();o[k]=k==='badge'?matchBadge(v):k==='flag'?matchFlag(v):k==='move'?normMove(v):v;});
@@ -2115,7 +2633,7 @@ function exportPNG(scale,fmt='screen'){
   withFormat(fmt,()=>{
     const c=document.createElement('canvas');c.width=W*scale;c.height=H*scale;
     const x=c.getContext('2d');x.scale(scale,scale);render(x,readState());
-    download(c,`${MODES[MODE].file}${fmt==='ig'?'_ig':''}_${c.width}x${c.height}.png`);
+    download(c,`${MODES[MODE].file}${fmt==='ig'?'_ig':fmt==='story'?'_story':''}_${c.width}x${c.height}.png`);
   });
 }
 function tileCanvas(key,scale){
@@ -2197,6 +2715,8 @@ async function saveProject(){
   if(M.quote){try{pics.quote=localStorage.getItem('wrcTpl_photo')||null;}catch(e){}}
   if(!M.quote&&!M.strips&&st.opt&&st.opt.photo!=='none')pics.table=await getIdb('tablePhoto');
   if(M.strips){pics.strips=[];const n=Math.min(STRIP_MAX,(SS&&SS.n)||0);for(let i=0;i<n;i++)pics.strips.push(await getIdb(photoKey(i))||null);}
+  if(M.slots){pics.slots=[];for(let i=0;i<M.slots;i++)pics.slots.push(await getIdb(slotKey(i))||null);}
+  if(st.brand&&st.brand.partnerOn)pics.partner=await getIdb('brandPartner')||null;
   if(M.collage){pics.collage={};if(COL.pano)pics.collage.pano=await getIdb(colKey('pano'))||null;for(const it of COL.items)if(it.t==='photo')pics.collage[it.id]=await getIdb(colKey(it.id))||null;}
   const proj={app:PROJ_APP,version:1,saved:new Date().toISOString(),mode:MODE,logo:st.logo,format:FMT,state:st,pictures:pics};
   const name=(slug($('projName').value)||slug(st.title)||M.file)+'.wrcproj';
@@ -2224,9 +2744,12 @@ async function openProject(file){
     for(let i=0;i<STRIP_MAX;i++){const d=pics.strips[i];
       await idb('readwrite',st=>d?st.put(d,pre+i):st.delete(pre+i)).catch(()=>{});}
   }
+  if(Array.isArray(pics.slots))for(let i=0;i<(M.slots||0);i++){const d=pics.slots[i];await idb('readwrite',st=>d?st.put(d,slotKey(i,m)):st.delete(slotKey(i,m))).catch(()=>{});}
+  if(pics.partner){await idb('readwrite',st=>st.put(pics.partner,'brandPartner')).catch(()=>{});PARTNER.img=await loadImg(pics.partner).catch(()=>null);}
+  if(proj.state.brand)loadBrand(proj.state.brand);
   if(pics.collage)for(const [id,d] of Object.entries(pics.collage)){delete COL_IMG[id];if(d)await idb('readwrite',st=>st.put(d,colKey(id,m))).catch(()=>{});}
   if(proj.logo&&PS_LOGOS[proj.logo])$('logo').value=proj.logo;
-  $('previewIg').checked=proj.format==='ig';
+  $('previewIg').checked=proj.format==='ig';$('previewStory').checked=proj.format==='story';
   loadMode(m);
   $('projName').value=file.name.replace(/\.(wrcproj|json)$/i,'');
   redraw();
@@ -2681,6 +3204,9 @@ async function colExport(scale){
   $('logo').innerHTML=Object.keys(PS_LOGOS).map(k=>`<option value="${k}">${PS_LOGO_NAMES[k]}</option>`).join('');
   $('mode').innerHTML=Object.keys(MODES).map(k=>`<option value="${k}">${MODES[k].label}</option>`).join('');
   $('hTile').innerHTML=badgeOptions;
+  document.querySelectorAll('#proUI .flagSel').forEach(e=>e.innerHTML=flagOptions);document.querySelectorAll('#proUI .badgeSel').forEach(e=>e.innerHTML=badgeOptions);
+  $('bTagStyle').innerHTML=opts(TAG_STYLES,'red');
+  try{loadBrand(JSON.parse(localStorage.getItem('wrcTpl_brand')||'null'));}catch(e){loadBrand(null);}
   $('tCells').innerHTML=opts({...BOX_COLORS,light:'Theme (default)'},'light');
   document.querySelectorAll('.sxCol').forEach(e=>e.innerHTML=opts({auto:'Automatic',...BOX_COLORS},'auto'));
   $('tally').innerHTML='<option value="">No (numbers)</option>'+Object.entries(ICONS).map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
@@ -2710,8 +3236,10 @@ async function colExport(scale){
   $('applyBulk').onclick=()=>{buildRows(parseBulk($('bulk').value));redraw();};
   $('png1').onclick=()=>exportPNG(1);$('png2').onclick=()=>exportPNG(2);
   $('ig1').onclick=()=>exportPNG(.75,'ig');$('ig2').onclick=()=>exportPNG(1.5,'ig');
-  $('previewIg').addEventListener('change',()=>redraw());
-  [['tabScreen',false],['tabIg',true]].forEach(([id,ig])=>$(id).addEventListener('click',()=>{$('previewIg').checked=ig;redraw();}));
+  $('story1').onclick=()=>exportPNG(.75,'story');$('story2').onclick=()=>exportPNG(1.5,'story');
+  $('previewIg').addEventListener('change',()=>{if($('previewIg').checked)$('previewStory').checked=false;redraw();});
+  $('previewStory').addEventListener('change',()=>{if($('previewStory').checked)$('previewIg').checked=false;redraw();});
+  [['tabScreen',''],['tabIg','ig'],['tabStory','story']].forEach(([id,f])=>$(id).addEventListener('click',()=>{$('previewIg').checked=f==='ig';$('previewStory').checked=f==='story';redraw();}));
   initFolds();
   const pickProj=()=>$('projFile').click();
   $('projOpen').onclick=$('projOpen2').onclick=pickProj;
@@ -2787,11 +3315,47 @@ async function colExport(scale){
   try{const d=localStorage.getItem('wrcTpl_photo');if(d)PHOTO.img=await loadImg(d);}catch(e){}
   initStripsUI(cv,toCanvas);
   initCollageUI(cv,toCanvas);
+  // brand kit
+  $('brandUI').addEventListener('input',()=>{brandUI();redraw();});$('brandUI').addEventListener('change',()=>redraw());
+  $('bPartner').addEventListener('change',e=>{e.stopPropagation();setPartner($('bPartner').files[0]);$('bPartner').value='';});
+  $('bPartnerDel').onclick=()=>{PARTNER.img=null;idb('readwrite',st=>st.delete('brandPartner')).catch(()=>{});redraw();};
+  try{const d=await idb('readonly',st=>st.get('brandPartner'));if(d)PARTNER.img=await loadImg(d);}catch(e){}
+  // preview / head to head / podium / driver card: settings, picture places, dragging
+  $('proUI').addEventListener('input',e=>{if(e.target.dataset.p!==undefined)redraw();});
+  $('proUI').addEventListener('change',e=>{const t=e.target;if(t.dataset.slot!==undefined){setSlotPhoto(+t.dataset.slot,t.files[0]);t.value='';}else if(t.dataset.p!==undefined)redraw();});
+  $('proUI').addEventListener('click',e=>{const b=e.target.closest('[data-slotdel]');if(b)clearSlot(+b.dataset.slotdel);});
+  $('proReset').onclick=()=>{PRO_OFF={};redraw();};
+  {
+    let pdrag=null;
+    const hitIn=(arr,pt)=>[...arr].reverse().find(b=>pt.x>=b.x&&pt.x<=b.x+b.w&&pt.y>=b.y&&pt.y<=b.y+b.h);
+    const slotAt=pt=>{const s=hitIn(SLOT_RECTS,pt);return s&&SLOT_IMG[s.i]?s:null;};
+    cv.addEventListener('pointerdown',e=>{
+      if(!MODES[MODE].pro)return;const pt=toCanvas(e),r=hitIn(PRO_RECTS,pt);
+      if(r){const o=PRO_OFF[r.key]||[0,0];pdrag={part:r.key,sx:pt.x,sy:pt.y,ox:o[0],oy:o[1]};}
+      else{const s=slotAt(pt);if(!s)return;const c=PRO_CROP[s.i]||(PRO_CROP[s.i]={z:1,fx:.5,fy:.5});pdrag={slot:s,sx:pt.x,sy:pt.y,fx:c.fx,fy:c.fy};}
+      cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();
+    },true);
+    cv.addEventListener('pointermove',e=>{
+      if(!MODES[MODE].pro)return;const pt=toCanvas(e);
+      if(!pdrag){cv.style.cursor=hitIn(PRO_RECTS,pt)?'move':slotAt(pt)?'grab':'';e.stopImmediatePropagation();return;}
+      if(pdrag.part)PRO_OFF[pdrag.part]=[Math.round(pdrag.ox+pt.x-pdrag.sx),Math.round(pdrag.oy+pt.y-pdrag.sy)];
+      else{const s=pdrag.slot,c=PRO_CROP[s.i],im=SLOT_IMG[s.i];if(!im)return;const sc=Math.max(s.w/im.width,s.h/im.height)*c.z,ex=im.width*sc-s.w,ey=im.height*sc-s.h;
+        if(ex>0)c.fx=clamp01(pdrag.fx-(pt.x-pdrag.sx)/ex);if(ey>0)c.fy=clamp01(pdrag.fy-(pt.y-pdrag.sy)/ey);}
+      redraw();e.stopImmediatePropagation();
+    },true);
+    const endP=()=>{pdrag=null;};cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
+    cv.addEventListener('wheel',e=>{if(!MODES[MODE].pro)return;const s=slotAt(toCanvas(e));if(!s)return;e.preventDefault();
+      const c=PRO_CROP[s.i]||(PRO_CROP[s.i]={z:1,fx:.5,fy:.5});c.z=Math.min(4,Math.max(1,c.z*(e.deltaY<0?1.06:1/1.06)));redraw();},{passive:false});
+    // a picture dropped on a picture place goes there (anywhere else it is the background picture)
+    cv.addEventListener('drop',e=>{if(!MODES[MODE].pro)return;const s=hitIn(SLOT_RECTS,toCanvas(e));if(!s)return;
+      e.preventDefault();e.stopImmediatePropagation();cv.classList.remove('dropping');setSlotPhoto(s.i,e.dataTransfer.files[0]);},true);
+  }
   // table modes: drop a picture for the table on the preview
   const tableDrop=()=>{const M=MODES[MODE];return !M.quote&&!M.strips&&$('tPhoto').value!=='none';};
   cv.addEventListener('dragover',e=>{if(tableDrop()){e.preventDefault();cv.classList.add('dropping');}});
   cv.addEventListener('drop',e=>{if(!tableDrop())return;e.preventDefault();cv.classList.remove('dropping');setTablePhoto(e.dataTransfer.files[0]);});
   await loadStripImgs();
+  if(MODES[MODE].slots)await loadSlotImgs();
   if(MODES[MODE].collage)colLoadImgs();
   try{const d=await idb('readonly',st=>st.get('tablePhoto'));if(d)TPHOTO.img=await loadImg(d);}catch(e){}
   if(MODES[MODE].strips)buildStripUI();

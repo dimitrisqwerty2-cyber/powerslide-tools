@@ -32,6 +32,8 @@
   #xfBar b{color:#ececec;font-weight:600}
   #xfBar button{height:20px;padding:0 7px;font-size:11px}
   #xfBar .hint{margin-left:4px;color:#767676}
+  #xfBar .xcol{display:inline-flex;align-items:center;gap:4px;margin:0 2px 0 4px;font-size:11px;color:var(--muted)}
+  #xfBar .xcol input{width:26px;height:20px;padding:0 1px}
   .stage.col #xfBar{display:none}
   .xfRow{display:flex;align-items:center;gap:6px;height:23px;padding-right:4px;border-radius:2px;cursor:pointer}
   .xfRow:hover{background:#353535}
@@ -1842,7 +1844,7 @@ function render(ctx,st){
       const room=(tg?XR-tg:W-40)-515;while(ts>30&&textW(st.title,ts)>room)ts--;}   // the title shrinks to fit, leaving room for a tag in the header
     measureCtx.font=`700 ${ts}px "WRC Clean"`;const capH=measureCtx.measureText('H').actualBoundingBoxAscent;   // capitals centred on the logo (or the band), so descenders don't shift it
     const tb=Math.round((logoMid??L.topBot/2)+capH/2);xfB(ctx,'title','Title',515,Math.round(tb-capH*1.05),Math.max(1,textW(st.title||'',ts)),Math.round(capH*1.35));
-    drawGlitchTitle(ctx,st.title||'',515,tb,ts,tk(T,'glitchInk'),tk(T,'speck'));xfE(ctx);
+    drawGlitchTitle(ctx,st.title||'',515,tb,ts,((((st.xf||{})[FMT]||{}).title||{}).col)||tk(T,'glitchInk'),tk(T,'speck'));xfE(ctx);
   }
   drawStripText(ctx,st,T);
   if(M.strips)drawStrips(ctx,st,T);
@@ -1850,7 +1852,7 @@ function render(ctx,st){
   else if(M.headline){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawHeadline(ctx,st,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
   else if(M.stats){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawStats(ctx,st,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
   else if(M.quote){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawQuoteBox(ctx,st.quote,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
-  else drawTable(ctx,st,T);
+  else{xfB(ctx,'table','Table',X0,L.panel[0],XR-X0,L.panel[1]-L.panel[0]);drawTable(ctx,st,T);xfE(ctx);}
   // footer: caption against the divider, optional text in the darker right-hand cell
   if(foot){
     const fy=(L.foot[0]+L.foot[1])/2;
@@ -2959,7 +2961,7 @@ function xfAll(){return XF[FMT]||(XF[FMT]={});}
 function xfGet(key){return xfAll()[key]||{};}
 function xfSet(key,o){
   const a=xfAll(),t={...(a[key]||{}),...o};
-  if(!t.dx)delete t.dx;if(!t.dy)delete t.dy;if(!t.s||Math.abs(t.s-1)<.001)delete t.s;if(!t.hide)delete t.hide;
+  if(!t.dx)delete t.dx;if(!t.dy)delete t.dy;if(!t.s||Math.abs(t.s-1)<.001)delete t.s;if(!t.hide)delete t.hide;if(!t.col)delete t.col;
   if(Object.keys(t).length)a[key]=t;else delete a[key];
 }
 function xfB(ctx,key,label,x,y,w,h){
@@ -2968,10 +2970,17 @@ function xfB(ctx,key,label,x,y,w,h){
   ctx.save();
   if(t.dx||t.dy||s!==1){ctx.translate(cx+(t.dx||0),cy+(t.dy||0));ctx.scale(s,s);ctx.translate(-cx,-cy);}
   if(t.hide){ctx.beginPath();ctx.rect(0,0,0,0);ctx.clip();}   // hidden: nothing inside gets drawn
-  XF_STACK.push({key,label,x,y,w,h,m0,parent,hide:!!t.hide,s,ord:XF_ORD++});
+  if(t.col){
+    if(!ctx.__xfCols){const of=ctx.fillText,os=ctx.strokeText;ctx.__xfCols=[];ctx.__xfOrig=[of,os];
+      ctx.fillText=function(...a){const c=this.__xfCols[this.__xfCols.length-1];if(!c)return of.apply(this,a);const p=this.fillStyle;this.fillStyle=c;of.apply(this,a);this.fillStyle=p;};
+      ctx.strokeText=function(...a){const c=this.__xfCols[this.__xfCols.length-1];if(!c)return os.apply(this,a);const p=this.strokeStyle;this.strokeStyle=c;os.apply(this,a);this.strokeStyle=p;};}
+    ctx.__xfCols.push(t.col);
+  }
+  XF_STACK.push({key,label,x,y,w,h,m0,parent,hide:!!t.hide,s,ord:XF_ORD++,col:t.col||''});
 }
 function xfE(ctx){
   const f=XF_STACK.pop();if(!f)return;
+  if(f.col&&ctx.__xfCols){ctx.__xfCols.pop();if(!ctx.__xfCols.length){[ctx.fillText,ctx.strokeText]=ctx.__xfOrig;delete ctx.__xfCols;delete ctx.__xfOrig;}}
   if(ctx.canvas.id==='cv'){
     const m=ctx.getTransform(),pts=[[f.x,f.y],[f.x+f.w,f.y],[f.x,f.y+f.h],[f.x+f.w,f.y+f.h]].map(([px,py])=>[m.a*px+m.c*py+m.e,m.b*px+m.d*py+m.f]);
     const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),r={key:f.key,label:f.label,parent:f.parent,hide:f.hide,s:f.s,ord:f.ord,ps:Math.hypot(f.m0.a,f.m0.b)||1,x:Math.min(...xs),y:Math.min(...ys)};
@@ -3004,22 +3013,27 @@ function xfPanel(){
     list.innerHTML=els.length?els.map(r=>`<div class="xfRow" data-k="${escA(r.key)}" style="padding-left:${6+depth(r)*14}px"><input type="checkbox" data-xv title="Show"${r.hide?'':' checked'}><span>${escA(r.label)}</span><small></small><button type="button" data-xr title="Reset position and size">↺</button></div>`).join('')
       :'<div class="note" style="margin:0">Nothing to move in this mode yet.</div>';}
   list.querySelectorAll('.xfRow').forEach(d=>{const r=els.find(e=>e.key===d.dataset.k),t=xfGet(d.dataset.k);d.classList.toggle('sel',d.dataset.k===XF_SEL);
-    d.querySelector('small').textContent=(t.dx||t.dy?'moved · ':'')+Math.round((t.s||1)*100)+'%';});
+    d.querySelector('small').textContent=(t.col?'colour · ':'')+(t.dx||t.dy?'moved · ':'')+Math.round((t.s||1)*100)+'%';});
   xfBar();
 }
 function xfBar(){
   const bar=$('xfBar');if(!bar)return;const r=XF_SEL&&XF_RECTS.find(q=>q.key===XF_SEL);
-  if(!r){bar.innerHTML='Click any text, logo or block on the preview to move it · drag a corner to resize · <b>Alt</b>+click picks the whole block';return;}
-  const t=xfGet(r.key);
-  bar.innerHTML=`<b>${escA(r.label)}</b> ${Math.round((t.s||1)*100)}% <button type="button" data-x="-" title="Smaller (−)">−</button><button type="button" data-x="+" title="Bigger (+)">+</button>`
-    +(r.parent?'<button type="button" data-x="up" title="Select the block it sits in (Alt+click)">Whole block</button>':'')
-    +`<button type="button" data-x="hide">${t.hide?'Show':'Hide'}</button><button type="button" data-x="reset" title="R">Reset</button><span class="hint">arrows nudge · Alt: no snap</span>`;
+  if(!r){bar.dataset.sig='';bar.innerHTML='Click any text, logo or block on the preview to move it · drag a corner to resize · <b>Alt</b>+click picks the whole block';return;}
+  const t=xfGet(r.key),sig=r.key+'|'+!!t.hide+'|'+!!t.col+'|'+!!r.parent;
+  if(bar.dataset.sig!==sig){bar.dataset.sig=sig;
+    bar.innerHTML=`<b>${escA(r.label)}</b> <span class="xpct"></span> <button type="button" data-x="-" title="Smaller (−)">−</button><button type="button" data-x="+" title="Bigger (+)">+</button>`
+      +`<label class="xcol" title="Text colour of this element (and everything in it)">Text <input type="color" data-xc></label>`+(t.col?'<button type="button" data-x="nocol" title="Back to its own colours">Auto</button>':'')
+      +(r.parent?'<button type="button" data-x="up" title="Select the block it sits in (Alt+click)">Whole block</button>':'')
+      +`<button type="button" data-x="hide">${t.hide?'Show':'Hide'}</button><button type="button" data-x="reset" title="R">Reset</button><span class="hint">arrows nudge · Alt: no snap</span>`;}
+  bar.querySelector('.xpct').textContent=Math.round((t.s||1)*100)+'%';
+  const ci=bar.querySelector('[data-xc]');if(ci&&document.activeElement!==ci)ci.value=t.col||'#ffffff';
 }
 function xfAct(a,key){
   key=key||XF_SEL;if(!key)return;const t=xfGet(key);
   if(a==='+'||a==='-')xfSet(key,{s:+Math.min(6,Math.max(.15,(t.s||1)*(a==='+'?1.05:1/1.05))).toFixed(3)});
   else if(a==='hide')xfSet(key,{hide:!t.hide});
-  else if(a==='reset')xfSet(key,{dx:0,dy:0,s:1,hide:false});
+  else if(a==='reset')xfSet(key,{dx:0,dy:0,s:1,hide:false,col:''});
+  else if(a==='nocol')xfSet(key,{col:''});
   else if(a==='up'){const r=XF_RECTS.find(q=>q.key===key);if(r&&r.parent)XF_SEL=r.parent;}
   redraw();
 }
@@ -4091,6 +4105,7 @@ async function colExport(scale){
       if(done){e.preventDefault();redraw();}
     });
     $('xfBar').addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(b)xfAct(b.dataset.x);});
+    $('xfBar').addEventListener('input',e=>{if(e.target.matches('[data-xc]')&&XF_SEL){xfSet(XF_SEL,{col:e.target.value});redraw();}});
     $('xfList').addEventListener('click',e=>{
       const row=e.target.closest('.xfRow');if(!row)return;const k=row.dataset.k;
       if(e.target.matches('[data-xv]'))xfSet(k,{hide:!e.target.checked});

@@ -55,7 +55,17 @@
   .side::-webkit-scrollbar-thumb{background:#4b4b4b;border:3px solid var(--panel);border-radius:6px}
   .side::-webkit-scrollbar-thumb:hover{background:#5c5c5c}
   .paneltabs{position:sticky;top:0;z-index:5;display:flex;margin:0 -12px;background:#232323;border-bottom:1px solid var(--line)}
-  .paneltabs span{padding:6px 14px;font-size:11.5px;color:var(--muted);border-right:1px solid var(--line)}
+  .paneltabs span{padding:7px 14px;font-size:11.5px;color:var(--muted);border-right:1px solid var(--line);cursor:pointer;user-select:none}
+  .paneltabs span:hover{color:var(--text)}
+  .rowsScroll{overflow:auto;max-height:440px;margin:0 -12px;padding:0 12px 6px;border-bottom:1px solid var(--line)}   /* its own scroll box: long tables and wide ones */
+  .rowsScroll #hdr{position:sticky;top:0;z-index:2;background:var(--panel);padding:4px 0 3px;margin-bottom:0}
+  .rowsScroll::-webkit-scrollbar{width:10px}
+  .rowsScroll .row{min-width:min-content}
+  .rowsScroll::-webkit-scrollbar{height:10px}
+  .rowsScroll::-webkit-scrollbar-track{background:#262626}
+  .rowsScroll::-webkit-scrollbar-thumb{background:#4b4b4b;border:2px solid #262626;border-radius:5px}
+  .rowsScroll::-webkit-scrollbar-thumb:hover{background:#5c5c5c}
+  .tabPane > h2:first-child{margin-top:8px}
   .paneltabs span.on{background:var(--panel);color:#ececec}
   h2{position:relative;margin:10px -12px 8px;padding:5px 12px 5px 25px;background:var(--head);border-top:1px solid var(--line2);border-bottom:1px solid var(--line);
      font-size:11.5px;font-weight:600;color:#e4e4e4;cursor:pointer;user-select:none}
@@ -117,6 +127,9 @@
   .topbar .tools{display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid var(--line)}
   .topbar .tools button{height:22px}
   @media (max-width:1000px){
+    .topbar{height:auto;flex-wrap:wrap}
+    .doctab small{display:none}
+    .topbar .tools{padding:4px 8px}
     body{display:block;overflow:auto}
     .wrap{display:block}
     .stage{height:62vh}
@@ -192,8 +205,8 @@
     <div id="teamColBox" hidden><div class="hdr">Team colours <small>(for the brands in the rows; Reset = the brand's own colours)</small></div><div id="teamColList" style="display:flex;flex-wrap:wrap;gap:6px 14px"></div></div>
     </div>
     <h2>Rows</h2>
-    <div class="row hdr" id="hdr"></div>
-    <div id="rows"></div>
+    <div class="rowsScroll"><div class="row hdr" id="hdr"></div>
+    <div id="rows"></div></div>
     <div class="note">Enter / ↑ ↓ change row, ← → change column. Flag "auto" uses the driver (or rally) name. Rows 9–10 only appear in the Instagram and Story formats. With Two columns all 20 rows are used in both formats, split evenly.</div>
     <h2>Bulk paste</h2>
     <textarea id="bulk"></textarea>
@@ -355,6 +368,85 @@
         </div>
         <div class="note">One row per round: Round | Rally | Flag | Dates | Winner | Car. The flag comes from the rally's name. Fill in the winner as the season goes; the highlighted row (the next round) turns gold. Up to 20 rounds, and the cards arrange themselves.</div>
       </div>
+      <div data-pro="entry">
+        <div class="grid2">
+          <div style="grid-column:1/-1"><label>Heading <small>(optional; the Clean look uses the title when empty)</small></label><input data-p="head" placeholder="Rally Japan entry list"></div>
+          <div><label>Number colour</label><select data-p="numStyle"><option value="team">Team colour (from the car)</option><option value="strip">Theme strip</option><option value="gold">Gold</option></select></div>
+          <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="note">One row per crew in running order: No. | Driver | Co-driver | Flag | Car | Class. Up to 20 crews; the cards arrange themselves. The highlighted row's number turns gold.</div>
+      </div>
+      <div data-pro="fight">
+        <div class="grid2">
+          <div style="grid-column:1/-1"><label>Heading</label><input data-p="head" placeholder="Who can still win?"></div>
+          <div><label>Points still to be won</label><input data-p="left" inputmode="decimal" placeholder="60"></div>
+          <div><label>Note beside it <small>(optional)</small></label><input data-p="note" placeholder="2 rounds to go"></div>
+          <div><label>Bar colour</label><select data-p="barCol"><option value="team">Team colours</option><option value="strip">Theme strip</option></select></div>
+          <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="checks"><label><input type="checkbox" data-p="zoom">Zoom in on the fight <small>(the axis doesn't start at 0)</small></label></div>
+        <div class="note">Rows are Name | Flag | Badge | Points, in any order (they're sorted). The solid bar is the points so far, the dashed part the most they can still add; the line is the leader's total. Anyone who can't reach it shows OUT.</div>
+      </div>
+      <div data-pro="road">
+        <div class="grid2">
+          <div style="grid-column:1/-1"><label>Heading</label><input data-p="head" placeholder="Sweeping the road"></div>
+          <div style="grid-column:1/-1"><label>Line under it</label><input data-p="sub"></div>
+          <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+          <div><label>&nbsp;</label><label><input type="checkbox" data-p="slowerLeft">Slower to the left (as in the database)</label></div>
+        </div>
+        <div class="note">Rows are Road position | s/km (+ = time lost, − = time gained). The defaults are your Sardegna Friday numbers (2017–25, vs the driver's own pace on other rough gravel rallies); paste others from the database's Road Conditions view.</div>
+      </div>
+      <div data-pro="weather">
+        <div class="grid2">
+          <div><label>Heading</label><input data-p="head" placeholder="Weekend weather"></div>
+          <div><label>Line under it <small>(place)</small></label><input data-p="sub" placeholder="Olbia"></div>
+          <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="note">One row per day: Day | Weather | Temp | Extra (rain chance, wind…). The icon follows the words in Weather: sunny / clear, partly cloudy, cloudy, rain / showers, storm, snow, fog, windy. Type the temperature as a number; the degree ring is drawn.</div>
+      </div>
+      <div data-pro="stagemap">
+        <div class="grid2">
+          <div style="grid-column:1/-1"><label>Stage route <small>(GPX, KML or GeoJSON; or drop the file on the preview)</small></label><div style="display:flex;gap:4px"><input type="file" data-track accept=".gpx,.kml,.geojson,.json"><button type="button" id="smClear" title="Remove the route">✕</button></div><div class="note" id="smInfo" style="margin-top:3px"></div></div>
+          <div><label>Caption</label><input data-p="caption"></div>
+          <div><label>Stage name</label><input data-p="name"></div>
+          <div style="grid-column:1/-1"><label>Pills <small>(comma-separated; the first is orange; {km} = the route's length)</small></label><input data-p="pills"></div>
+          <div><label>Big footer line</label><input data-p="big"></div>
+          <div><label>Small footer line</label><input data-p="foot"></div>
+          <div><label>Map look</label><select data-p="style"><option value="navy">Navy (Meet the Stages)</option><option value="satellite">Satellite</option><option value="dark">Dark grey</option></select></div>
+          <div><label>Route colour</label><input type="color" data-p="route"></div>
+          <div><label>Map zoom</label><input type="range" data-p="zoom" min="-3" max="3" step="0.05"><input type="hidden" data-p="mx"><input type="hidden" data-p="my"></div>
+          <div><label>&nbsp;</label><label><input type="checkbox" data-p="markers">Start and finish markers</label></div>
+        </div>
+        <div class="note">Drag an empty part of the map to move it, scroll there to zoom; the card, footer and logo move like any other element. Imagery: Esri World Imagery (credited on the graphic), loaded live, so it needs the internet. <button type="button" id="smCentre">Centre the map again</button></div>
+      </div>
+      <div data-pro="poll">
+        <div class="grid2">
+          <div><label>Label</label><input data-p="kicker" placeholder="Your prediction"></div>
+          <div><label>Sticker space</label><select data-p="zone"><option value="bottom">Under the options</option><option value="middle">Between question and options</option><option value="none">None</option></select></div>
+          <div style="grid-column:1/-1"><label>Question</label><input data-p="question" placeholder="Who wins Rally Japan?"></div>
+          <div><label>Picture 1</label><div style="display:flex;gap:4px"><input type="file" data-slot="0" accept="image/*"><button type="button" data-slotdel="0">✕</button></div></div>
+          <div><label>Picture 2</label><div style="display:flex;gap:4px"><input type="file" data-slot="1" accept="image/*"><button type="button" data-slotdel="1">✕</button></div></div>
+          <div><label>Picture 3</label><div style="display:flex;gap:4px"><input type="file" data-slot="2" accept="image/*"><button type="button" data-slotdel="2">✕</button></div></div>
+          <div><label>Picture 4</label><div style="display:flex;gap:4px"><input type="file" data-slot="3" accept="image/*"><button type="button" data-slotdel="3">✕</button></div></div>
+          <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="note">Rows 1–4 are the options (Name, Flag, Badge). Best in the Story format: the dashed box shows where to put Instagram's poll or quiz sticker and isn't exported. Drop a picture straight onto an option.</div>
+      </div>
+      <div data-pro="milestone">
+        <div class="grid2">
+          <div><label>Label</label><input data-p="kicker" list="msKicks"><datalist id="msKicks"><option>Milestone</option><option>Landmark</option><option>Record</option><option>Century</option></datalist></div>
+          <div><label>Number / suffix</label><div style="display:flex;gap:4px"><input data-p="num" placeholder="100"><input data-p="suffix" placeholder="th" style="width:60px;flex:none"></div></div>
+          <div><label>What it counts</label><input data-p="label" placeholder="WRC starts"></div>
+          <div><label>Name</label><input data-p="name"></div>
+          <div><label>Flag / car</label><div style="display:flex;gap:4px"><select data-p="flag" class="flagSel"></select><select data-p="badge" class="badgeSel"></select></div></div>
+          <div><label>Career line <small>(regular weight)</small></label><input data-p="line"></div>
+          <div><label>Number look</label><select data-p="numStyle"><option value="gold">Gold</option><option value="white">White</option><option value="outline">Outline</option></select></div>
+          <div><label>Text side / height</label><div style="display:flex;gap:4px"><select data-p="side"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select><select data-p="vpos"><option value="center">Middle</option><option value="bottom">Bottom</option><option value="top">Top</option></select></div></div>
+          <div><label>Size</label><input type="range" data-p="size" min="50" max="150"></div>
+          <div><label>Shade behind the text</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="note">The rows (Stat | Value) are key numbers under it, up to four. Put the driver's photo under Picture below.</div>
+      </div>
       <div data-pro="bars">
         <div class="grid2">
           <div><label>Bar colour</label><select data-p="barCol"><option value="team">Team colours (from the badge)</option><option value="strip">Theme strip</option><option value="gold">Gold</option></select></div>
@@ -461,7 +553,7 @@
       <div id="xfList" style="margin-top:6px"></div>
       <div class="btns"><button type="button" id="xfResetAll">Reset all (this format)</button></div>
     </div>
-    <h2 data-closed>Brand kit</h2>
+    <h2>Brand kit</h2>
     <div id="brandUI">
       <div class="grid2">
         <div><label>Handle</label><input data-b="handle" placeholder="@powerslidemedia"></div>
@@ -672,7 +764,7 @@ FORMATS.thumb={H:810, L:{...FORMATS.screen.L, panel:[60,750]}};
 // below the story's own header and the footer above its reply bar; 10 rows as in the 4:5 post
 FORMATS.story={H:2560, L:{topBot:600, strip1:[600,642], panel:[642,1889], strip2:[1889,1927], foot:[1927,2097], div:496, rowTop:650, pitch:125, rowH:106, txt:59, footTxt:54, hs:1.9, rows:10}};
 QUOTE_L.story={...FORMATS.story.L, topBot:520, strip1:[520,562], panel:[562,1955], strip2:[1955,1993], foot:[1993,2107]};
-const tileW=()=>Math.round(TILE_W*L.rowH/62);
+const tileW=()=>Math.round(TILE_W*Math.min(L.rowH,FMT==='story'?84:1e9)/62);   // Story: tiles don't widen past 4:5 size
 const MAX_ROWS=20;   // 10 per column; rows 11-20 only with Two columns
 const W=1440;let H=1080, L=FORMATS.screen.L, FMT='screen';
 function setFormat(f){FMT=FORMATS[f]?f:'screen';H=FORMATS[FMT].H;const M=MODES[MODE]||{};L=(M.quote||M.strips)?QUOTE_L[FMT]:FORMATS[FMT].L;}
@@ -843,7 +935,7 @@ const MODES = {
   schedule: {
     label:'Schedule / itinerary', title:'Schedule', foot:'Powerslide Media', rally:'Rally Japan', theme:'siteDark', file:'wrc_schedule',
     show:{flag:false,badge:false,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'schedule', proLabel:'Schedule', allRows:true, hlOk:true,
-    fields:[['pos','Day'],['a','Time'],['name','Session / stage'],['b','Detail']], right:[], bulk:['pos','a','name','b'],
+    fields:[['pos','Day'],['a','Time'],['name','Session / stage'],['b','Detail']], fieldW:{pos:'100px',a:'70px',b:'96px'}, right:[], bulk:['pos','a','name','b'],
     paste:'Day | Time | Session or stage | Detail\nThursday | 09:01 | Shakedown | 2.75 km\nFriday | 08:05 | SS1 Forest 1 | 23.28 km'
   },
   // in-rally stories: the stage winner and the top times, the rally leader underneath
@@ -857,8 +949,56 @@ const MODES = {
   calendar: {
     label:'Season calendar', title:'Calendar', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_calendar',
     show:{flag:true,badge:true,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'calendar', proLabel:'Calendar', allRows:true, hlOk:true, checks:true,
-    fields:[['pos','Round'],['name','Rally'],['flag','Flag'],['a','Dates'],['b','Winner'],['badge','Car']], right:[], bulk:['pos','name','a','b','badge','flag'],
+    fields:[['pos','Round'],['name','Rally'],['flag','Flag'],['a','Dates'],['b','Winner'],['badge','Car']], fieldW:{a:'110px',b:'minmax(140px,1fr)'}, right:[], bulk:['pos','name','a','b','badge','flag'],
     paste:'Round | Rally | Dates | Winner | Car | Flag\nR1 | Rallye Monte-Carlo | 22-25 Jan | Sébastien Ogier | Toyota'
+  },
+  // entry list / running order: a card per crew
+  entry: {
+    label:'Entry list / running order', title:'Entry list', foot:'Powerslide Media', rally:'Rally Japan', theme:'siteDark', file:'wrc_entry',
+    show:{flag:true,badge:true,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'entry', proLabel:'Entry list', allRows:true, hlOk:true, checks:true,
+    fields:[['pos','No.'],['name','Driver'],['a','Co-driver'],['flag','Flag'],['badge','Car'],['b','Class']], fieldW:{a:'minmax(130px,1fr)',b:'72px'}, right:[], bulk:['pos','name','a','badge','b','flag'],
+    paste:'No. | Driver | Co-driver | Car | Class | Flag\n33 | Elfyn Evans | Scott Martin | Toyota | Rally1'
+  },
+  // who can still win the title: points so far, the most each can still add, the leader's line
+  fight: {
+    label:'Title fight (who can still win)', title:'Title fight', foot:'Championship', rally:'2026', theme:'siteDark', file:'wrc_title_fight',
+    show:{flag:true,badge:true,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'fight', proLabel:'Title fight', checks:true,
+    fields:[['name','Driver'],['flag','Flag'],['badge','Badge'],['b','Points']], right:[], bulk:['name','badge','b','flag'],
+    paste:'Name | Badge | Points | Flag\nElfyn Evans | Toyota | 254'
+  },
+  // road conditions: the DB's diverging bars per road position
+  road: {
+    label:'Road conditions (road position)', title:'Road order', foot:'Powerslide Media', rally:'Rally Italia Sardegna', theme:'siteDark', file:'wrc_road_conditions',
+    show:{flag:false,badge:false,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'road', proLabel:'Road conditions',
+    fields:[['name','Road position'],['b','s/km']], right:[], bulk:['name','b'],
+    paste:'Road position | s/km\n1st on the road | +0.36\n2nd | +0.17'
+  },
+  // the weekend forecast: a card per day
+  weather: {
+    label:'Weather', title:'Weather', foot:'Powerslide Media', rally:'Rally Italia Sardegna', theme:'siteDark', file:'wrc_weather',
+    show:{flag:false,badge:false,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'weather', proLabel:'Weather', hlOk:true,
+    fields:[['name','Day'],['a','Weather'],['b','Temp'],['pos','Extra']], fieldW:{a:'minmax(130px,1fr)',name:'110px',pos:'120px'}, right:[], bulk:['name','a','b','pos'],
+    paste:'Day | Weather | Temp | Extra\nFriday | Sunny | 27 | Wind 10 km/h'
+  },
+  // one stage on the map, in the Meet the Stages look
+  stagemap: {
+    label:'Stage map (Meet the Stages)', title:'Meet the Stages', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_stage_map',
+    show:{flag:false,badge:false,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'stagemap', proLabel:'Stage map', noRows:true, defLook:'clean',
+    fields:[], right:[], paste:''
+  },
+  // prediction / poll story with room for Instagram's poll sticker
+  poll: {
+    label:'Poll / prediction', title:'Predict', foot:'Powerslide Media', rally:'Rally Japan', theme:'siteDark', file:'wrc_poll',
+    show:{flag:true,badge:true,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'poll', proLabel:'Poll', slots:4, checks:true,
+    fields:[['name','Option'],['flag','Flag'],['badge','Badge']], right:[], bulk:['name','badge','flag'],
+    paste:'Option | Badge | Flag\nElfyn Evans | Toyota'
+  },
+  // milestone: "100th start", "50th stage win"
+  milestone: {
+    label:'Milestone', title:'Milestone', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_milestone',
+    show:{flag:false,badge:false,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'milestone', proLabel:'Milestone',
+    fields:[['name','Stat'],['b','Value']], right:[], bulk:['name','b'],
+    paste:'Stat | Value\nWins | 11'
   },
   // standings or stats as bars, as in the F1 / MotoGP points-gap posts
   bars: {
@@ -887,15 +1027,15 @@ const MODES = {
   }
 };
 // the mode menu, by what the post is for
-const MODE_GROUPS=[['Results & standings',['points','results','custom','bars','h2h']],['Race weekend',['preview','schedule','live']],['News',['headline','quote']],
-  ['Numbers',['stats']],['Season',['calendar']],['Photos',['strips','grid','collage']],['Video',['thumb']]];
+const MODE_GROUPS=[['Results & standings',['points','results','custom','bars','h2h','fight']],['Race weekend',['preview','schedule','entry','live','stagemap','road','weather']],
+  ['News & social',['headline','quote','poll']],['Numbers',['stats','milestone']],['Season',['calendar']],['Photos',['strips','grid','collage']],['Video',['thumb']]];
 const HEAD_DEFAULT={kicker:'CHAMPIONS',style:'white',above:'2026 FIA World Rally Championship',below:'',pos:'bottom',size:190,fade:65,
   names:[{name:'Elfyn Evans',flag:'',badge:'toyota'},{name:'Scott Martin',flag:'GB',badge:''},{name:'',flag:'',badge:''}]};
 const STATS_DEFAULT={style:'ladder',pos:'right',size:46,fade:45,head:'',hStyle:'plain',hSize:54,hPos:'stats',fx:1,fy:.5,hfx:.5,hfy:0,
   labelCol:'auto',valueCol:'auto',hlCol:'auto',headCol:'auto',custom:'#e8412c',alpha:100};
 const OPT_DEFAULT={gap:'',tally:'',photo:'none',share:45,zoom:1,fx:.5,fy:.5,teamCol:false,twoCol:false,cells:'light',cellCustom:'#1d2a33',cellAlpha:100};
 const QUOTE_DEFAULT={text:'Next year\'s Rally2 car might not be so bad, so we\'ll eye up our opportunities.',sub:'is open to all opportunities\nfor the 2027 WRC',who:'Josh McErlean',style:'bold',place:'free',size:44,zoom:1,fx:.5,fy:.5,bw:50,bh:0,px:0,py:.6,showHead:true,showFoot:true,logoPos:'header',logoSize:1,logoInk:'white',credit:'',creditPos:'br',boxColor:'light',boxCustom:'#888888',align:'auto'};
-const FIELD_W={pos:'70px',name:'minmax(0,1fr)',flag:'88px',badge:'100px',move:'52px',a:'64px',b:'72px'};
+const FIELD_W={pos:'70px',name:'minmax(150px,1fr)',flag:'88px',badge:'100px',move:'52px',a:'64px',b:'72px'};
 
 const R=(name,badge,move,a,b,pos)=>({pos:pos||'',name,flag:'',badge,move:move||'',a:a||'',b:b||''});
 const DEFAULTS = {
@@ -914,6 +1054,14 @@ const DEFAULTS = {
   calendar:[['Rallye Monte-Carlo','Jan'],['Rally Sweden','Feb'],['Safari Rally Kenya','Mar'],['Croatia Rally','Apr'],['Rally Islas Canarias','Apr'],['Rally de Portugal','May'],
             ['Rally Japan','May'],['Acropolis Rally Greece','Jun'],['Rally Estonia','Jul'],['Rally Finland','Jul'],['Rally Paraguay','Aug'],['Rally Chile','Sep'],
             ['Rally Italia Sardegna','Oct'],['Rally Saudi Arabia','Nov']].map(([n,d],i)=>R(n,'','',d,'','R'+(i+1))),
+  entry:[R('Elfyn Evans','toyota','','Scott Martin','Rally1','33'),R('Sébastien Ogier','toyota','','Vincent Landais','Rally1','17'),R('Oliver Solberg','toyota','','Elliott Edmondson','Rally1','99'),
+         R('Thierry Neuville','hyundai','','Martijn Wydaeghe','Rally1','1'),R('Adrien Fourmaux','hyundai','','Alexandre Coria','Rally1','16'),R('Sami Pajari','toyota','','Marko Salminen','Rally1','5')],
+  fight:[R('Elfyn Evans','toyota','','','254'),R('Sébastien Ogier','toyota','','','231'),R('Oliver Solberg','toyota','','','198'),R('Thierry Neuville','hyundai','','','176'),R('Adrien Fourmaux','hyundai','','','142')],
+  road:[R('1st on the road','','','','+0.36'),R('2nd','','','','+0.17'),R('3rd','','','','+0.12'),R('4th','','','','+0.02'),R('5th','','','','-0.06'),R('6th','','','','-0.19'),R('7th','','','','-0.19')],
+  weather:[R('Thursday','','','Sunny','27','Wind 10 km/h'),R('Friday','','','Partly cloudy','25','Rain 10%'),R('Saturday','','','Showers','21','Rain 60%'),R('Sunday','','','Sunny','26','Rain 0%')],
+  stagemap:[],
+  poll:[R('Elfyn Evans','toyota'),R('Sébastien Ogier','toyota'),R('Thierry Neuville','hyundai')],
+  milestone:[],
   bars:[R('Elfyn Evans','toyota','','','254'),R('Sébastien Ogier','toyota','','','231'),R('Oliver Solberg','toyota','','','198'),R('Thierry Neuville','hyundai','','','176'),
         R('Adrien Fourmaux','hyundai','','','142'),R('Sami Pajari','toyota','','','118'),R('Takamoto Katsuta','toyota','','','97'),R('Esapekka Lappi','hyundai','','','61')],
   h2h:[R('Rally wins','','up','3','2'),R('Podiums','','up','8','6'),R('Stage wins','','up','41','51'),R('Avg. finish','','down','2.9','3.4'),R('Pace s/km','','down','0.36','0.23')],
@@ -943,7 +1091,7 @@ function rowUsed(r){return !!(r&&(r.name||r.a||r.b||r.pos));}
 function layout(st,x0,xr,idx){   // x0..xr = the table's width, idx = the rows it holds
   const M=MODES[st.mode],cols={};x0=x0??X0;xr=xr??XR;let x=x0;
   const used=(idx||st.rows.map((r,i)=>i<L.rows?i:-1).filter(i=>i>=0)).filter(i=>rowUsed(st.rows[i]));
-  const k=L.rowH/62,tw=tileW();   // cells grow with the row height in the taller formats
+  const k=Math.min(L.rowH/62,FMT==='story'?1.35:1e9),tw=tileW();   // cells grow with the row height in the taller formats (less in Story, so names keep their room)
   let posW=Math.round(87*k);
   if(M.labels)posW=Math.round(Math.min(330*k,Math.max(87*k,...used.map(i=>textW(posLabel(st,i),L.txt)+34))));
   cols.pos=[x,posW];x+=posW+GAP;
@@ -1068,7 +1216,7 @@ function wrapLines(ctx,text,maxW){
 // the picture fills the panel between the rails (outside them the theme glow shows, as in the
 // table modes); zoom/fx/fy pick the crop
 function drawPhoto(ctx,q){
-  const im=PHOTO.img,[p0,p1]=L.panel,h=p1-p0;if(!im)return;
+  const im=PHOTO.img,p0=CLEAN?0:L.panel[0],p1=CLEAN?H:L.panel[1],h=p1-p0;if(!im)return;   // Clean: the whole canvas
   const x0=PX0(),w=PX1()-x0;
   if(PHOTO.cutOf!==im){PHOTO.cutOf=im;PHOTO.cut=hasAlpha(im);}   // a cut-out is fitted whole, on the theme glow
   const s=(PHOTO.cut?Math.min(w/im.width,h/im.height):Math.max(w/im.width,h/im.height))*(q.zoom||1),dw=im.width*s,dh=im.height*s;
@@ -1207,7 +1355,7 @@ function drawPicLogo(ctx,st,q){
   let pos=q.logoPos||'';if(CLEAN&&(pos==='header'||pos==='footer'))pos='pic-tr';   // no bands: the logo goes on the picture
   if(!pos.startsWith('pic-'))return;
   const lg=PS_IMG[st.logo]||PS_IMG.media;if(!lg)return;
-  const [p0,p1]=L.panel,k=L.rowH/62,x0=PX0(),x1=PX1();
+  const [p0,p1]=L.frame||L.panel,k=L.rowH/62,x0=PX0(),x1=PX1();
   let h=(st.logo==='icon'?96:62)*k*(q.logoSize||1),w=h*lg.width/lg.height;
   const maxW=(x1-x0)*.6;if(w>maxW){w=maxW;h=w*lg.height/lg.width;}
   const m=26*k,c=pos.slice(4),x=c[1]==='r'?x1-m-w:x0+m,y=c[0]==='b'?p1-m-h:p0+m;
@@ -1218,7 +1366,7 @@ function drawPicLogo(ctx,st,q){
 }
 function drawCredit(ctx,q,T){
   const t=(q.credit||'').trim();if(!t)return;
-  const [p0,p1]=L.panel,k=L.rowH/62,x0=PX0(),x1=PX1();
+  const [p0,p1]=L.frame||L.panel,k=L.rowH/62,x0=PX0(),x1=PX1();
   const size=Math.round(20*k),padX=Math.round(12*k),h=Math.round(size*1.7),m=Math.round(10*k);
   ctx.font=`700 ${size}px "WRC Clean"`;
   const w=Math.min(ctx.measureText(t).width+padX*2,x1-x0-m*2);
@@ -1234,7 +1382,12 @@ function clamp01(v){v=+v;return isFinite(v)?Math.min(1,Math.max(0,v)):0;}
 
 // Quote mode: a band that's switched off gives its height to the picture; the green strip stays as the edge.
 function quoteLayout(q){
-  if(CLEAN)return {...QUOTE_L[FMT],topBot:0,strip1:[0,0],panel:[0,H],strip2:[H,H],foot:[H,H]};
+  if(CLEAN){   // picture edge to edge; the logo / tag get a bar at the top and the handle / credit one at the bottom, so content never runs under them
+    const fr=FMT==='story'?[Math.round(H*250/1920),H-Math.round(H*340/1920)]:[0,H],k=QUOTE_L[FMT].rowH/62,b=(XST&&XST.brand)||{},lp=q.logoPos||'header';
+    const top=['header','footer','pic-tl','pic-tr'].includes(lp)||!!(b.tag||'').trim()||/^t/.test(b.bug||'');
+    const bot=(b.signoff&&b.signoff!=='off')||lp==='pic-bl'||lp==='pic-br'||(!!(q.credit||'').trim()&&/^b/.test(q.creditPos||'br'))||/^b/.test(b.bug||'');
+    return {...QUOTE_L[FMT],topBot:0,strip1:[0,0],frame:fr,panel:[fr[0]+(top?Math.round(96*k):0),fr[1]-(bot?Math.round(58*k):0)],strip2:[H,H],foot:[H,H]};
+  }
   const b=QUOTE_L[FMT],o={...b};
   if(!q.showHead){const d=b.strip1[1]-b.strip1[0];o.topBot=0;o.strip1=[0,d];o.panel=[d,o.panel[1]];}
   if(!q.showFoot){const d=b.strip2[1]-b.strip2[0];o.foot=[H,H];o.strip2=[H-d,H];o.panel=[o.panel[0],H-d];}
@@ -1685,14 +1838,15 @@ function render(ctx,st){
     xfB(ctx,'logo','Logo',(L.div-w)/2,L.foot[0]+(fh-h)/2,w,h);drawLogo(ctx,lg,T,(L.div-w)/2,L.foot[0]+(fh-h)/2,w,h);xfE(ctx);}
   if(head){
     let ts=Math.round(66*Math.min(L.hs,1.5));
-    if(L.hs>1)while(ts>66&&textW(st.title,ts)>W-515-40)ts--;   // taller header: grow the title only while it still fits
+    {const bb=st.brand||{},tg=(bb.tag||'').trim()&&(bb.tagPos||'header')==='header'?proChip(ctx,bb.tag,0,0,Math.round(46*L.rowH/62),'red',T,'left',{dry:true,dot:bb.tagStyle==='live'})+Math.round(30*L.rowH/62):0;
+      const room=(tg?XR-tg:W-40)-515;while(ts>30&&textW(st.title,ts)>room)ts--;}   // the title shrinks to fit, leaving room for a tag in the header
     measureCtx.font=`700 ${ts}px "WRC Clean"`;const capH=measureCtx.measureText('H').actualBoundingBoxAscent;   // capitals centred on the logo (or the band), so descenders don't shift it
     const tb=Math.round((logoMid??L.topBot/2)+capH/2);xfB(ctx,'title','Title',515,Math.round(tb-capH*1.05),Math.max(1,textW(st.title||'',ts)),Math.round(capH*1.35));
     drawGlitchTitle(ctx,st.title||'',515,tb,ts,tk(T,'glitchInk'),tk(T,'speck'));xfE(ctx);
   }
   drawStripText(ctx,st,T);
   if(M.strips)drawStrips(ctx,st,T);
-  else if(M.pro){drawProMode(ctx,st,T);if(M.quote){drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}}
+  else if(M.pro){drawProMode(ctx,st,T);if(M.quote){drawCredit(ctx,st.quote,T);if(M.pro!=='stagemap')drawPicLogo(ctx,st,st.quote);}}
   else if(M.headline){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawHeadline(ctx,st,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
   else if(M.stats){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawStats(ctx,st,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
   else if(M.quote){drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);drawQuoteBox(ctx,st.quote,T);drawCredit(ctx,st.quote,T);drawPicLogo(ctx,st,st.quote);}
@@ -1852,7 +2006,7 @@ function nameChip(ctx,x,y,h,n,T,dry){
 // darken the picture towards the side the text sits on
 let SHADE_RGB='0,0,0';   // picture shade colour: black, the picked tint, or white behind black headline text
 function shadePic(ctx,a,dir,from,to){
-  if(!(a>0))return;const [p0,p1]=L.panel,x0=PX0(),x1=PX1();
+  if(!(a>0))return;const p0=CLEAN?0:L.panel[0],p1=CLEAN?H:L.panel[1],x0=PX0(),x1=PX1();
   ctx.save();ctx.beginPath();ctx.rect(x0,p0,x1-x0,p1-p0);ctx.clip();
   let g=null;
   if(dir==='x')g=ctx.createLinearGradient(from,0,to,0);else if(dir==='y')g=ctx.createLinearGradient(0,from,0,to);
@@ -2077,6 +2231,7 @@ const BRAND_DEFAULT={handle:'',site:'',signoff:'off',tag:'',tagStyle:'red',tagPo
 const TAG_STYLES={red:'Red',live:'Live (red with a dot)',gold:'Gold',strip:'Theme strip',dark:'Dark',white:'White',blue:'Blue',green:'Green',accent:'Brand accent'};
 function readBrand(){const o={};document.querySelectorAll('#brandUI [data-b]').forEach(e=>{o[e.dataset.b]=e.type==='checkbox'?e.checked:e.type==='range'?+e.value:e.value;});return o;}
 function loadBrand(b){b={...BRAND_DEFAULT,...(b||{})};document.querySelectorAll('#brandUI [data-b]').forEach(e=>{const v=b[e.dataset.b];if(e.type==='checkbox')e.checked=!!v;else if(v!==undefined)e.value=v;});brandUI();}
+function smInfo(){const e=$('smInfo');if(!e)return;const t=STAGE.track;e.textContent=t&&t.length>1?`Route: ${t.length} points · ${trackKm(t).toFixed(2)} km`:'No route loaded yet.';}
 function lookUI(){const c=!!MODES[MODE].quote&&$('look').value==='clean';document.querySelectorAll('.classicOnly').forEach(e=>e.classList.toggle('lookHide',c));}
 function brandUI(){const b=readBrand();
   document.querySelectorAll('#brandUI .bAcc').forEach(e=>e.hidden=!b.accentOn);
@@ -2111,7 +2266,7 @@ function proChip(ctx,text,x,y,h,style,T,align,o){
   return w;
 }
 function drawBrand(ctx,st,T,o){
-  const b={...BRAND_DEFAULT,...(st.brand||{})},k=L.rowH/62,[p0,p1]=L.panel,x0=PX0(),x1=PX1();
+  const b={...BRAND_DEFAULT,...(st.brand||{})},k=L.rowH/62,[p0,p1]=L.frame||L.panel,x0=PX0(),x1=PX1();
   // content tag
   const tag=(b.tag||'').trim();
   if(tag){const h=Math.round(46*k),m=Math.round(24*k);let pos=b.tagPos;if(pos==='header'&&!o.head)pos='pic-tl';
@@ -2125,7 +2280,7 @@ function drawBrand(ctx,st,T,o){
       xfB(ctx,'bug','Corner logo',x,y,w,h);ctx.save();ctx.globalAlpha=.85;ctx.filter='brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.5))';ctx.drawImage(lg,x,y,w,h);ctx.restore();xfE(ctx);}}
   // handle / website sign-off in the bottom strip
   if(b.signoff!=='off'){const t=[b.handle,b.site].map(s=>(s||'').trim()).filter(Boolean).join('   ·   ');
-    if(t){const [a,c]=CLEAN?[H-Math.round(50*k),H-Math.round(14*k)]:L.strip2,z=Math.round((c-a)*.5),ls=Math.round(z*.12),hw=twOf(t,z,700,ls),hx=b.signoff==='left'?X0:b.signoff==='center'?W/2-hw/2:XR-hw;
+    if(t){const [a,c]=CLEAN?[p1-Math.round(50*k),p1-Math.round(14*k)]:L.strip2,z=Math.round((c-a)*.5),ls=Math.round(z*.12),hw=twOf(t,z,700,ls),hx=b.signoff==='left'?X0:b.signoff==='center'?W/2-hw/2:XR-hw;
       xfB(ctx,'handle','Handle',hx,(a+c)/2-z*.5,hw,z);proText(ctx,t,b.signoff==='left'?X0:b.signoff==='center'?W/2:XR,(a+c)/2+1,z,{ink:'rgba(255,255,255,.95)',base:'middle',align:b.signoff,ls,blur:4});xfE(ctx);}}
   if(b.guides)drawGuides(ctx);
 }
@@ -2157,7 +2312,14 @@ const PRO_DEFAULT={
   schedule:{head:'',dayStyle:'gold',size:100,fade:60},
   bars:{barCol:'team'},
   live:{stage:'SS7 · Forest 2',kicker:'Stage winner',leader:'Rally leader: Elfyn Evans +4.2',pos:'left',vpos:'bottom',size:100,fade:65},
-  calendar:{head:'',winners:true,fade:55}
+  calendar:{head:'',winners:true,fade:55},
+  entry:{head:'',numStyle:'team',fade:55},
+  fight:{head:'Who can still win?',left:'60',note:'',barCol:'team',zoom:true,fade:55},
+  road:{head:'Sweeping the road',sub:'Friday · Rally Italia Sardegna 2017–25 · s/km vs own pace',slowerLeft:true,fade:60},
+  weather:{head:'Weekend weather',sub:'Olbia',fade:55},
+  stagemap:{caption:'Rally Italia Sardegna • 2026',name:'SS3 Monte Lerno',pills:'SS3, {km}, Gravel',big:'Friday · 09:05',foot:'Every stage, every corner: powerslideblog.com',style:'navy',route:'#fe4d02',markers:true,zoom:0,mx:0,my:0},
+  poll:{kicker:'Your prediction',question:'Who wins Rally Japan?',zone:'bottom',fade:45},
+  milestone:{kicker:'Milestone',num:'100',suffix:'th',label:'WRC starts',name:'Elfyn Evans',flag:'',badge:'toyota',line:'Rally Japan 2026',side:'left',vpos:'center',numStyle:'gold',size:100,fade:65}
 };
 let PRO_RECTS=[],SLOT_RECTS=[],PRO_OFF={},PRO_CROP=[],SLOT_LOAD=0;
 const SLOT_IMG=[];
@@ -2231,7 +2393,7 @@ function proFacts(ctx,T,facts,x,y,w,z,look,align,dry){
     else if(i){ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(cx-Math.round(g/2)-1,y+pad,2,h-pad*2);}
     let vz=z;while(vz>14&&twOf(f.v,vz)>c-pad*2)vz--;
     const vb=y+stripe+pad+Math.round(z*.78);
-    proText(ctx,f.v,tx,vb,vz,{align:al,shadow:!cells});
+    proText(ctx,f.v,tx,vb-Math.round((z-vz)*.39),vz,{align:al,shadow:!cells});   // a shrunk value stays centred on the line
     const lt=f.l.toLocaleUpperCase();let lz2=lz;while(lz2>10&&twOf(lt,lz2,700,ls)>c-pad*2)lz2--;
     proText(ctx,lt,tx,vb+Math.round(z*.34)+Math.round(lz*.78),lz2,{ink:'rgba(255,255,255,.8)',align:al,ls,shadow:!cells});
   });
@@ -2363,10 +2525,11 @@ function drawSchedule(ctx,st,T){
     let best=Math.ceil(items.length/2),bd=1e9;items.forEach((t,j)=>{if(t.day&&j>0){const d=Math.abs(j-items.length/2);if(d<bd&&d<=items.length*.2){bd=d;best=j;}}});
     cols=[items.slice(0,best),items.slice(best)];rh=Math.min(maxRh,Math.floor(avail/Math.max(fit(cols[0]),fit(cols[1]))));
   }
+  rh=Math.min(rh,Math.round((XR-X0-(cols.length-1)*28*k)/cols.length/11));   // in narrow columns the names keep readable room
   const g=Math.round(rh*.18),hh=Math.round(rh*.9),gc=Math.round(28*k),cw=Math.round((XR-X0-(cols.length-1)*gc)/cols.length),z=Math.round(rh*.54),pad=Math.round(rh*.3);
   const tw=Math.max(Math.round(rh*1.7),Math.round(Math.max(0,...items.filter(t=>t.r).map(t=>twOf((t.r.a||'').trim(),z)))+pad*2));
   const dwMax=Math.round(Math.max(0,...items.filter(t=>t.r&&(t.r.b||'').trim()).map(t=>twOf(t.r.b.trim(),Math.round(z*.86))+pad*2)));
-  const dw=Math.min(Math.round(cw*.3),dwMax),gg=Math.round(6*k);
+  const dw=Math.min(Math.round(cw*.22),dwMax),gg=Math.round(6*k);
   const colH=cols.map(col=>col.reduce((a,t,j)=>a+(t.day?(j?Math.round(g*1.2):0)+hh+g:rh+g),0)-g);
   xfB(ctx,'schedule','Schedule',X0,top,XR-X0,Math.max(...colH));
   cols.forEach((col,c)=>{
@@ -2411,11 +2574,373 @@ function drawBars(ctx,st,T){
   });
   xfE(ctx);
 }
+// a heading over a card / chart (shrinks to fit the width); returns its height
+function proHead(ctx,key,text,top,k,size,align){
+  text=(text||'').trim().toLocaleUpperCase();if(!text)return 0;
+  let hz=Math.round((size||64)*k);const ls=()=>Math.round(hz*.04);while(hz>16&&twOf(text,hz,700,ls())>XR-X0)hz-=2;
+  const w=twOf(text,hz,700,ls()),x=align==='center'?Math.round((X0+XR)/2-w/2):X0,h=Math.round(hz*.8);
+  xfB(ctx,key,'Heading',x,top,w,h);proText(ctx,text,x,top+h,hz,{ls:ls(),blur:18*k});xfE(ctx);return h;
+}
+// a small spaced line under a heading; returns its height
+function proSub(ctx,key,text,top,k,align){
+  text=(text||'').trim().toLocaleUpperCase();if(!text)return 0;
+  let z=Math.round(26*k);const ls=Math.round(z*.1);while(z>11&&twOf(text,z,700,ls)>XR-X0)z--;
+  const w=twOf(text,z,700,ls),x=align==='center'?Math.round((X0+XR)/2-w/2):X0,h=Math.round(z*.8);
+  xfB(ctx,key+'Sub','Line under the heading',x,top,w,h);proText(ctx,text,x,top+h,z,{ink:'rgba(255,255,255,.78)',ls,blur:10*k});xfE(ctx);return h;
+}
+const ordX=(al,ax,w)=>al==='center'?Math.round(ax-w/2):al==='right'?Math.round(ax-w):Math.round(ax);
+
+// entry list / running order: a card per crew - car number, driver over co-driver, flag and car tiles, class
+function drawEntry(ctx,st,T){
+  const en={...PRO_DEFAULT.entry,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(30*k),show=st.show||{};
+  shadePic(ctx,(en.fade||0)/100);
+  const rows=st.rows.map((r,i)=>({r,i})).filter(o=>(o.r.name||'').trim()||(o.r.pos||'').trim());
+  let top=p0+m;const hh=proHead(ctx,'entryHead',(en.head||'').trim()||(CLEAN?st.title:''),top,k);if(hh)top+=hh+Math.round(24*k);
+  if(!rows.length)return;
+  const n=rows.length,AW=XR-X0,AH=p1-m-top,g=Math.round(12*k),maxH=Math.round(150*k);
+  let best=null;
+  for(let c=1;c<=4;c++){const r=Math.ceil(n/c),cw=(AW-(c-1)*g)/c,ch=(AH-(r-1)*g)/r;if(c>1&&cw<260*k)continue;const h=Math.min(ch,cw/3,maxH);if(!best||h>best.h+2)best={c,r,cw,h};}
+  const cols=best.c,cw=best.cw,h=Math.round(best.h);
+  xfB(ctx,'entryGrid','Entry list',X0,top,AW,best.r*h+(best.r-1)*g);
+  rows.forEach((o,j)=>{
+    const r=o.r,x=Math.round(X0+(j%cols)*(cw+g)),y=Math.round(top+Math.floor(j/cols)*(h+g)),w=Math.round(cw),hl=st.hl===o.i;
+    cell(ctx,x,y,w,h,T.dark,T);
+    const nw=Math.round(h*1.05),num=(r.pos||'').trim()||String(j+1),bd=show.badge&&BADGES[r.badge]?r.badge:'';
+    const P=paint(ctx,y,h,hl?'gold':en.numStyle==='team'&&BADGES[r.badge]?'brand':en.numStyle==='gold'?'gold':'strip',T,{badge:r.badge});
+    ctx.fillStyle=P.fill;ctx.fillRect(x,y,nw,h);
+    let nz=Math.round(h*.56);while(nz>12&&twOf(num,nz)>nw*.86)nz--;
+    proText(ctx,num,x+nw/2,y+h/2+2*k,nz,{ink:P.ink,base:'middle',align:'center',shadow:false});
+    const pad=Math.round(h*.12),th=Math.round(h*.24),tw=Math.round(th*TILE_W/62),gp=Math.round(th*GAP/62),fl=show.flag?resolveFlag(r):'';
+    const cls=(r.b||'').trim(),cwid=cls?proChip(ctx,cls,0,0,th,'light',T,'left',{dry:true}):0,by=y+h-pad-th;
+    let rx=x+w-pad;   // bottom row, right to left: class, car, flag
+    if(cls){rx-=cwid;proChip(ctx,cls,rx,by,th,'light',T,'left');rx-=gp;}
+    if(bd){rx-=tw;drawTile(ctx,rx,by,tw,th,bd,T);rx-=gp;}
+    if(fl){rx-=tw;drawFlagTile(ctx,rx,by,tw,th,fl,T);rx-=gp;}
+    const lx=x+nw+pad,drv=(r.name||'').trim(),co=(r.a||'').trim();
+    // driver, then co-driver on its own line (both full width), the tiles and class in the row under them
+    let z1=Math.round(h*.28);while(z1>11&&twOf(drv,z1)>x+w-pad-lx)z1--;proText(ctx,drv,lx,y+pad+Math.round(z1*.8),z1,{shadow:false});
+    let z2=Math.round(h*.2);while(z2>10&&twOf(co,z2,400)>x+w-pad-lx)z2--;proText(ctx,co,lx,by-Math.round(h*.04),z2,{w:400,ink:'rgba(255,255,255,.8)',shadow:false});
+  });
+  xfE(ctx);
+}
+
+// title fight: points so far as a bar, the most each driver can still add as a lighter extension, and the leader's
+// total as the line to reach; anyone whose extension falls short is out
+function drawFight(ctx,st,T){
+  const tf={...PRO_DEFAULT.fight,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(34*k),show=st.show||{};
+  shadePic(ctx,(tf.fade||0)/100);
+  const left=Math.max(0,parseFloat(String(tf.left).replace(',','.'))||0),num=v=>String(Math.round(v*10)/10);
+  const rows=st.rows.map((r,i)=>({r,i,v:parseVal(r.b)})).filter(o=>(o.r.name||'').trim()&&isFinite(o.v)).sort((a,b)=>b.v-a.v).slice(0,10);
+  let top=p0+m;const hh=proHead(ctx,'fightHead',tf.head,top,k);if(hh)top+=hh+Math.round(20*k);
+  const sub=[left?num(left)+' points left':'',(tf.note||'').trim()].filter(Boolean).join('  ·  ');
+  if(sub){const ch=Math.round(44*k),w=proChip(ctx,sub,0,0,ch,'gold',T,'left',{dry:true});xfB(ctx,'fightNote','Points left',X0,top,w,ch);proChip(ctx,sub,X0,top,ch,'gold',T,'left');xfE(ctx);top+=ch+Math.round(26*k);}
+  if(!rows.length)return;
+  const lead=rows[0].v,n=rows.length,lblH=Math.round(46*k),g=Math.round(10*k),rh=Math.max(20,Math.min(Math.round(84*k),Math.round((XR-X0)*.062),Math.floor((p1-m-top-lblH-(n-1)*g)/n)));
+  const tw=Math.round(rh*TILE_W/62),gp=Math.round(rh*GAP/62),z=Math.round(rh*.54),pad=Math.round(rh*.3);
+  const nameW=Math.min(Math.round((XR-X0)*.28),Math.round(Math.max(...rows.map(o=>twOf(o.r.name.trim(),z)))+pad*2));
+  const bx=X0+(show.flag?tw+gp:0)+(show.badge?tw+gp:0)+nameW+gp,valW=Math.round(twOf('OUT',z)+twOf('-000',z)*.4+pad*2),bw=XR-bx-valW;
+  const lo=tf.zoom?Math.max(0,Math.floor(Math.min(...rows.map(o=>o.v))*.85/10)*10):0,hi=Math.max(lead,...rows.map(o=>o.v+left));
+  const sx=v=>bx+bw*(v-lo)/Math.max(1,hi-lo),gridH=n*rh+(n-1)*g,hlC=tk(T,'hl')[1][1];
+  xfB(ctx,'fight','Title fight',X0,top,XR-X0,gridH+lblH);
+  rows.forEach((o,j)=>{
+    const r=o.r,y=Math.round(top+j*(rh+g)),alive=o.v+left>=lead;let x=X0;
+    ctx.save();if(!alive)ctx.globalAlpha=.42;
+    if(show.flag){const f=resolveFlag(r);if(f)drawFlagTile(ctx,x,y,tw,rh,f,T);else emptyTile(ctx,x,y,tw,rh,T);x+=tw+gp;}
+    if(show.badge){drawTile(ctx,x,y,tw,rh,r.badge,T);x+=tw+gp;}
+    const Pn=paint(ctx,y,rh,j===0?'gold':'light',T),nm=r.name.trim();cell(ctx,x,y,nameW,rh,Pn.fill,T);
+    let nz=z;while(nz>11&&twOf(nm,nz)>nameW-pad*2)nz--;proText(ctx,nm,x+pad,y+rh/2+2*k,nz,{ink:Pn.ink,base:'middle',shadow:false});
+    const by=y+Math.round(rh*.14),bh=Math.round(rh*.72),a0=sx(lo),a1=sx(o.v),a2=sx(o.v+left);
+    const P=paint(ctx,by,bh,tf.barCol==='team'&&BADGES[r.badge]?'brand':'strip',T,{badge:r.badge});
+    if(left>0){ctx.save();ctx.globalAlpha*=.3;ctx.fillStyle=P.fill;ctx.fillRect(a1,by,Math.max(0,a2-a1),bh);ctx.restore();
+      ctx.save();ctx.setLineDash([6*k,5*k]);ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2*k;ctx.strokeRect(a1,by+1,Math.max(0,a2-a1),bh-2);ctx.restore();}
+    cell(ctx,a0,by,Math.max(4,a1-a0),bh,P.fill,T);
+    const pz=Math.round(bh*.5),pt=num(o.v);if(a1-a0>twOf(pt,pz)+16*k)proText(ctx,pt,a1-8*k,y+rh/2+2*k,pz,{ink:P.ink,base:'middle',align:'right',shadow:false});
+    proText(ctx,j===0?'LEADER':alive?'-'+num(lead-o.v):'OUT',XR,y+rh/2+2*k,Math.round(z*.86),{base:'middle',align:'right',blur:8,ink:j===0?hlC:'#ffffff'});
+    ctx.restore();
+  });
+  const lx=Math.round(sx(lead));
+  ctx.save();ctx.strokeStyle=hlC;ctx.lineWidth=3*k;ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=6*k;ctx.beginPath();ctx.moveTo(lx,top-8*k);ctx.lineTo(lx,top+gridH+8*k);ctx.stroke();ctx.restore();
+  proText(ctx,'TO BEAT: '+num(lead),lx,top+gridH+Math.round(36*k),Math.round(24*k),{align:'center',ink:hlC,ls:Math.round(2*k),blur:8});
+  xfE(ctx);
+}
+
+// road conditions: one diverging bar per road position (your DB's chart: slower to the left, 1st at the top)
+function niceStep(range){const raw=range/4,p=Math.pow(10,Math.floor(Math.log10(raw||1))),f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+function drawRoad(ctx,st,T){
+  const rd={...PRO_DEFAULT.road,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(36*k);
+  shadePic(ctx,(rd.fade||0)/100);
+  const rows=st.rows.map(r=>({l:(r.name||'').trim(),t:(r.b||'').trim(),v:parseFloat(String(r.b||'').replace(',','.').replace(/[^\d.+-]/g,''))})).filter(o=>o.l||o.t).slice(0,12);
+  let top=p0+m;const hh=proHead(ctx,'roadHead',rd.head,top,k);if(hh)top+=hh+Math.round(14*k);
+  const sh=proSub(ctx,'road',rd.sub,top,k);if(sh)top+=sh;if(hh||sh)top+=Math.round(30*k);
+  if(!rows.length)return;
+  const n=rows.length,axisH=Math.round(52*k),g=Math.round(10*k),rh=Math.max(18,Math.min(Math.round(72*k),Math.round((XR-X0)*.05),Math.floor((p1-m-top-axisH-(n-1)*g)/n)));
+  const z=Math.round(rh*.5),pad=Math.round(rh*.3),lw=Math.min(Math.round((XR-X0)*.26),Math.round(Math.max(...rows.map(o=>twOf(o.l,z)))+pad*2));
+  const cx0=X0+lw+Math.round(18*k),cw=XR-cx0,mid=cx0+cw/2,room=twOf('+0.00',z)+14*k;
+  const max=Math.max(1e-9,...rows.map(o=>isFinite(o.v)?Math.abs(o.v):0)),step=niceStep(max*2),lim=Math.ceil(max/step-1e-9)*step||step;
+  const flip=rd.slowerLeft!==false,sx=v=>mid+(flip?-v:v)/lim*(cw/2-room),gridH=n*rh+(n-1)*g;
+  const dec=Math.max(0,-Math.floor(Math.log10(step)+1e-9)),fmt=v=>(v>0?'+':'')+v.toFixed(dec);
+  xfB(ctx,'roadChart','Chart',X0,top,XR-X0,gridH+axisH);
+  ctx.save();ctx.fillStyle='rgba(255,255,255,.12)';
+  for(let t=-lim;t<=lim+1e-9;t+=step){const x=Math.round(sx(t));if(Math.abs(t)<1e-9)continue;ctx.fillRect(x,top-6*k,Math.max(1,1.5*k),gridH+12*k);}ctx.restore();
+  rows.forEach((o,j)=>{
+    const y=Math.round(top+j*(rh+g)),P=paint(ctx,y,rh,'light',T);cell(ctx,X0,y,lw,rh,P.fill,T);
+    {let lz=z;while(lz>10&&twOf(o.l,lz)>lw-pad*2)lz--;proText(ctx,o.l,X0+pad,y+rh/2+2*k,lz,{ink:P.ink,base:'middle',shadow:false});}
+    if(!isFinite(o.v))return;
+    const bh=Math.round(rh*.7),by=y+Math.round((rh-bh)/2),x1=sx(o.v),a=Math.min(mid,x1),w=Math.abs(x1-mid),slow=o.v>0;
+    const Pb=paint(ctx,by,bh,slow?'red':'green',T);if(w>.5)cell(ctx,Math.round(a),by,Math.max(2,Math.round(w)),bh,Pb.fill,T);
+    const left=flip?slow:!slow,txt=o.t.startsWith('+')||o.t.startsWith('-')||o.v===0?o.t:fmt(o.v);
+    proText(ctx,txt,left?x1-10*k:x1+10*k,y+rh/2+2*k,z,{base:'middle',align:left?'right':'left',blur:8});
+  });
+  ctx.save();ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(mid-1.5*k),top-10*k,Math.max(2,3*k),gridH+20*k);ctx.restore();
+  const az=Math.round(20*k),ay=top+gridH+Math.round(30*k);
+  {const every=Math.max(1,Math.ceil((twOf(fmt(lim),az)+14*k)/Math.max(1,Math.abs(sx(step)-sx(0)))));   // every other number when they'd touch
+   for(let i=-Math.round(lim/step);i<=Math.round(lim/step);i++)if(i%every===0){const t=i*step;proText(ctx,i===0?'0':fmt(t),sx(t),ay,az,{align:'center',ink:'rgba(255,255,255,.7)',blur:6});}}
+  const ez=Math.round(22*k),ls=Math.round(ez*.14);
+  proText(ctx,flip?'SLOWER':'FASTER',cx0,ay+Math.round(ez*1.5),ez,{ink:flip?'#ff8a8a':'#7ee0a8',ls,blur:6});
+  proText(ctx,flip?'FASTER':'SLOWER',XR,ay+Math.round(ez*1.5),ez,{align:'right',ink:flip?'#7ee0a8':'#ff8a8a',ls,blur:6});
+  xfE(ctx);
+}
+
+// weather: a card per day with a drawn icon, the temperature (degree ring drawn: the font has no ° glyph) and the conditions
+function wxKind(t){t=(t||'').toLowerCase();
+  return /thunder|storm|lightning/.test(t)?'storm':/snow|sleet|ice/.test(t)?'snow':/rain|shower|drizzle|wet/.test(t)?'rain':/fog|mist|haze/.test(t)?'fog'
+    :/partly|interval|mixed|spells|sun and cloud/.test(t)?'partly':/cloud|overcast|grey|gray|dull/.test(t)?'cloud':/wind|gust/.test(t)?'wind':/sun|clear|dry|hot|fine/.test(t)?'sun':'cloud';}
+function drawWx(ctx,kind,cx,cy,s){
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=s*.06;ctx.shadowOffsetY=s*.02;ctx.lineCap='round';
+  const sun=(x,y,r)=>{ctx.fillStyle='#f6b51e';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f6b51e';ctx.lineWidth=r*.22;
+    for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*r*1.38,y+Math.sin(a)*r*1.38);ctx.lineTo(x+Math.cos(a)*r*1.78,y+Math.sin(a)*r*1.78);ctx.stroke();}};
+  const cloud=(x,y,w,col)=>{ctx.fillStyle=col||'#eef2f6';ctx.beginPath();ctx.arc(x-w*.22,y+w*.05,w*.2,0,Math.PI*2);ctx.arc(x+w*.02,y-w*.08,w*.27,0,Math.PI*2);
+    ctx.arc(x+w*.26,y+w*.06,w*.19,0,Math.PI*2);ctx.fill();ctx.fillRect(x-w*.22,y+w*.05,w*.48,w*.2);};
+  const drops=(col,sym)=>{ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=s*.05;
+    for(let i=-1;i<=1;i++){const x=cx+i*s*.2,y=cy+s*.3;if(sym){ctx.beginPath();ctx.arc(x,y,s*.045,0,Math.PI*2);ctx.arc(x+s*.08,y+s*.13,s*.045,0,Math.PI*2);ctx.fill();}
+      else{ctx.beginPath();ctx.moveTo(x+s*.04,y-s*.02);ctx.lineTo(x-s*.04,y+s*.16);ctx.stroke();}}};
+  if(kind==='sun')sun(cx,cy,s*.24);
+  else if(kind==='partly'){sun(cx+s*.13,cy-s*.12,s*.17);cloud(cx-s*.05,cy+s*.06,s*.8);}
+  else if(kind==='cloud'){cloud(cx+s*.12,cy-s*.1,s*.6,'#aeb8c4');cloud(cx-s*.04,cy+s*.04,s*.85);}
+  else if(kind==='rain'){cloud(cx,cy-s*.1,s*.88,'#d6dce4');drops('#5ab0ff');}
+  else if(kind==='snow'){cloud(cx,cy-s*.1,s*.88,'#e9eef4');drops('#ffffff',1);}
+  else if(kind==='storm'){cloud(cx,cy-s*.12,s*.88,'#9ea8b6');ctx.fillStyle='#ffd23a';ctx.beginPath();ctx.moveTo(cx+s*.05,cy+s*.08);ctx.lineTo(cx-s*.1,cy+s*.3);
+    ctx.lineTo(cx,cy+s*.3);ctx.lineTo(cx-s*.06,cy+s*.48);ctx.lineTo(cx+s*.12,cy+s*.22);ctx.lineTo(cx+s*.02,cy+s*.22);ctx.closePath();ctx.fill();}
+  else if(kind==='fog'){ctx.strokeStyle='#dfe5ec';ctx.lineWidth=s*.07;[-.18,0,.18].forEach((d,i)=>{ctx.beginPath();ctx.moveTo(cx-s*(.32-i*.05),cy+s*d);ctx.lineTo(cx+s*(.3-i*.04),cy+s*d);ctx.stroke();});}
+  else{ctx.strokeStyle='#eef2f6';ctx.lineWidth=s*.06;[-.16,0,.16].forEach((d,i)=>{const w=s*(.5-i*.08);ctx.beginPath();ctx.moveTo(cx-s*.32,cy+s*d);ctx.lineTo(cx-s*.32+w,cy+s*d);
+    ctx.arc(cx-s*.32+w,cy+s*d-s*.07,s*.07,Math.PI/2,-Math.PI*.7,true);ctx.stroke();});}
+  ctx.restore();
+}
+function drawWeather(ctx,st,T){
+  const wx={...PRO_DEFAULT.weather,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(36*k);
+  shadePic(ctx,(wx.fade||0)/100);
+  const days=st.rows.filter(r=>[r.name,r.a,r.b,r.pos].some(v=>(v||'').trim())).slice(0,7);
+  let top=p0+m;const hh=proHead(ctx,'wxHead',wx.head,top,k);if(hh)top+=hh+Math.round(14*k);
+  const sh=proSub(ctx,'wx',wx.sub,top,k);if(sh)top+=sh;if(hh||sh)top+=Math.round(30*k);
+  if(!days.length)return;
+  const n=days.length,AW=XR-X0,AH=p1-m-top,g=Math.round(14*k);
+  let rowsN=1,cols=n;while(cols>1&&(AW-(cols-1)*g)/cols<230*k){rowsN++;cols=Math.ceil(n/rowsN);}
+  const cw=(AW-(cols-1)*g)/cols,ch=Math.min((AH-(rowsN-1)*g)/rowsN,cw*1.55),hlC=tk(T,'hl')[1][1];
+  xfB(ctx,'wxCards','Weather cards',X0,top,AW,rowsN*ch+(rowsN-1)*g);
+  days.forEach((r,j)=>{
+    const x=Math.round(X0+(j%cols)*(cw+g)),y=Math.round(top+Math.floor(j/cols)*(ch+g)),w=Math.round(cw),h=Math.round(ch),hl=st.hl===st.rows.indexOf(r);
+    cell(ctx,x,y,w,h,hl?vgrad(ctx,y,y+h,tk(T,'hl')):T.dark,T);const ink=hl?tk(T,'inkHl'):'#ffffff',cx=x+w/2;
+    const day=(r.name||'').trim().toLocaleUpperCase();let dz=Math.round(Math.min(h*.085,w*.13));const dls=Math.round(dz*.1);while(dz>10&&twOf(day,dz,700,dls)>w*.9)dz--;
+    proText(ctx,day,cx,y+Math.round(h*.12),dz,{align:'center',ink:hl?ink:hlC,ls:dls,shadow:false});
+    drawWx(ctx,wxKind(r.a),cx,y+h*.36,Math.min(w*.62,h*.36));
+    const t=String(r.b||'').replace(/[°ºcC]/g,'').trim();
+    if(t){let tz=Math.round(Math.min(h*.18,w*.3));while(tz>12&&twOf(t,tz)>w*.7)tz--;const tw=twOf(t,tz),rr=tz*.11,tx=cx-(tw+rr*3)/2,base=y+Math.round(h*.74);
+      proText(ctx,t,tx,base,tz,{ink,shadow:false});ctx.save();ctx.strokeStyle=ink;ctx.lineWidth=Math.max(2,tz*.07);ctx.beginPath();ctx.arc(tx+tw+rr*1.8,base-tz*.66,rr,0,Math.PI*2);ctx.stroke();ctx.restore();}
+    const cond=(r.a||'').trim();if(cond){let cz=Math.round(Math.min(h*.065,w*.1));while(cz>10&&twOf(cond,cz)>w*.9)cz--;proText(ctx,cond,cx,y+Math.round(h*.85),cz,{align:'center',ink,shadow:false});}
+    const ex=(r.pos||'').trim();if(ex){let ez=Math.round(Math.min(h*.05,w*.085));while(ez>9&&twOf(ex,ez,400)>w*.9)ez--;proText(ctx,ex,cx,y+Math.round(h*.94),ez,{w:400,align:'center',ink:hl?ink:'rgba(255,255,255,.72)',shadow:false});}
+  });
+  xfE(ctx);
+}
+
+// stage map in the Meet the Stages look: Esri satellite imagery through Rally Stage Studio's navy matrix, the route in
+// orange, the dark card with the orange bar (caption, stage name, pills) and the footer lines
+const STAGE={track:null};
+const TILE={};let TILE_N=0,TILE_T=0;
+const MAPC={key:'',c:null};
+const MAP_NAVY=[0.237,0.467,0.087,0,-0.007, 0.245,0.481,0.090,0,0.018, 0.273,0.536,0.100,0,0.109];
+const MAP_DARK=[0.11,0.36,0.04,0,0.01, 0.11,0.36,0.04,0,0.012, 0.11,0.36,0.04,0,0.02];
+function tileImg(z,x,y){
+  const key=z+'/'+x+'/'+y,t=TILE[key];if(t&&t!=='loading')return t==='err'?null:t;
+  if(!t){TILE[key]='loading';const im=new Image();im.crossOrigin='anonymous';
+    const done=v=>{TILE[key]=v;TILE_N++;clearTimeout(TILE_T);TILE_T=setTimeout(()=>redraw(true),120);};
+    im.onload=()=>done(im);im.onerror=()=>done('err');
+    im.src=`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;}
+  return null;
+}
+function merc(lat,lon,z){const s=256*Math.pow(2,z),sl=Math.sin(lat*Math.PI/180);return [(lon+180)/360*s,(.5-Math.log((1+sl)/(1-sl))/(4*Math.PI))*s];}
+function trackKm(tr){let d=0;for(let i=1;i<(tr||[]).length;i++){const [a,b]=tr[i-1],[c,e]=tr[i],r=Math.PI/180,h=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((e-b)*r/2)**2;d+=12742*Math.asin(Math.sqrt(h));}return d;}
+function parseTrack(text,name){
+  const pts=[];
+  if(/\.(geo)?json$/i.test(name)||/^\s*\{/.test(text)){
+    const walk=g=>{if(!g)return;if(g.type==='FeatureCollection')g.features.forEach(f=>walk(f.geometry));else if(g.type==='Feature')walk(g.geometry);
+      else if(g.type==='LineString')g.coordinates.forEach(c=>pts.push([c[1],c[0]]));else if(g.type==='MultiLineString')g.coordinates.forEach(l=>l.forEach(c=>pts.push([c[1],c[0]])));};
+    walk(JSON.parse(text));
+  } else {
+    const d=new DOMParser().parseFromString(text,'application/xml');
+    d.querySelectorAll('trkpt,rtept').forEach(p=>pts.push([+p.getAttribute('lat'),+p.getAttribute('lon')]));
+    if(!pts.length)d.querySelectorAll('coordinates').forEach(c=>c.textContent.trim().split(/\s+/).forEach(t=>{const [lo,la]=t.split(',').map(Number);if(isFinite(la)&&isFinite(lo))pts.push([la,lo]);}));
+  }
+  const ok=pts.filter(p=>isFinite(p[0])&&isFinite(p[1])),step=Math.max(1,Math.ceil(ok.length/2000));
+  return ok.filter((p,i)=>i%step===0||i===ok.length-1).map(([a,b])=>[+a.toFixed(6),+b.toFixed(6)]);
+}
+function stageMap(sm,area,scale,fit){
+  fit=fit||{x:area.x+area.w*.19,y:area.y+area.h*.29,w:area.w*.7,h:area.h*.56};
+  const tr=STAGE.track,zoom=+sm.zoom||0,mx=+sm.mx||0,my=+sm.my||0;
+  let cx=merc(37.98,23.73,0)[0],cy=merc(37.98,23.73,0)[1],zf=10;   // no route yet: Athens
+  if(tr&&tr.length>1){const p=tr.map(([a,b])=>merc(a,b,0)),xs=p.map(q=>q[0]),ys=p.map(q=>q[1]);
+    const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+    zf=Math.log2(Math.min(fit.w/Math.max(1e-9,x1-x0),fit.h/Math.max(1e-9,y1-y0)));cx=(x0+x1)/2;cy=(y0+y1)/2;}
+  zf=Math.min(19,zf+zoom);const zi=Math.max(1,Math.min(18,Math.round(zf))),f=Math.pow(2,zi),k2=Math.pow(2,zf-zi);   // canvas px per tile px
+  // the route sits a little right of and below centre, clear of the card; the user's pan moves it from there
+  const sxo=fit.x+fit.w/2-(area.x+area.w/2)+mx*area.w,syo=fit.y+fit.h/2-(area.y+area.h/2)+my*area.h,wcx=cx*f-sxo/k2,wcy=cy*f-syo/k2,left=wcx-area.w/2/k2,topw=wcy-area.h/2/k2;
+  const P=(lat,lon)=>{const [x,y]=merc(lat,lon,zi);return [area.x+(x-left)*k2,area.y+(y-topw)*k2];};
+  const key=[area.x,area.y,area.w,area.h,scale,zf.toFixed(4),left.toFixed(1),topw.toFixed(1),sm.style,TILE_N].join('|');
+  if(MAPC.key===key)return {c:MAPC.c,P};
+  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(area.w*scale));c.height=Math.max(1,Math.round(area.h*scale));
+  const x=c.getContext('2d');x.scale(scale,scale);x.fillStyle='#17203b';x.fillRect(0,0,area.w,area.h);x.imageSmoothingQuality='high';
+  const ts=256*k2,tx0=Math.floor(left/256),ty0=Math.floor(topw/256),tx1=Math.floor((left+area.w/k2)/256),ty1=Math.floor((topw+area.h/k2)/256);
+  for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){if(ty<0||ty>=f)continue;const im=tileImg(zi,((tx%f)+f)%f,ty);if(im)x.drawImage(im,(tx*256-left)*k2,(ty*256-topw)*k2,ts+.6,ts+.6);}
+  const M=sm.style==='satellite'?null:sm.style==='dark'?MAP_DARK:MAP_NAVY;
+  if(M){const d=x.getImageData(0,0,c.width,c.height),a=d.data;
+    for(let i=0;i<a.length;i+=4){const r=a[i],g=a[i+1],b=a[i+2];a[i]=M[0]*r+M[1]*g+M[2]*b+M[4]*255;a[i+1]=M[5]*r+M[6]*g+M[7]*b+M[9]*255;a[i+2]=M[10]*r+M[11]*g+M[12]*b+M[14]*255;}
+    x.putImageData(d,0,0);}
+  MAPC.key=key;MAPC.c=c;return {c,P};
+}
+// wait until every tile the export needs has loaded (drawing once in that format asks for them)
+async function mapPrefetch(fmt,scale){
+  const c=document.createElement('canvas');c.width=8;c.height=8;
+  for(let t=0;t<80;t++){
+    withFormat(fmt,()=>{const x=c.getContext('2d');x.setTransform(scale,0,0,scale,0,0);render(x,readState());});
+    if(!Object.values(TILE).includes('loading'))return;await new Promise(r=>setTimeout(r,150));
+  }
+}
+function drawStageMap(ctx,st,T){
+  const sm={...PRO_DEFAULT.stagemap,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,c15=k/1.5,x0=PX0(),x1=PX1(),area={x:x0,y:CLEAN?0:p0,w:x1-x0,h:(CLEAN?H:p1)-(CLEAN?0:p0)},tr=STAGE.track;
+  // measure the card, the footer and the logo first: the route is fitted into the open map between them
+  const cx=CLEAN?Math.round(94*c15):X0,cy=p0+Math.round(24*c15),pad=Math.round(34*c15),bar=Math.round(8*c15),cw0=Math.round(560*c15);
+  const cap=(sm.caption||'').trim().toLocaleUpperCase(),name=(sm.name||'').trim(),km=trackKm(tr);
+  const pills=(sm.pills||'').split(',').map(s=>s.trim().replace('{km}',km?km.toFixed(2)+' km':'')).filter(Boolean);
+  const capZ=Math.round(30*c15),tz0=Math.round(64*c15),ph=Math.round(51*c15),pz=Math.round(31*c15),pg=Math.round(12*c15),pp=Math.round(20*c15);
+  const cw=Math.max(cw0,Math.min(Math.round((x1-x0)*.62),Math.round(Math.max(twOf(cap,capZ,400,2),...pills.map(p=>twOf(p,pz)+pp*2))+pad*2+bar)));
+  let tz=tz0,tl=[];for(;;){measureCtx.font=`700 ${tz}px "WRC Clean"`;tl=name?wrapLines(measureCtx,name,cw-pad*2-bar):[];if((tl.length<=2&&tl.every(l=>measureCtx.measureText(l).width<=cw-pad*2-bar))||tz<=20)break;tz-=2;}
+  const rowsP=[];let cur=[],cwid=0;pills.forEach(p=>{const w=twOf(p,pz)+pp*2;if(cur.length&&cwid+pg+w>cw-pad*2-bar){rowsP.push(cur);cur=[];cwid=0;}cur.push([p,w]);cwid+=(cwid?pg:0)+w;});if(cur.length)rowsP.push(cur);
+  const capH=cap?Math.round(capZ*1.5):0,tH=tl.length?Math.round(tl.length*tz*1.05):0,pH=rowsP.length?rowsP.length*ph+(rowsP.length-1)*pg+Math.round(20*c15):0,ch=pad*2+capH+tH+pH,hasCard=!!(cap||name||pills.length);
+  const big=(sm.big||'').trim(),ft=(sm.foot||'').trim(),fb=p1-Math.round((CLEAN&&p1>=(L.frame||[0,H])[1]&&FMT!=='story'?150:30)*c15);
+  const lg=PS_IMG[st.logo]||PS_IMG.media;let lh=0,lw=0;
+  if(lg){lh=Math.round(120*c15*(st.logo==='icon'?1.1:.8));lw=lh*lg.width/lg.height;if(lw>400*c15){lw=400*c15;lh=lw*lg.height/lg.width;}}
+  const lx=x1-Math.round(92*c15)-lw,fmax=Math.max(60*c15,(lg?lx-Math.round(30*c15):x1-Math.round(40*c15))-(cx+1));   // the footer lines stop short of the logo
+  let bz=Math.round(46*c15),fz=Math.round(33*c15);while(big&&bz>12&&twOf(big,bz)>fmax)bz--;while(ft&&fz>10&&twOf(ft,fz,400)>fmax)fz--;
+  const footH=(big?Math.round(bz*1.25):0)+(ft?Math.round(fz*1.2):0),footTop=fb-Math.max(footH,lh);
+  const fit={x:area.x+Math.round(70*c15),y:(hasCard?cy+ch:p0)+Math.round(46*c15),w:area.w-Math.round(140*c15)};fit.h=Math.max(Math.round(120*c15),footTop-Math.round(46*c15)-fit.y);
+  const tf=ctx.getTransform(),scale=Math.min(2,Math.hypot(tf.a,tf.b)||1),M=stageMap(sm,area,scale,fit);
+  ctx.save();ctx.beginPath();ctx.rect(area.x,area.y,area.w,area.h);ctx.clip();ctx.drawImage(M.c,area.x,area.y,area.w,area.h);
+  if(tr&&tr.length>1){
+    const pts=tr.map(([a,b])=>M.P(a,b)),path=()=>{ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));};
+    ctx.lineJoin='round';ctx.lineCap='round';path();ctx.strokeStyle='rgba(10,12,16,.85)';ctx.lineWidth=14*c15;ctx.stroke();
+    path();ctx.strokeStyle=sm.route||'#fe4d02';ctx.lineWidth=7*c15;ctx.stroke();
+    if(sm.markers)[[pts[0],'START','#323a52'],[pts[pts.length-1],'FINISH','#fe4d02']].forEach(([[x,y],lab,col])=>{
+      ctx.fillStyle='#ffffff';ctx.strokeStyle='#0a0c10';ctx.lineWidth=4*c15;ctx.beginPath();ctx.arc(x,y,11*c15,0,Math.PI*2);ctx.fill();ctx.stroke();
+      const h=Math.round(40*c15),z=Math.round(24*c15),w=Math.round(twOf(lab,z,700,2)+26*c15),lx2=x+16*c15+w>area.x+area.w-12*c15?x-16*c15-w:x+16*c15,ly=y-h-10*c15<area.y+8*c15?y+10*c15:y-h-10*c15;
+      ctx.fillStyle=col;rr(ctx,lx2,ly,w,h,h/2);ctx.fill();proText(ctx,lab,lx2+13*c15,ly+h/2+2*c15,z,{ink:'#ffffff',base:'middle',ls:2,shadow:false});});
+  } else if(ctx.canvas.id==='cv')proText(ctx,'Drop a GPX, KML or GeoJSON of the stage here',area.x+area.w/2,area.y+area.h/2,Math.round(34*k),{align:'center',blur:10});
+  ctx.restore();
+  if(hasCard){
+    xfB(ctx,'mapCard','Stage card',cx,cy,cw,ch);
+    ctx.save();ctx.fillStyle='#0a0c10';ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=24*c15;ctx.fillRect(cx,cy,cw,ch);ctx.restore();
+    ctx.fillStyle='#fe4d02';ctx.fillRect(cx,cy,bar,ch);
+    let y=cy+pad;const tx=cx+bar+pad;
+    if(cap){ctx.save();ctx.font=`400 ${capZ}px "WRC Clean"`;try{ctx.letterSpacing='2px';}catch(e){}ctx.fillStyle='#c6cbcb';ctx.textBaseline='alphabetic';ctx.fillText(cap,tx,y+capZ*.8);ctx.restore();y+=capH;}
+    tl.forEach((l,i)=>proText(ctx,l,tx,y+Math.round(tz*.8)+i*Math.round(tz*1.05),tz,{shadow:false}));y+=tH;
+    if(rowsP.length){y+=Math.round(20*c15);rowsP.forEach((row,ri)=>{let x=tx;row.forEach(([p,w],i)=>{const first=ri===0&&i===0;ctx.fillStyle=first?'#fe4d02':'#323a52';rr(ctx,x,y,w,ph,ph/2);ctx.fill();
+      proText(ctx,p,x+pp,y+ph/2+2*c15,pz,{base:'middle',shadow:false});x+=w+pg;});y+=ph+pg;});}
+    xfE(ctx);
+  }
+  if(big||ft){const w=Math.max(twOf(big,bz),twOf(ft,fz,400));
+    xfB(ctx,'mapFoot','Footer lines',cx+1,fb-footH,w,footH);
+    if(big)proText(ctx,big,cx+1,fb-(ft?Math.round(fz*1.2):0)-Math.round(bz*.25),bz,{blur:14*c15});
+    if(ft)proText(ctx,ft,cx+1,fb-Math.round(fz*.2),fz,{w:400,ink:'#c1c7d7',blur:10*c15});
+    xfE(ctx);}
+  if(lg){const ly=fb-lh;xfB(ctx,'mapLogo','Logo',lx,ly,lw,lh);ctx.save();ctx.filter='invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.5))';ctx.drawImage(lg,lx,ly,lw,lh);ctx.restore();xfE(ctx);}
+  ctx.save();ctx.font=`600 ${Math.round(16*k)}px "Segoe UI",Arial,sans-serif`;ctx.fillStyle='rgba(255,255,255,.75)';ctx.textAlign='right';ctx.textBaseline='bottom';
+  ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=4;ctx.fillText('Imagery © Esri',x1-Math.round(12*k),(CLEAN?H:p1)-Math.round(8*k));ctx.restore();
+}
+
+// poll / prediction story: the question, a card per option (picture or brand tile, flag and name), and room for
+// Instagram's poll sticker (outlined on the preview only)
+function drawPoll(ctx,st,T){
+  const pl={...PRO_DEFAULT.poll,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(40*k),show=st.show||{},AW=XR-X0,mid=(X0+XR)/2;
+  shadePic(ctx,(pl.fade||0)/100);
+  const opts=st.rows.map((r,i)=>({r,i})).filter(o=>(o.r.name||'').trim()).slice(0,4),q=(pl.question||'').trim().toLocaleUpperCase(),kick=(pl.kicker||'').trim();
+  let top=p0+m;
+  if(kick){const h=Math.round(46*k),w=proChip(ctx,kick,0,0,h,'gold',T,'left',{dry:true}),x=Math.round(mid-w/2);xfB(ctx,'pollKick','Label',x,top,w,h);proChip(ctx,kick,x,top,h,'gold',T,'left');xfE(ctx);top+=h+Math.round(22*k);}
+  if(q){let z=Math.round(96*k),ls;for(;;){measureCtx.font=`700 ${z}px "WRC Clean"`;ls=wrapLines(measureCtx,q,AW);if((ls.length<=3&&ls.every(l=>measureCtx.measureText(l).width<=AW))||z<=24)break;z-=2;}
+    const lh=Math.round(z*.92),qh=Math.round((ls.length-1)*lh+z*.8),qw=Math.max(...ls.map(l=>twOf(l,z)));
+    xfB(ctx,'pollQ','Question',Math.round(mid-qw/2),top,qw,qh);ls.forEach((l,i)=>proText(ctx,l,mid,top+Math.round(z*.8)+i*lh,z,{align:'center',blur:24*k}));xfE(ctx);top+=qh+Math.round(34*k);}
+  const zoneH=pl.zone==='none'?0:Math.round(Math.min(W*.26,(p1-m-top)*.3)),below=pl.zone!=='middle',gz=Math.round(24*k);
+  const oTop=below?top:top+zoneH+gz,oBot=below?p1-m-zoneH-gz:p1-m,zy=below?p1-m-zoneH:top;
+  if(ctx.canvas.id==='cv'&&pl.zone!=='none'){ctx.save();ctx.setLineDash([16,10]);ctx.lineWidth=3;ctx.strokeStyle='rgba(0,229,255,.9)';ctx.fillStyle='rgba(0,229,255,.08)';
+    ctx.fillRect(X0+AW*.1,zy,AW*.8,zoneH);ctx.strokeRect(X0+AW*.1,zy,AW*.8,zoneH);ctx.restore();
+    proText(ctx,'Instagram poll sticker goes here (not exported)',mid,zy+zoneH/2,Math.round(26*k),{align:'center',base:'middle',ink:'#7ff3ff',blur:6});}
+  if(!opts.length)return;
+  const n=opts.length,g=Math.round(18*k),cw=Math.round((AW-(n-1)*g)/n),ch=oBot-oTop,plH=Math.round(54*k);
+  if(ch<plH*2)return;
+  xfB(ctx,'pollOpts','Options',X0,oTop,AW,ch);
+  opts.forEach((o,i)=>{
+    const r=o.r,x=X0+i*(cw+g),fl=show.flag?resolveFlag(r):'',bd=show.badge&&BADGES[r.badge]?r.badge:'';
+    const gT=Math.round(plH*GAP/62),tilesH=fl||bd?plH+5+gT:0,picH=ch-tilesH-plH-5-Math.round(12*k),py=oTop+picH+Math.round(12*k);
+    if(picH>40){ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(x,oTop,cw,picH);if(!drawSlot(ctx,st,o.i,x,oTop,cw,picH)&&bd)bigTile(ctx,bd,x+cw/2,oTop+picH/2,Math.round(Math.min(cw*.55,picH*.7)),T);}
+    if(tilesH)proPlate(ctx,T,x,py,plH,'',fl,bd,cw,false);
+    proPlate(ctx,T,x,py+tilesH,plH,r.name.trim(),'','',cw,true,'light');
+  });
+  xfE(ctx);
+}
+
+// milestone: a big number with a raised suffix ("100th"), what it counts, the name plate, a career line, key numbers
+function drawMilestone(ctx,st,T){
+  const ms={...PRO_DEFAULT.milestone,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(48*k),side=ms.side||'left';
+  const facts=factRows(st),num=(ms.num||'').trim(),suf=(ms.suffix||'').trim().toLocaleUpperCase(),lab=(ms.label||'').trim().toLocaleUpperCase();
+  const kick=(ms.kicker||'').trim(),name=(ms.name||'').trim(),line=(ms.line||'').trim(),fl=resolveFlag({name,flag:ms.flag||'',pos:''}),bd=BADGES[ms.badge]?ms.badge:'';
+  const bw=side==='center'?XR-X0:Math.round((XR-X0)*.6),al=side,ax=side==='center'?(X0+XR)/2:side==='right'?XR:X0,bx=side==='right'?XR-bw:X0;
+  let sc=(ms.size||100)/100,D;
+  const measure=()=>{
+    const g=Math.round(22*k*sc),kh=kick?Math.round(46*k*sc):0;let nz=num?Math.round(330*k*sc):0;
+    const nwid=z=>twOf(num,z)+(suf?twOf(suf,Math.round(z*.3))+z*.04:0);while(nz>40&&nwid(nz)>bw)nz-=4;
+    let lz=lab?Math.round(80*k*sc):0;while(lz>16&&twOf(lab,lz)>bw)lz-=2;
+    const ph=name||fl||bd?Math.round(54*k*sc):0;let iz=line?Math.round(34*k*sc):0;while(iz>12&&twOf(line,iz,400)>bw)iz--;
+    const fz=Math.round(44*k*sc),fw=Math.min(bw,Math.round(facts.length*260*k*sc)),fh=proFacts(ctx,T,facts,0,0,fw,fz,'cells',al,true);
+    const u=[kh,nz?Math.round(nz*.76):0,lz?Math.round(lz*.8):0,ph?ph+5:0,iz?Math.round(iz*.9):0,fh].filter(Boolean);
+    D={g,kh,nz,nw:num?nwid(nz):0,lz,ph,iz,fz,fw,fh,H:u.reduce((a,b)=>a+b,0)+g*(u.length-1)};
+  };
+  measure();while(D.H>p1-p0-2*m&&sc>.3){sc*=.92;measure();}
+  const top=Math.round(ms.vpos==='top'?p0+m:ms.vpos==='bottom'?p1-m-D.H:p0+(p1-p0-D.H)/2),a=(ms.fade||0)/100,x0=PX0(),x1=PX1();
+  if(side==='left')shadePic(ctx,a,'x',x0,Math.min(x1,bx+bw+260*k));else if(side==='right')shadePic(ctx,a,'x',x1,Math.max(x0,bx-260*k));else shadePic(ctx,a);
+  xfB(ctx,'milestone','Milestone block',bx,top,bw,D.H);let y=top;
+  if(D.kh){const w=proChip(ctx,kick,0,0,D.kh,'gold',T,'left',{dry:true}),x=ordX(al,ax,w);xfB(ctx,'msKick','Label',x,y,w,D.kh);proChip(ctx,kick,x,y,D.kh,'gold',T,'left');xfE(ctx);y+=D.kh+D.g;}
+  if(D.nz){const nh=Math.round(D.nz*.76),x=ordX(al,ax,D.nw),base=y+nh;xfB(ctx,'msNum','Number',x,y,D.nw,nh);
+    ctx.save();ctx.font=`700 ${D.nz}px "WRC Clean"`;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.lineJoin='round';
+    if(ms.numStyle==='outline'){ctx.lineWidth=Math.max(3,Math.round(D.nz*.02));ctx.strokeStyle='#ffffff';ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=D.nz*.05;ctx.strokeText(num,x,base);}
+    else{ctx.fillStyle=ms.numStyle==='gold'?vgrad(ctx,base-nh,base,tk(T,'hl')):'#ffffff';ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=D.nz*.06;ctx.shadowOffsetY=D.nz*.015;ctx.fillText(num,x,base);}
+    ctx.restore();
+    if(suf){const sz=Math.round(D.nz*.3);proText(ctx,suf,x+twOf(num,D.nz)+D.nz*.04,y+Math.round(sz*.8),sz,{ink:ms.numStyle==='gold'?tk(T,'hl')[1][1]:'#ffffff',blur:10*k});}
+    xfE(ctx);y+=nh+D.g;}
+  if(D.lz){const w=twOf(lab,D.lz),x=ordX(al,ax,w),h=Math.round(D.lz*.8);xfB(ctx,'msLabel','What it counts',x,y,w,h);proText(ctx,lab,x,y+h,D.lz,{blur:20*k});xfE(ctx);y+=h+D.g;}
+  if(D.ph){const w=proPlate(ctx,T,0,0,D.ph,name,fl,bd,bw,false,'light',true),x=ordX(al,ax,w);xfB(ctx,'msName','Name',x,y,w,D.ph);proPlate(ctx,T,x,y,D.ph,name,fl,bd,bw,false,'light');xfE(ctx);y+=D.ph+5+D.g;}
+  if(D.iz){const w=twOf(line,D.iz,400),x=ordX(al,ax,w),h=Math.round(D.iz*.9);xfB(ctx,'msLine','Career line',x,y,w,h);proText(ctx,line,x,y+Math.round(D.iz*.78),D.iz,{w:400,blur:12*k});xfE(ctx);y+=h+D.g;}
+  if(D.fh){const x=ordX(al,ax,D.fw);xfB(ctx,'msFacts','Key numbers',x,y,D.fw,D.fh);proFacts(ctx,T,facts,x,y,D.fw,D.fz,'cells',al);xfE(ctx);}
+  xfE(ctx);
+}
 function drawProMode(ctx,st,T){
   const M=MODES[st.mode];if(ctx.canvas.id==='cv'){PRO_RECTS=[];SLOT_RECTS=[];}
   if(M.pro==='bars'){blendDraw(ctx,T,drawOuterRails);drawBars(ctx,st,T);return;}
+  if(M.pro==='stagemap'){drawStageMap(ctx,st,T);blendDraw(ctx,T,drawOuterRails);return;}
   drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);
   if(M.pro==='preview')drawPreview(ctx,st,T);
+  else if(M.pro==='entry')drawEntry(ctx,st,T);
+  else if(M.pro==='fight')drawFight(ctx,st,T);
+  else if(M.pro==='road')drawRoad(ctx,st,T);
+  else if(M.pro==='weather')drawWeather(ctx,st,T);
+  else if(M.pro==='poll')drawPoll(ctx,st,T);
+  else if(M.pro==='milestone')drawMilestone(ctx,st,T);
   else if(M.pro==='h2h')drawH2H(ctx,st,T);
   else if(M.pro==='live')drawLive(ctx,st,T);
   else if(M.pro==='calendar')drawCalendar(ctx,st,T);
@@ -2473,6 +2998,7 @@ let XF_SIG='';
 function xfPanel(){
   const list=$('xfList');if(!list)return;
   const els=[...XF_RECTS].sort((a,b)=>a.ord-b.ord),sig=els.map(r=>r.key+(r.hide?'-':'')).join(',');
+  {const t=document.querySelector('.paneltabs [data-tab=layout]');if(t){t.textContent=els.length?`Elements (${els.length})`:'Elements';}}
   if(sig!==XF_SIG){XF_SIG=sig;
     const depth=r=>{let d=0,p=r.parent;while(p&&d<4){d++;const q=els.find(e=>e.key===p);p=q&&q.parent;}return d;};
     list.innerHTML=els.length?els.map(r=>`<div class="xfRow" data-k="${escA(r.key)}" style="padding-left:${6+depth(r)*14}px"><input type="checkbox" data-xv title="Show"${r.hide?'':' checked'}><span>${escA(r.label)}</span><small></small><button type="button" data-xr title="Reset position and size">↺</button></div>`).join('')
@@ -2504,7 +3030,8 @@ function drawLive(ctx,st,T){
   const lv={...PRO_DEFAULT.live,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(40*k),show=st.show||{};
   const rows=st.rows.filter(r=>r.name||r.b).slice(0,5),stage=(lv.stage||'').trim(),kick=(lv.kicker||'').trim().toLocaleUpperCase(),lead=(lv.leader||'').trim();
   if(!rows.length&&!stage&&!kick&&!lead)return;
-  const side=lv.pos!=='bottom',bw=side?Math.round((XR-X0)*.56):XR-X0,bx=lv.pos==='right'?XR-bw:X0;
+  const need=(rh=>rh*1.05+2*rh*TILE_W/62+3*rh*GAP/62+rh*5.5+Math.max(0,...rows.map(r=>twOf((r.b||'').trim(),Math.round(rh*.56))))+rh*.7)(62*k*(lv.size||100)/100);
+  const side=lv.pos!=='bottom'&&need<=(XR-X0)*.66,bw=side?Math.max(Math.round((XR-X0)*.56),Math.round(need)):XR-X0,bx=lv.pos==='right'?XR-bw:X0;   // too narrow: full width
   let s=(lv.size||100)/100,D;
   const measure=()=>{
     const ch=stage?Math.round(50*k*s):0;let kz=kick?Math.round(96*k*s):0;while(kz>20&&twOf(kick,kz)>bw)kz-=2;
@@ -2536,7 +3063,7 @@ function drawLive(ctx,st,T){
     });
     y-=D.rg;xfE(ctx);y+=D.g;
   }
-  if(D.lh){const lz=Math.round(D.lh*.5),lsp=Math.round(lz*.06),w=Math.min(bw,Math.round(twOf(lead,lz,700,lsp)+D.lh*.8)),P=paint(ctx,y,D.lh,'strip',T);
+  if(D.lh){let lz=Math.round(D.lh*.5);const lsp=Math.round(lz*.06);while(lz>10&&twOf(lead,lz,700,lsp)+D.lh*.8>bw)lz--;const w=Math.min(bw,Math.round(twOf(lead,lz,700,lsp)+D.lh*.8)),P=paint(ctx,y,D.lh,'strip',T);
     xfB(ctx,'liveLead','Leader line',bx,y,w,D.lh);cell(ctx,bx,y,w,D.lh,P.fill,T);
     proText(ctx,lead,bx+Math.round(D.lh*.4),y+D.lh/2+2*k,lz,{ink:P.ink,base:'middle',ls:lsp,shadow:false});xfE(ctx);}
   xfE(ctx);
@@ -2568,13 +3095,16 @@ function drawCalendar(ctx,st,T){
     if(fl)drawFlagTile(ctx,x+pad,y+pad,tw,th,fl,T);
     const rl=((r.pos||'').trim()||('R'+(j+1))).toLocaleUpperCase(),rz=Math.round(th*.6);
     proText(ctx,rl,x+w-pad,y+pad+th/2+2*k,rz,{ink:hl?P.ink:hlC,base:'middle',align:'right',shadow:false});
-    const name=(r.name||'').trim();let nz=Math.round(h*.15),ls=[];
-    for(;;){measureCtx.font=`700 ${nz}px "WRC Clean"`;ls=wrapLines(measureCtx,name,w-pad*2);if((ls.length<=2&&ls.every(l=>measureCtx.measureText(l).width<=w-pad*2))||nz<=10)break;nz--;}
-    ls=ls.slice(0,2);const lh=Math.round(nz*1.02);let ty=y+pad+th+Math.round(h*.05)+Math.round(nz*.8);
+    // the name (up to two lines) and the dates share the room between the flag row and the winner strip
+    const name=(r.name||'').trim(),dt=(r.a||'').trim().toLocaleUpperCase(),win=(r.b||'').trim(),bh=win&&cl.winners?Math.round(h*.22):0;
+    const tTop=y+pad+th+Math.round(h*.05),tBot=y+h-(bh||0)-Math.round(pad*.8);let nz=Math.round(h*.15),ls=[],dz=0;
+    for(;;){measureCtx.font=`700 ${nz}px "WRC Clean"`;ls=wrapLines(measureCtx,name,w-pad*2);dz=dt?Math.round(nz*.72):0;
+      const tall=(ls.length?(ls.length-1)*Math.round(nz*1.02)+Math.round(nz*.8):0)+(dz?Math.round(dz*.5)+Math.round(dz*.8):0);
+      if((ls.length<=2&&ls.every(l=>measureCtx.measureText(l).width<=w-pad*2)&&tall<=tBot-tTop)||nz<=9)break;nz--;}
+    ls=ls.slice(0,2);const lh=Math.round(nz*1.02);let ty=tTop+Math.round(nz*.8);
     ls.forEach((l,i)=>proText(ctx,l,x+pad,ty+i*lh,nz,{ink:P.ink,shadow:false}));ty+=(ls.length-1)*lh;
-    const dt=(r.a||'').trim();if(dt){const dz=Math.round(nz*.72);proText(ctx,dt.toLocaleUpperCase(),x+pad,ty+Math.round(dz*1.5),dz,{ink:hl?P.ink:'rgba(255,255,255,.72)',ls:Math.round(dz*.08),shadow:false});}
-    const win=(r.b||'').trim();
-    if(win&&cl.winners){const bh=Math.round(h*.22),by=y+h-bh,bd=show.badge!==false&&BADGES[r.badge]?r.badge:'',Pw=paint(ctx,by,bh,hl?'dark':'strip',T);
+    if(dz)proText(ctx,dt,x+pad,ty+Math.round(dz*.5)+Math.round(dz*.8),dz,{ink:hl?P.ink:'rgba(255,255,255,.72)',ls:Math.round(dz*.08),shadow:false});
+    if(bh){const by=y+h-bh,bd=show.badge!==false&&BADGES[r.badge]?r.badge:'',Pw=paint(ctx,by,bh,hl?'dark':'strip',T);
       ctx.fillStyle=Pw.fill;ctx.fillRect(x,by,w,bh);let wx=x+pad;
       if(bd){const bt=Math.round(bh*TILE_W/62);drawTile(ctx,x,by,bt,bh,bd,T);wx=x+bt+Math.round(pad*.7);}
       let wz=Math.round(bh*.5);while(wz>9&&twOf(win,wz)>x+w-pad-wx)wz--;proText(ctx,win,wx,by+bh/2+2*k,wz,{ink:Pw.ink,base:'middle',shadow:false});}
@@ -2587,7 +3117,7 @@ const flagOptions='<option value="">auto</option><option value="-">none</option>
 const moveOptions='<option value=""></option><option value="=">=</option><option value="up">▲</option><option value="down">▼</option>';
 let MODE='points';
 
-function gridCols(){const M=MODES[MODE];return '46px '+M.fields.filter(([k])=>visibleField(k)).map(([k])=>FIELD_W[k]).join(' ');}
+function gridCols(){const M=MODES[MODE];return '46px '+M.fields.filter(([k])=>visibleField(k)).map(([k])=>(M.fieldW&&M.fieldW[k])||FIELD_W[k]).join(' ');}
 function visibleField(k){return !((k==='flag'&&!$('showFlag').checked)||(k==='badge'&&!$('showBadge').checked)||(k==='move'&&!$('showMove').checked));}
 function teamColUI(){
   const box=$('teamColBox');box.hidden=!$('teamCol').checked;if(box.hidden)return;
@@ -2638,7 +3168,7 @@ function refreshFieldVisibility(){
 }
 function readRows(){return [...$('rows').children].map(d=>{const o={pos:'',name:'',flag:'',badge:'',move:'',a:'',b:''};d.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value.trim());return o;});}
 function readState(){
-  return {mode:MODE,look:$('look').value,xf:JSON.parse(JSON.stringify(XF)),title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,blend:$('themeBlend').checked,themeCol2:$('themeCol2').value,blendDir:$('blendDir').value,collage:MODES[MODE].collage?JSON.parse(JSON.stringify(COL)):undefined,tint:+$('pTint').value,
+  return {mode:MODE,look:$('look').value,track:MODES[MODE].pro==='stagemap'?STAGE.track:undefined,xf:JSON.parse(JSON.stringify(XF)),title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,blend:$('themeBlend').checked,themeCol2:$('themeCol2').value,blendDir:$('blendDir').value,collage:MODES[MODE].collage?JSON.parse(JSON.stringify(COL)):undefined,tint:+$('pTint').value,
           logo:$('logo').value,valAlign:$('valAlign').value,hl:$('hl').value===''?-1:+$('hl').value,
           show:{flag:$('showFlag').checked,badge:$('showBadge').checked,move:$('showMove').checked},rows:readRows(),
           quote:{text:$('qText').value,sub:$('qSub').value,who:$('qWho').value,tcase:$('qCase').value,ink:$('qInk').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
@@ -2705,7 +3235,7 @@ function loadMode(m){
   $('mode').value=m;
   $('rallyBox').hidden=!M.rightCell;$('rallyLbl').textContent=M.rightLabel||'Rally';
   $('startBox').hidden=!M.labels;
-  $('alignBox').hidden=!!(M.quote||M.strips||M.pro);$('lookBox').hidden=!M.quote;$('look').value=(s&&s.look)||'classic';lookUI();XF=JSON.parse(JSON.stringify((s&&s.xf)||{}));XF_SEL=XF_HOVER=null;XF_SIG='';$('alignLbl').textContent=m==='results'?'Time alignment':m==='points'?'Points alignment':'Value alignment';
+  $('alignBox').hidden=!!(M.quote||M.strips||M.pro);$('lookBox').hidden=!M.quote;$('look').value=(s&&s.look)||M.defLook||'classic';lookUI();XF=JSON.parse(JSON.stringify((s&&s.xf)||{}));XF_SEL=XF_HOVER=null;XF_SIG='';$('alignLbl').textContent=m==='results'?'Time alignment':m==='points'?'Points alignment':'Value alignment';
   $('valAlign').value=(s&&s.valAlign)||'';
   $('bulk').placeholder='One row per line:\n'+M.paste;
   const show=(s&&s.show)||M.show;
@@ -2724,8 +3254,8 @@ function loadMode(m){
   buildRows(s?s.rows:DEFAULTS[m]);
   $('title').value=s?s.title:M.title;$('foot').value=s?s.foot:M.foot;$('rally').value=s?(s.rally||''):M.rally;
   $('start').value=s?(s.start||''):'';$('theme').value=(s&&s.theme)||M.theme;if(s&&s.themeCol)$('themeCol').value=s.themeCol;$('themeBlend').checked=!!(s&&s.blend);if(s&&s.themeCol2)$('themeCol2').value=s.themeCol2;$('blendDir').value=(s&&s.blendDir)||'diag';$('pTint').value=(s&&s.tint)||0;$('themeColBox').hidden=$('themeBlendBox').hidden=!/^custom/.test($('theme').value);
-  $('hl').value=s?(s.hl<0?'':String(s.hl)):M.pro==='schedule'?'':'0';
-  $('rowsUI').hidden=!!(M.strips||(M.quote&&!M.stats&&!M.pro));$('hlBox').hidden=$('rowsUI').hidden||!!(M.pro&&!M.hlOk);$('quoteUI').hidden=!M.quote;$('stripsUI').hidden=!M.strips;
+  $('hl').value=s?(s.hl<0?'':String(s.hl)):M.pro&&M.pro!=='bars'?'':'0';
+  $('rowsUI').hidden=!!(M.strips||(M.quote&&!M.stats&&!M.pro)||M.noRows);$('hlBox').hidden=$('rowsUI').hidden||!!(M.pro&&!M.hlOk);$('quoteUI').hidden=!M.quote;$('stripsUI').hidden=!M.strips;
   $('headUI').hidden=!M.headline;$('statsUI').hidden=!M.stats;$('quoteUI').classList.toggle('noText',!!(M.headline||M.stats||M.pro));
   $('extrasUI').hidden=!!(M.stats||M.pro);$('rowChecks').hidden=!!(M.stats||(M.pro&&!M.checks));
   $('collageUI').hidden=!M.collage;document.querySelectorAll('.noCol').forEach(e=>e.classList.toggle('colHide',!!M.collage));
@@ -2745,12 +3275,14 @@ function loadMode(m){
   $('qHead').checked=q.showHead;$('qFootOn').checked=q.showFoot;$('qLogoPos').value=q.logoPos;$('qLogoSize').value=q.logoSize;$('qLogoInk').value=q.logoInk;picLogoUI();$('qCredit').value=q.credit;$('qCreditPos').value=q.creditPos;
   $('qSize').value=q.size;$('qZoom').value=q.zoom;$('qFx').value=q.fx;$('qFy').value=q.fy;
   $('qColor').value=q.boxColor;$('qCustom').value=q.boxCustom;$('qAlign').value=q.align;$('qCustomBox').hidden=q.boxColor!=='custom';
+  {const lt=document.querySelector('.paneltabs [data-tab=layout]');if(lt){lt.hidden=!!M.collage;if(M.collage&&lt.classList.contains('on'))lt.parentElement.querySelector('[data-tab=content]').click();}}
   $('proUI').hidden=!M.pro;$('tabStory').classList.toggle('colHide',!!M.collage);
   if(M.pro){
     document.querySelectorAll('#proUI [data-pro]').forEach(e=>e.hidden=e.dataset.pro!==M.pro);$('proHead').textContent=M.proLabel;
     const p={...PRO_DEFAULT[M.pro],...((s&&s.pro)||{})};loadPro(M.pro,p);
     PRO_OFF=JSON.parse(JSON.stringify(p.off||{}));PRO_CROP=JSON.parse(JSON.stringify(p.crop||[]));
     SLOT_IMG.length=0;if(ready)loadSlotImgs();
+    if(M.pro==='stagemap'){STAGE.track=(s&&s.track)||null;MAPC.key='';smInfo();}
   }
 }
 // Pictures are scaled to at most 3000 px and kept as JPEG so the last one survives a reload.
@@ -2832,9 +3364,10 @@ async function thumbExport(h){
   let q=.95;do{b=await blob('image/jpeg',q);q-=.05;}while(b.size>2e6&&q>.5);
   await saveBlob(b,name+'.jpg');saveMsg($('saveMsg').textContent+' JPEG, as the PNG was over YouTube\'s 2 MB limit.');
 }
-function exportPNG(scale,fmt='screen'){
+async function exportPNG(scale,fmt='screen'){
   if(MODES[MODE].thumb){thumbExport(scale>1?1080:720);return;}
   if(MODES[MODE].collage){colExport(scale>1?2:1);return;}
+  if(MODES[MODE].pro==='stagemap'){saveMsg('Loading the map tiles…');await mapPrefetch(fmt,scale);}
   withFormat(fmt,()=>{
     const c=document.createElement('canvas');c.width=W*scale;c.height=H*scale;
     const x=c.getContext('2d');x.scale(scale,scale);render(x,readState());
@@ -2861,11 +3394,35 @@ function showSaveDir(){
   $('sbSave').textContent=SAVE_DIR?SAVE_DIR.name:'Downloads';
 }
 // panel sections: click a bar to fold what's under it (until the next bar); remembered per section
+// the side panel in four tabs instead of one long scroll: what's on the graphic, how it looks, the elements on it,
+// and saving / exporting. Built from the existing sections at start-up (moving nodes keeps their listeners).
+function buildPanelTabs(){
+  const side=document.querySelector('.side'),bar=side.querySelector('.paneltabs'),TABS=[['content','Content'],['style','Style'],['layout','Elements'],['export','Export']],panes={};
+  TABS.forEach(([k])=>{const d=document.createElement('div');d.className='tabPane';d.dataset.tab=k;panes[k]=d;});
+  const sty=document.createElement('div');sty.className='grid2';
+  ['logo','theme','themeColBox','themeBlendBox','lookBox','hShadeAuto','pTint'].forEach(id=>{const b=$(id)&&$(id).closest('.grid2 > div');if(b)sty.appendChild(b);});
+  const h=document.createElement('h2');h.textContent='Look & colours';panes.style.append(h,sty);
+  let cur='content';
+  [...side.children].forEach(n=>{
+    if(n===bar)return;
+    if(n.tagName==='H2'){const t=n.textContent.trim();cur=/^Elements/.test(t)?'layout':/^Brand kit/.test(t)?'style':/^(Project|Export|Badges)/.test(t)?'export':cur;}
+    panes[cur].appendChild(n);
+  });
+  side.append(...Object.values(panes));
+  const pv=$('previewIg').closest('.checks');if(pv)pv.hidden=true;   // the format tabs over the preview do this
+  bar.innerHTML=TABS.map(([k,l])=>`<span data-tab="${k}">${l}</span>`).join('');
+  const show=k=>{Object.entries(panes).forEach(([t,d])=>d.hidden=t!==k);bar.querySelectorAll('span').forEach(s=>s.classList.toggle('on',s.dataset.tab===k));
+    try{localStorage.setItem('wrcTpl_tab',k);}catch(e){}side.scrollTop=0;};
+  bar.addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(t)show(t.dataset.tab);});
+  let k0='content';try{k0=localStorage.getItem('wrcTpl_tab')||'content';}catch(e){}if(MODES[MODE].collage&&k0==='layout')k0='content';show(panes[k0]?k0:'content');
+  bar.querySelector('[data-tab=layout]').hidden=!!MODES[MODE].collage;
+}
 function initFolds(){
   let saved={};try{saved=JSON.parse(localStorage.getItem('wrcTpl_folds')||'{}');}catch(e){}
   document.querySelectorAll('.side h2').forEach(h=>{
     const key=h.textContent.replace(/\(.*\)/,'').trim();
-    const set=c=>{h.classList.toggle('closed',c);for(let n=h.nextElementSibling;n&&n.tagName!=='H2';n=n.nextElementSibling)n.classList.toggle('folded',c);};
+    const set=c=>{h.classList.toggle('closed',c);   // a bar folds what's under it, up to the next bar or the next mode section
+      for(let n=h.nextElementSibling,i=0;n&&n.tagName!=='H2'&&!(i>0&&n.id&&/UI$/.test(n.id));n=n.nextElementSibling,i++)n.classList.toggle('folded',c);};
     set(key in saved?saved[key]:h.hasAttribute('data-closed'));
     h.addEventListener('click',()=>{const c=!h.classList.contains('closed');set(c);saved[key]=c;try{localStorage.setItem('wrcTpl_folds',JSON.stringify(saved));}catch(e){}});
   });
@@ -3443,7 +4000,7 @@ async function colExport(scale){
   $('previewIg').addEventListener('change',()=>{if($('previewIg').checked)$('previewStory').checked=false;redraw();});
   $('previewStory').addEventListener('change',()=>{if($('previewStory').checked)$('previewIg').checked=false;redraw();});
   [['tabScreen',''],['tabIg','ig'],['tabStory','story']].forEach(([id,f])=>$(id).addEventListener('click',()=>{$('previewIg').checked=f==='ig';$('previewStory').checked=f==='story';redraw();}));
-  initFolds();
+  buildPanelTabs();initFolds();
   const pickProj=()=>$('projFile').click();
   $('projOpen').onclick=$('projOpen2').onclick=pickProj;
   $('projSave').onclick=$('projSave2').onclick=()=>saveProject();
@@ -3452,7 +4009,7 @@ async function colExport(scale){
     else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='o'){e.preventDefault();pickProj();}});
   // drop a .wrcproj anywhere on the window to open it
   document.addEventListener('dragover',e=>{if([...e.dataTransfer.items].some(i=>i.kind==='file'))e.preventDefault();});
-  document.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&/\.(wrcproj|json)$/i.test(f.name)){e.preventDefault();e.stopPropagation();openProject(f);}},true);
+  document.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&/\.(wrcproj|json)$/i.test(f.name)&&!(MODES[MODE].pro==='stagemap'&&/\.json$/i.test(f.name))){e.preventDefault();e.stopPropagation();openProject(f);}},true);
   $('qStyle').addEventListener('change',()=>{if($('qStyle').value==='bold'){$('qBw').value=50;$('qPx').value=0;$('qPy').value=.6;$('qPlace').value='free';}});
   ['qText','qSub','qWho','qCase','qInk','qStyle','qPlace','qSize','qZoom','qFx','qFy','qLogoPos','qLogoSize','qLogoInk','qHead','qFootOn','qBw','qBh','qCredit','qCreditPos','qColor','qCustom','qAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('qLogoPos').addEventListener('input',picLogoUI);
@@ -3543,6 +4100,30 @@ async function colExport(scale){
     $('xfList').addEventListener('mouseover',e=>{const row=e.target.closest('.xfRow');const k=row?row.dataset.k:null;if(k!==XF_HOVER){XF_HOVER=k;redraw(true);}});
     $('xfList').addEventListener('mouseleave',()=>{if(XF_HOVER){XF_HOVER=null;redraw(true);}});
     $('xfResetAll').onclick=()=>{XF[FMT]={};redraw();};
+  }
+  // stage map: drag an empty part of the map to pan it, scroll there to zoom, drop a GPX / KML / GeoJSON on it
+  {
+    let md=null;
+    const isMap=()=>MODES[MODE].pro==='stagemap';
+    const pv=k=>document.querySelector(`#proUI [data-pro="stagemap"] [data-p="${k}"]`);
+    cv.addEventListener('pointerdown',e=>{
+      if(!isMap()||e.button!==0)return;const pt=toCanvas(e);
+      md={sx:pt.x,sy:pt.y,mx:+pv('mx').value||0,my:+pv('my').value||0};cv.setPointerCapture(e.pointerId);e.preventDefault();
+    });
+    cv.addEventListener('pointermove',e=>{
+      if(!isMap())return;const pt=toCanvas(e);if(!md){if(!XF_HOVER)cv.style.cursor='grab';return;}
+      const [p0,p1]=L.panel,w=PX1()-PX0();pv('mx').value=(md.mx+(pt.x-md.sx)/w).toFixed(4);pv('my').value=(md.my+(pt.y-md.sy)/(p1-p0)).toFixed(4);redraw(true);
+    });
+    const endM=()=>{if(md){md=null;redraw();}};cv.addEventListener('pointerup',endM);cv.addEventListener('pointercancel',endM);
+    cv.addEventListener('wheel',e=>{if(!isMap())return;e.preventDefault();const z=pv('zoom');z.value=Math.min(3,Math.max(-3,(+z.value||0)+(e.deltaY<0?.1:-.1))).toFixed(2);redraw();},{passive:false});
+    const takeTrack=f=>{if(!f)return;f.text().then(t=>{let pts=[];try{pts=parseTrack(t,f.name);}catch(err){}
+      if(pts.length<2){saveMsg('No route found in '+f.name+' (it needs a track, a route or a line).');return;}
+      STAGE.track=pts;MAPC.key='';pv('mx').value=0;pv('my').value=0;pv('zoom').value=0;smInfo();redraw();saveMsg('Loaded the route from '+f.name+'.');});};
+    cv.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(!isMap()||!f||!/\.(gpx|kml|geojson|json)$/i.test(f.name))return;
+      e.preventDefault();e.stopImmediatePropagation();cv.classList.remove('dropping');takeTrack(f);},true);
+    $('proUI').addEventListener('change',e=>{if(e.target.dataset.track!==undefined){takeTrack(e.target.files[0]);e.target.value='';}});
+    $('smClear').onclick=()=>{STAGE.track=null;MAPC.key='';smInfo();redraw();};
+    $('smCentre').onclick=()=>{pv('mx').value=0;pv('my').value=0;pv('zoom').value=0;redraw();};
   }
   const inBox=pt=>QBOX&&pt.x>=QBOX.x&&pt.x<=QBOX.x+QBOX.w&&pt.y>=QBOX.y&&pt.y<=QBOX.y+QBOX.h;
   let drag=null;

@@ -24,9 +24,21 @@
   .doctab small{color:var(--muted)}
   .wrap{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 480px}
   .stage{position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--work)}
-  .stage canvas{position:absolute;inset:0;margin:auto;display:block;width:auto;height:auto;max-width:calc(100% - 56px);max-height:calc(100% - 56px);
+  .stage canvas{position:absolute;inset:0;margin:auto;display:block;width:auto;height:auto;max-width:calc(100% - 56px);max-height:calc(100% - 96px);
                 box-shadow:0 0 0 1px #0d0d0d,0 12px 40px rgba(0,0,0,.6)}
   .colHide,.lookHide{display:none!important}
+  #xfBar{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:26px;padding:0 6px 0 10px;
+         background:rgba(44,44,44,.96);border:1px solid #121212;border-radius:3px;font-size:11px;color:var(--muted);white-space:nowrap;z-index:3;max-width:calc(100% - 20px);overflow:hidden}
+  #xfBar b{color:#ececec;font-weight:600}
+  #xfBar button{height:20px;padding:0 7px;font-size:11px}
+  #xfBar .hint{margin-left:4px;color:#767676}
+  .stage.col #xfBar{display:none}
+  .xfRow{display:flex;align-items:center;gap:6px;height:23px;padding-right:4px;border-radius:2px;cursor:pointer}
+  .xfRow:hover{background:#353535}
+  .xfRow.sel{background:rgba(47,139,230,.22);box-shadow:inset 0 0 0 1px var(--accent)}
+  .xfRow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .xfRow small{color:var(--muted);font-size:10.5px}
+  .xfRow button{height:18px;padding:0 6px;font-size:11px}
   .stage.col canvas{bottom:130px;max-height:calc(100% - 186px)}
   .stage.col.yt canvas{bottom:250px;max-height:calc(100% - 306px)}
   .stage.yt #colStrip{height:226px;gap:28px;align-items:flex-start}
@@ -129,7 +141,7 @@
   </div>
 </div>
 <div class="wrap">
-  <div class="stage"><canvas id="cv" width="1440" height="1080"></canvas><div id="colStrip" hidden></div></div>
+  <div class="stage"><canvas id="cv" width="1440" height="1080"></canvas><div id="xfBar"></div><div id="colStrip" hidden></div></div>
   <div class="side">
     <div class="paneltabs"><span class="on">Properties</span></div>
     <h2>Document</h2>
@@ -236,7 +248,7 @@
         <div><label>Logo tile above the word</label><select id="hTile"></select></div>
         <div><label>Name tiles order</label><select id="hOrder"><option value="flag">Flag, then car</option><option value="car">Car, then flag</option></select></div>
       </div>
-      <div class="note">Drag the headline on the preview to move the whole block freely. <button type="button" id="hReset">Reset positions</button></div>
+      <div class="note">Click any part of the headline on the preview to move or resize it; Alt+click takes the whole block. <button type="button" id="hReset">Reset positions</button></div>
       <label style="display:block;margin-top:8px">Line under it <small>(optional)</small></label>
       <textarea id="hBelow" style="font-family:inherit;font-size:13px;min-height:52px"></textarea>
       <div class="hdr" style="margin-top:8px">Names: flag and brand tiles as in the table rows; leave a name empty to skip it</div>
@@ -323,13 +335,33 @@
         </div>
         <div class="note">Rows are Day | Time | Session or stage | Detail (km, TV channel…). Type the day only on its first row: it carries down until it changes, and each new day gets its own bar. Up to 20 rows; a long itinerary splits into two columns by itself. The highlighted row turns gold.</div>
       </div>
+      <div data-pro="live">
+        <div class="grid2">
+          <div><label>Stage</label><input data-p="stage" placeholder="SS7 · Forest 2"></div>
+          <div><label>Big line</label><input data-p="kicker" list="lKick"><datalist id="lKick"><option>Stage winner</option><option>Stage result</option><option>New leader</option><option>Fastest</option><option>Retired</option></datalist></div>
+          <div style="grid-column:1/-1"><label>Line under the times <small>(optional)</small></label><input data-p="leader" placeholder="Rally leader: Elfyn Evans +4.2"></div>
+          <div><label>Block side</label><select data-p="pos"><option value="left">Left</option><option value="right">Right</option><option value="bottom">Full width</option></select></div>
+          <div><label>Block height</label><select data-p="vpos"><option value="bottom">Bottom</option><option value="center">Middle</option><option value="top">Top</option></select></div>
+          <div><label>Size</label><input type="range" data-p="size" min="50" max="150"></div>
+          <div><label>Shade behind the text</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="note">Rows 1–5 are the stage's top times (Name, Flag, Badge, Time or gap); row 1 is gold. Made for quick stories during a rally: drop the stage winner's photo, type the times, export.</div>
+      </div>
+      <div data-pro="calendar">
+        <div class="grid2">
+          <div style="grid-column:1/-1"><label>Heading <small>(optional; the Clean look uses the title when empty)</small></label><input data-p="head" placeholder="2026 calendar"></div>
+          <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+          <div><label>&nbsp;</label><label><input type="checkbox" data-p="winners">Show winners</label></div>
+        </div>
+        <div class="note">One row per round: Round | Rally | Flag | Dates | Winner | Car. The flag comes from the rally's name. Fill in the winner as the season goes; the highlighted row (the next round) turns gold. Up to 20 rounds, and the cards arrange themselves.</div>
+      </div>
       <div data-pro="bars">
         <div class="grid2">
           <div><label>Bar colour</label><select data-p="barCol"><option value="team">Team colours (from the badge)</option><option value="strip">Theme strip</option><option value="gold">Gold</option></select></div>
         </div>
         <div class="note">Rows are Name | Flag | Badge | Value. Each bar is scaled to the biggest value; points, times and percentages all work. The highlighted row's bar is gold.</div>
       </div>
-      <div class="note">Drag the text blocks on the preview to move them. <button type="button" id="proReset">Reset positions</button></div>
+      <div class="note">Click any text or block on the preview to move or resize it (see Elements). <button type="button" id="proReset">Reset positions</button></div>
     </div>
     <div id="stripsUI" hidden>
       <h2>Strips</h2>
@@ -422,6 +454,12 @@
       </div>
       <div class="note thumbOnly">YouTube shows thumbnails small, so keep to a few big words with an outline, one face or car, and nothing important in the bottom-right corner (the video length goes there). The cards under the preview show it at feed size. Drop a transparent PNG (a driver or car cut out) and it goes in without a frame; give it an Outline to lift it off the background. Click to select, drag to move (snaps to the edges, middle and other items; Alt places freely), corner squares resize, the round handle rotates. Shift+drag or scroll on a photo moves / zooms it in its frame. Ctrl+Z undo, Ctrl+D duplicate, Ctrl+C / Ctrl+V copy and paste, arrows nudge. The YouTube 1280×720 export is a PNG when it's under YouTube's 2 MB limit, otherwise a JPEG that fits.</div>
       <div class="note colOnly">The slides sit side by side as one long picture, so anything over a slide edge carries on onto the next slide; the strip under the preview shows them all. Click to select, drag to move (it snaps to the slide's edges, middle and other items; hold Alt to place freely), drag any corner square to resize, or use Photo size / Width / height (Shift keeps a photo's shape), the round handle to rotate. Shift+drag or scroll on a photo moves / zooms the picture in its frame. Drop pictures on the preview: on a frame they replace its picture, elsewhere they fill this slide's empty frames first. Ctrl+Z undo, Ctrl+D duplicate, arrows nudge, PageUp/PageDown change slide.</div>
+    </div>
+    <h2>Elements</h2>
+    <div id="xfUI">
+      <div class="note" style="margin-top:0">Everything you can move or resize in this mode. Click a name (or the element on the preview) to select it; the tick shows or hides it. Screen, 4:5 and Story keep their own positions.</div>
+      <div id="xfList" style="margin-top:6px"></div>
+      <div class="btns"><button type="button" id="xfResetAll">Reset all (this format)</button></div>
     </div>
     <h2 data-closed>Brand kit</h2>
     <div id="brandUI">
@@ -808,6 +846,20 @@ const MODES = {
     fields:[['pos','Day'],['a','Time'],['name','Session / stage'],['b','Detail']], right:[], bulk:['pos','a','name','b'],
     paste:'Day | Time | Session or stage | Detail\nThursday | 09:01 | Shakedown | 2.75 km\nFriday | 08:05 | SS1 Forest 1 | 23.28 km'
   },
+  // in-rally stories: the stage winner and the top times, the rally leader underneath
+  live: {
+    label:'Live stage update', title:'Live', foot:'Powerslide Media', rally:'Rally Japan', theme:'siteDark', file:'wrc_live',
+    show:{flag:true,badge:true,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'live', proLabel:'Live update', checks:true,
+    fields:[['name','Driver'],['flag','Flag'],['badge','Badge'],['b','Time / gap']], right:[], bulk:['name','badge','b','flag'],
+    paste:'Name | Badge | Time or gap | Flag\nElfyn Evans | Toyota | 8:41.2\nSébastien Ogier | Toyota | +1.4'
+  },
+  // the season-launch calendar: one card per round, winners filled in as the year goes
+  calendar: {
+    label:'Season calendar', title:'Calendar', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_calendar',
+    show:{flag:true,badge:true,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'calendar', proLabel:'Calendar', allRows:true, hlOk:true, checks:true,
+    fields:[['pos','Round'],['name','Rally'],['flag','Flag'],['a','Dates'],['b','Winner'],['badge','Car']], right:[], bulk:['pos','name','a','b','badge','flag'],
+    paste:'Round | Rally | Dates | Winner | Car | Flag\nR1 | Rallye Monte-Carlo | 22-25 Jan | Sébastien Ogier | Toyota'
+  },
   // standings or stats as bars, as in the F1 / MotoGP points-gap posts
   bars: {
     label:'Bar chart (standings, stats)', title:'Standings', foot:'Championship', rally:'2026', theme:'siteDark', file:'wrc_bars',
@@ -835,8 +887,8 @@ const MODES = {
   }
 };
 // the mode menu, by what the post is for
-const MODE_GROUPS=[['Results & standings',['points','results','custom','bars','h2h']],['News',['headline','quote']],['Numbers',['stats']],
-  ['Race week',['preview','schedule']],['Photos',['strips','grid','collage']],['Video',['thumb']]];
+const MODE_GROUPS=[['Results & standings',['points','results','custom','bars','h2h']],['Race weekend',['preview','schedule','live']],['News',['headline','quote']],
+  ['Numbers',['stats']],['Season',['calendar']],['Photos',['strips','grid','collage']],['Video',['thumb']]];
 const HEAD_DEFAULT={kicker:'CHAMPIONS',style:'white',above:'2026 FIA World Rally Championship',below:'',pos:'bottom',size:190,fade:65,
   names:[{name:'Elfyn Evans',flag:'',badge:'toyota'},{name:'Scott Martin',flag:'GB',badge:''},{name:'',flag:'',badge:''}]};
 const STATS_DEFAULT={style:'ladder',pos:'right',size:46,fade:45,head:'',hStyle:'plain',hSize:54,hPos:'stats',fx:1,fy:.5,hfx:.5,hfy:0,
@@ -858,6 +910,10 @@ const DEFAULTS = {
           R('SS3 Forest 2','','','14:05','23.28 km'),R('SS4 Lakeside 2','','','15:20','19.17 km'),R('SS5 Hills 1','','','08:35','16.89 km','Saturday'),
           R('SS6 Valley 1','','','10:05','21.04 km'),R('SS7 Hills 2','','','14:35','16.89 km'),R('SS8 Valley 2','','','16:05','21.04 km'),
           R('SS9 Coast','','','09:05','11.97 km','Sunday'),R('SS10 Coast (Power Stage)','','','12:15','11.97 km')],
+  live:[R('Elfyn Evans','toyota','','','8:41.2'),R('Sébastien Ogier','toyota','','','+1.4'),R('Thierry Neuville','hyundai','','','+3.9')],
+  calendar:[['Rallye Monte-Carlo','Jan'],['Rally Sweden','Feb'],['Safari Rally Kenya','Mar'],['Croatia Rally','Apr'],['Rally Islas Canarias','Apr'],['Rally de Portugal','May'],
+            ['Rally Japan','May'],['Acropolis Rally Greece','Jun'],['Rally Estonia','Jul'],['Rally Finland','Jul'],['Rally Paraguay','Aug'],['Rally Chile','Sep'],
+            ['Rally Italia Sardegna','Oct'],['Rally Saudi Arabia','Nov']].map(([n,d],i)=>R(n,'','',d,'','R'+(i+1))),
   bars:[R('Elfyn Evans','toyota','','','254'),R('Sébastien Ogier','toyota','','','231'),R('Oliver Solberg','toyota','','','198'),R('Thierry Neuville','hyundai','','','176'),
         R('Adrien Fourmaux','hyundai','','','142'),R('Sami Pajari','toyota','','','118'),R('Takamoto Katsuta','toyota','','','97'),R('Esapekka Lappi','hyundai','','','61')],
   h2h:[R('Rally wins','','up','3','2'),R('Podiums','','up','8','6'),R('Stage wins','','up','41','51'),R('Avg. finish','','down','2.9','3.4'),R('Pace s/km','','down','0.36','0.23')],
@@ -1085,6 +1141,7 @@ function drawQuoteBox(ctx,q,T){
   const lines=(b,y,h,ink)=>{ctx.font=`700 ${b.z}px "WRC Clean"`;ctx.fillStyle=ink||tk(T,'ink');ctx.textBaseline='middle';ctx.textAlign=center?'center':'left';
     const y0=y+(h-b.ls.length*b.lh)/2;
     b.ls.forEach((l,i)=>ctx.fillText(l,center?tx+tw/2:tx+pad,y0+b.lh*(i+.5)+2));};
+  xfB(ctx,'textbox','Text box',bx,by,bw,total);
   if(bh){
     cell(ctx,bx,by,markW,bh,vgrad(ctx,by,by+bh,tk(T,'hl')),T);          // gold cell: “ for quotes, a stripe for announcements
     if(mark)drawQuoteMark(ctx,bx+markW/2,by+markW/2+4*k,Math.round(30*k),tk(T,'inkHl'));
@@ -1092,6 +1149,7 @@ function drawQuoteBox(ctx,q,T){
     cell(ctx,tx,by,tw,bh,P.fill,T);lines(hd,by,bh,P.ink);
   }
   if(sh){cell(ctx,tx,sy,tw,sh,lightFill(ctx,sy,sh,T),T);lines(sb,sy,sh);}
+  xfE(ctx);
   if(ctx.canvas.id==="cv")QBOX={x:bx,y:by,w:bw,h:total,full,maxH,top:p0+margin};
 }
 // Bold quote (after the DirtFish quote cards): big white capitals with drawn “ ” marks over a picture
@@ -1120,6 +1178,8 @@ function drawBoldQuote(ctx,q,T){
   const bx=Math.round(X0+(full-bw)*clamp01(q.px)),by=Math.round(p0+margin+(maxH-tot)*clamp01(q.py));
   const x0=PX0(),x1=PX1();
   if(bx+bw/2<(x0+x1)/2)shadePic(ctx,.85,'x',x0,Math.min(x1,bx+bw+300*k));else shadePic(ctx,.85,'x',x1,Math.max(x0,bx-300*k));
+  xfB(ctx,'quoteBlock','Quote block',bx,by,bw,tot);
+  xfB(ctx,'quoteText','Quote',bx,by,bw,th);
   ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=16*k;ctx.shadowOffsetY=3*k;
   ctx.fillStyle=INK;ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.font=`700 ${z}px "WRC Clean"`;sp(z,.01);
   const cap=Math.round(z*.74),ms=Math.round(z*.4);
@@ -1129,14 +1189,15 @@ function drawBoldQuote(ctx,q,T){
     if(i===ls.length-1){const ex=x+ctx.measureText(l).width+mw*.5;
       ctx.save();ctx.translate(ex,base-cap+ms*.55);ctx.rotate(Math.PI);drawQuoteMark(ctx,0,0,ms,INK);ctx.restore();}
   });
-  ctx.restore();sp(0,0);
+  ctx.restore();sp(0,0);xfE(ctx);
   let y=by+th;
-  if(who){y+=gap;ctx.font=`700 ${wz}px "WRC Clean"`;sp(wz,.04);const pad=Math.round(wz*.3),ww=Math.round(ctx.measureText(who).width+pad*2);
+  if(who){y+=gap;ctx.font=`700 ${wz}px "WRC Clean"`;sp(wz,.04);const pad=Math.round(wz*.3),ww=Math.round(ctx.measureText(who).width+pad*2);xfB(ctx,'who','Name tag',bx,y,ww,wh);
     const P=paint(ctx,y,wh,!q.boxColor||q.boxColor==='light'?'gold':q.boxColor,T,{color:q.boxCustom});
-    ctx.fillStyle=P.fill;ctx.fillRect(bx,y,ww,wh);ctx.fillStyle=P.ink;ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(who,bx+pad,y+wh/2+2*k);sp(0,0);y+=wh;}
-  if(sl.length){y+=Math.round(gap*.6);const slh=Math.round(sz*1.35);ctx.save();ctx.font=`700 ${sz}px "WRC Clean"`;sp(sz,.08);
+    ctx.fillStyle=P.fill;ctx.fillRect(bx,y,ww,wh);ctx.fillStyle=P.ink;ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(who,bx+pad,y+wh/2+2*k);xfE(ctx);sp(0,0);y+=wh;}
+  if(sl.length){y+=Math.round(gap*.6);const slh=Math.round(sz*1.35);xfB(ctx,'caption','Caption',bx,y,bw,sl.length*slh);ctx.save();ctx.font=`700 ${sz}px "WRC Clean"`;sp(sz,.08);
     ctx.fillStyle=INK;ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=8*k;ctx.textBaseline='top';ctx.textAlign='left';
-    sl.forEach((l,i)=>ctx.fillText(l,bx,y+i*slh));ctx.restore();}
+    sl.forEach((l,i)=>ctx.fillText(l,bx,y+i*slh));ctx.restore();xfE(ctx);}
+  xfE(ctx);
   if(ctx.canvas.id==="cv")QBOX={x:bx,y:by,w:bw,h:tot,full,maxH,top:p0+margin};
 }
 // small dark label in a corner of the picture, e.g. "Photo: name / agency"
@@ -1150,9 +1211,10 @@ function drawPicLogo(ctx,st,q){
   let h=(st.logo==='icon'?96:62)*k*(q.logoSize||1),w=h*lg.width/lg.height;
   const maxW=(x1-x0)*.6;if(w>maxW){w=maxW;h=w*lg.height/lg.width;}
   const m=26*k,c=pos.slice(4),x=c[1]==='r'?x1-m-w:x0+m,y=c[0]==='b'?p1-m-h:p0+m;
+  xfB(ctx,'picLogo','Logo',x,y,w,h);
   ctx.save();
   ctx.filter=(q.logoInk==='black'?'':'invert(1) ')+'drop-shadow(0 2px 6px rgba(0,0,0,'+(q.logoInk==='black'?'.25':'.6')+'))';
-  ctx.drawImage(lg,x,y,w,h);ctx.restore();
+  ctx.drawImage(lg,x,y,w,h);ctx.restore();xfE(ctx);
 }
 function drawCredit(ctx,q,T){
   const t=(q.credit||'').trim();if(!t)return;
@@ -1161,11 +1223,12 @@ function drawCredit(ctx,q,T){
   ctx.font=`700 ${size}px "WRC Clean"`;
   const w=Math.min(ctx.measureText(t).width+padX*2,x1-x0-m*2);
   const pos=q.creditPos||'br',x=pos[1]==='r'?x1-m-w:x0+m,y=pos[0]==='b'?p1-m-h:p0+m;
+  xfB(ctx,'credit','Photo credit',x,y,w,h);
   ctx.fillStyle=T.dark;ctx.fillRect(x,y,w,h);
   ctx.fillStyle=tk(T,'hi');ctx.fillRect(x,y,w,2);
   ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
   ctx.fillStyle=tk(T,'rightInk');ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(t,x+padX,y+h/2+1);
-  ctx.restore();
+  ctx.restore();xfE(ctx);
 }
 function clamp01(v){v=+v;return isFinite(v)?Math.min(1,Math.max(0,v)):0;}
 
@@ -1601,7 +1664,7 @@ let PIC_TINT=0;   // tint over every picture, in SHADE_RGB
 function render(ctx,st){
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';   // sharp photos when scaled down
   {const c=st.head&&st.head.shadeCol;SHADE_RGB=c?hexRgb(c).join(','):'0,0,0';PIC_TINT=(st.tint||0)/100;}
-  BLEND=blendOf(st);CLEAN=false;
+  BLEND=blendOf(st);CLEAN=false;XST=st;XF_ORD=0;XF_STACK.length=0;if(ctx.canvas.id==='cv')XF_RECTS=[];
   if(MODES[st.mode].collage){ctx.clearRect(0,0,W,H);drawCollage(ctx,st);return;}
   const M=MODES[st.mode],T=accentTheme(themeOf(st),st.brand),q=M.quote?st.quote:(M.strips?st.strips:null);
   CLEAN=!!(M.quote&&st.look==='clean');
@@ -1614,17 +1677,18 @@ function render(ctx,st){
   let logoMid=null;   // the header title lines up with the logo's middle
   if(lg&&head&&logoAt==='header'){let h=(st.logo==='icon'?120:92)*L.hs,w=h*lg.width/lg.height;
     if(L.hs>1&&66+w>L.div-24){w=L.div-24-66;h=w*lg.height/lg.width;}   // keep it left of the divider
-    drawLogo(ctx,lg,T,66,L.topBot-12-h,w,h);
+    xfB(ctx,'logo','Logo',66,L.topBot-12-h,w,h);drawLogo(ctx,lg,T,66,L.topBot-12-h,w,h);xfE(ctx);
     const b=inkBox(lg);logoMid=L.topBot-12-h+h*(b[0]+b[1])/2;}
   if(lg&&foot&&logoAt==='footer'){   // centred in the footer's left cell
     const fh=L.foot[1]-L.foot[0];let h=fh*(st.logo==='icon'?.82:.7),w=h*lg.width/lg.height;
     if(w>L.div-60){w=L.div-60;h=w*lg.height/lg.width;}
-    drawLogo(ctx,lg,T,(L.div-w)/2,L.foot[0]+(fh-h)/2,w,h);}
+    xfB(ctx,'logo','Logo',(L.div-w)/2,L.foot[0]+(fh-h)/2,w,h);drawLogo(ctx,lg,T,(L.div-w)/2,L.foot[0]+(fh-h)/2,w,h);xfE(ctx);}
   if(head){
     let ts=Math.round(66*Math.min(L.hs,1.5));
     if(L.hs>1)while(ts>66&&textW(st.title,ts)>W-515-40)ts--;   // taller header: grow the title only while it still fits
     measureCtx.font=`700 ${ts}px "WRC Clean"`;const capH=measureCtx.measureText('H').actualBoundingBoxAscent;   // capitals centred on the logo (or the band), so descenders don't shift it
-    drawGlitchTitle(ctx,st.title||'',515,Math.round((logoMid??L.topBot/2)+capH/2),ts,tk(T,'glitchInk'),tk(T,'speck'));
+    const tb=Math.round((logoMid??L.topBot/2)+capH/2);xfB(ctx,'title','Title',515,Math.round(tb-capH*1.05),Math.max(1,textW(st.title||'',ts)),Math.round(capH*1.35));
+    drawGlitchTitle(ctx,st.title||'',515,tb,ts,tk(T,'glitchInk'),tk(T,'speck'));xfE(ctx);
   }
   drawStripText(ctx,st,T);
   if(M.strips)drawStrips(ctx,st,T);
@@ -1637,10 +1701,13 @@ function render(ctx,st){
   if(foot){
     const fy=(L.foot[0]+L.foot[1])/2;
     ctx.textBaseline='middle';ctx.font=`700 ${L.footTxt}px "WRC Clean"`;
-    if(logoAt!=='footer'){fitText(ctx,st.foot||'',L.div-40,L.footTxt);ctx.fillStyle=tk(T,'footInk');ctx.textAlign='right';ctx.fillText(st.foot||'',L.div-18,fy);}
-    if(M.rightCell&&st.rally){ctx.font=`700 ${L.footTxt}px "WRC Clean"`;ctx.fillStyle=tk(T,'rightInk');ctx.textAlign='left';ctx.fillText(st.rally,L.div+22,fy);}
+    if(logoAt!=='footer'&&st.foot){fitText(ctx,st.foot,L.div-40,L.footTxt);const fw=ctx.measureText(st.foot).width;xfB(ctx,'foot','Footer text',L.div-18-fw,fy-L.footTxt*.45,fw,L.footTxt*.9);
+      ctx.fillStyle=tk(T,'footInk');ctx.textAlign='right';ctx.fillText(st.foot,L.div-18,fy);xfE(ctx);}
+    if(M.rightCell&&st.rally){ctx.font=`700 ${L.footTxt}px "WRC Clean"`;xfB(ctx,'rally','Footer right',L.div+22,fy-L.footTxt*.45,ctx.measureText(st.rally).width,L.footTxt*.9);
+      ctx.fillStyle=tk(T,'rightInk');ctx.textAlign='left';ctx.fillText(st.rally,L.div+22,fy);xfE(ctx);}
   }
   drawBrand(ctx,st,T,{head,foot,logoMid,dark:!!(M.rightCell&&st.rally)});
+  drawXfOverlay(ctx);
 }
 
 /* ---------- table extras: gaps, team colours, icon counts, a picture, two columns ----------
@@ -1687,8 +1754,8 @@ function drawStripText(ctx,st,T){
   const [a,b]=L.strip1,h=b-a;if(h<24)return;
   ctx.save();ctx.font=`700 ${Math.round(h*.6)}px "WRC Clean"`;ctx.fillStyle='#ffffff';ctx.textBaseline='middle';
   ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=4;ctx.shadowOffsetY=1;
-  if(l){ctx.textAlign='left';ctx.fillText(l,X0,a+h/2+2);}
-  if(r){ctx.textAlign='right';ctx.fillText(r,XR,a+h/2+2);}
+  if(l){xfB(ctx,'stripL','Top strip, left',X0,a,ctx.measureText(l).width,h);ctx.textAlign='left';ctx.fillText(l,X0,a+h/2+2);xfE(ctx);}
+  if(r){const w=ctx.measureText(r).width;xfB(ctx,'stripR','Top strip, right',XR-w,a,w,h);ctx.textAlign='right';ctx.fillText(r,XR,a+h/2+2);xfE(ctx);}
   ctx.restore();
 }
 function drawTable(ctx,st,T){
@@ -1797,7 +1864,8 @@ let HEAD_OFF={},HEAD_RECTS=[],HEAD_BLOCK=null;   // per-part drag offsets of the
 function drawHeadline(ctx,st,T){
   const hd0=st.head||{},dark=hd0.ink==='black',INK=dark?'#111111':'#ffffff';if(!hd0.shadeCol&&dark)SHADE_RGB='255,255,255';
   CHIP_CAR_FIRST=(st.head||{}).order==='car';HEAD_RECTS=[];const offs=(st.head&&st.head.off)||{};
-  const part=(p,x,y,w,h,fn)=>{const [dx,dy]=offs.all||[0,0];ctx.save();ctx.translate(dx,dy);fn();ctx.restore();HEAD_RECTS.push({p,x:x+dx,y:y+dy,w,h});};
+  const HL={above:'Line above',tile:'Logo tile',word:'Big word',below:'Line under',names:'Names'};
+  const part=(p,x,y,w,h,fn)=>{const [dx,dy]=offs.all||[0,0];ctx.save();ctx.translate(dx,dy);xfB(ctx,'h_'+p,HL[p]||p,x,y,w,h);fn();xfE(ctx);ctx.restore();HEAD_RECTS.push({p,x:x+dx,y:y+dy,w,h});};
   const hd={...HEAD_DEFAULT,...(st.head||{})},[p0,p1]=L.panel,k=L.rowH/62;
   const word=(hd.kicker||'').trim(),above=(hd.above||'').trim(),below=(hd.below||'').trim();
   const names=(hd.names||[]).filter(n=>n&&(n.name||'').trim());
@@ -1823,7 +1891,7 @@ function drawHeadline(ctx,st,T){
   if(sMid>p0+ph*.62)shadePic(ctx,a,'y',p1,Math.max(p0,sTop-200*k));
   else if(sMid<p0+ph*.38)shadePic(ctx,a,'y',p0,Math.min(p1,sTop+H0+200*k));
   else shadePic(ctx,a);
-  let y=top;HEAD_BLOCK={top,H0,mid:(p0+p1)/2};
+  let y=top;HEAD_BLOCK={top,H0,mid:(p0+p1)/2};xfB(ctx,'headline','Headline block',X0+(offs.all||[0,0])[0],sTop,maxW,H0);
   const tw0=()=>{ctx.font=`700 ${wz}px "WRC Clean"`;return ctx.measureText(word).width;};
   const soft=b=>{ctx.shadowColor=dark?'rgba(255,255,255,.6)':'rgba(0,0,0,.55)';ctx.shadowBlur=b*k;ctx.shadowOffsetY=Math.round(b*k/4);};
   if(above){const y0=y;
@@ -1858,6 +1926,7 @@ function drawHeadline(ctx,st,T){
   }
   if(cr.length){const y0=y,cw=Math.max(...cr.map(r=>r.w)),chT=cr.length*(chH+5+cg)-cg;
     part('names',Math.round(cx-cw/2),y0,cw,chT,()=>{let yy=y0;cr.forEach(r=>{let x=Math.round(cx-r.w/2);r.ix.forEach(i=>{nameChip(ctx,x,yy,chH,names[i],T);x+=ws[i]+cg;});yy+=chH+5+cg;});});}
+  xfE(ctx);
 }
 
 /* ---------- stat panel ----------
@@ -1915,6 +1984,7 @@ function drawStats(ctx,st,T){
   const labelC=col(sx.labelCol,big?'white':'dark'),valueC=col(sx.valueCol,big?'gold':'light'),hlC=col(sx.hlCol,'gold'),headC=col(sx.headCol,hbox?'light':'white');
   const box=(x,y,w,h,P)=>{ctx.save();ctx.globalAlpha=A;cell(ctx,x,y,w,h,P.fill,T);ctx.restore();};
   if(Hd){
+    xfB(ctx,'statsHead','Headline',hx,hy,Hd.w,Hd.h);
     ctx.save();ctx.font=`700 ${Hd.hz}px "WRC Clean"`;ctx.textBaseline='middle';
     if(hbox){
       box(hx,hy,Hd.stripe,Hd.h,{fill:vgrad(ctx,hy,hy+Hd.h,tk(T,'hl'))});
@@ -1925,9 +1995,10 @@ function drawStats(ctx,st,T){
       const ha=hfree?'left':al,tx=ha==='left'?hx:ha==='right'?hx+Hd.w:hx+Hd.w/2;
       ctx.textAlign=ha;Hd.ls.forEach((l,i)=>ctx.fillText(l,tx,hy+Hd.lh*(i+.5)+2*k));
     }
-    ctx.restore();
+    ctx.restore();xfE(ctx);
   }
   ctx.textBaseline='middle';
+  if(rows.length)xfB(ctx,'stats','Stats',bx,by,D.w,D.h);
   rows.forEach((r,n)=>{
     const hl=st.hl===r.i;
     if(big){
@@ -1943,6 +2014,7 @@ function drawStats(ctx,st,T){
       ctx.fillStyle=V.ink;ctx.textAlign='center';ctx.fillText(r.v,bx+D.lw+D.gh+D.vw/2,y+D.ch/2+2*k);
     }
   });
+  if(rows.length)xfE(ctx);
   if(prev){
     if(rows.length)STATS_RECTS.push({kind:'stats',x:gx,y:top,w:gw,h:tot,room});
     if(Hd)STATS_RECTS.push({kind:'head',x:hx,y:hy,w:Hd.w,h:Hd.h,room});
@@ -1982,13 +2054,15 @@ function drawHeroStat(ctx,st,T,sx,prev){
   else{gx=Math.round(pos==='left'?X0:pos==='right'?XR-D.w:X0+(maxW-D.w)/2);top=Math.round(pos==='bottom'?p1-m-D.h:p0+(p1-p0-D.h)/2);}
   const up=top+D.h/2<(p0+p1)/2;
   shadePic(ctx,(sx.fade||0)/100,'y',up?p0:p1,up?Math.min(p1,top+D.h+220*k):Math.max(p0,top-220*k));
+  xfB(ctx,'hero','Hero block',gx,top,D.w,D.h);
   ctx.save();ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=16*k;ctx.shadowOffsetY=2*k;ctx.textBaseline='alphabetic';ctx.textAlign='left';
-  if(num){ctx.save();ctx.font=`700 ${D.vz}px "WRC Clean"`;sp(D.vz,-.02);ctx.fillStyle=hx.numCol;ctx.translate(gx,top+D.nh);ctx.scale(hx.numW,1);ctx.fillText(num,0,0);ctx.restore();}
-  if(D.ch){fnt(400,D.cz);ctx.fillStyle=hx.capCol;ctx.textAlign='center';ctx.fillText(cap,gx+D.nw/2,top+D.nh+D.ch);ctx.textAlign='left';}
+  if(num){xfB(ctx,'heroNum','Number',gx,top,D.nw,D.nh);ctx.save();ctx.font=`700 ${D.vz}px "WRC Clean"`;sp(D.vz,-.02);ctx.fillStyle=hx.numCol;ctx.translate(gx,top+D.nh);ctx.scale(hx.numW,1);ctx.fillText(num,0,0);ctx.restore();xfE(ctx);}
+  if(D.ch){xfB(ctx,'heroCap','Line under the number',gx,top+D.nh,D.nw,D.ch);fnt(400,D.cz);ctx.fillStyle=hx.capCol;ctx.textAlign='center';ctx.fillText(cap,gx+D.nw/2,top+D.nh+D.ch);ctx.textAlign='left';xfE(ctx);}
   // the text block sits centred on the number's upper half (or at the top when there's no number)
   const tx=gx+D.nw+(D.nw?D.gx:0),ty=num?Math.max(top,Math.round(top+D.nh*.45-D.th/2)):top;
-  D.tl.forEach((l,i)=>l.forEach(r=>{fnt(r.b?700:400,D.z);ctx.fillStyle=r.b?hx.starCol:hx.txtCol;ctx.fillText(r.w,tx+r.x,ty+i*D.lh+Math.round(D.z*.74));}));
-  ctx.restore();sp(0,0);
+  if(D.tl.length){xfB(ctx,'heroText','Text',tx,ty,D.tw,D.th);
+  D.tl.forEach((l,i)=>l.forEach(r=>{fnt(r.b?700:400,D.z);ctx.fillStyle=r.b?hx.starCol:hx.txtCol;ctx.fillText(r.w,tx+r.x,ty+i*D.lh+Math.round(D.z*.74));}));xfE(ctx);}
+  ctx.restore();sp(0,0);xfE(ctx);
   if(prev)STATS_RECTS.push({kind:'stats',x:gx,y:top,w:D.w,h:D.h,room});
 }
 
@@ -2042,15 +2116,17 @@ function drawBrand(ctx,st,T,o){
   const tag=(b.tag||'').trim();
   if(tag){const h=Math.round(46*k),m=Math.round(24*k);let pos=b.tagPos;if(pos==='header'&&!o.head)pos='pic-tl';
     const style=b.tagStyle==='live'?'red':b.tagStyle==='accent'?'custom':b.tagStyle,opt={color:b.accent,dot:b.tagStyle==='live'};
-    if(pos==='header')proChip(ctx,tag,XR,Math.round((o.logoMid??L.topBot/2)-h/2),h,style,T,'right',opt);
-    else proChip(ctx,tag,pos==='pic-tr'?x1-m:x0+m,p0+m,h,style,T,pos==='pic-tr'?'right':'left',opt);}
+    const tw0=proChip(ctx,tag,0,0,h,style,T,'left',{...opt,dry:true});let tx,ty;
+    if(pos==='header'){tx=XR-tw0;ty=Math.round((o.logoMid??L.topBot/2)-h/2);}else{tx=pos==='pic-tr'?x1-m-tw0:x0+m;ty=p0+m;}
+    xfB(ctx,'tag','Tag',tx,ty,tw0,h);proChip(ctx,tag,tx,ty,h,style,T,'left',opt);xfE(ctx);}
   // logo bug: the Powerslide icon, small and white, in a corner of the picture
   if(b.bug!=='off'){const lg=PS_IMG.icon||PS_IMG.media,m=Math.round(26*k);
     if(lg){const h=84*k,w=h*lg.width/lg.height,x=b.bug[1]==='r'?x1-m-w:x0+m,y=b.bug[0]==='b'?p1-m-h:p0+m;
-      ctx.save();ctx.globalAlpha=.85;ctx.filter='brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.5))';ctx.drawImage(lg,x,y,w,h);ctx.restore();}}
+      xfB(ctx,'bug','Corner logo',x,y,w,h);ctx.save();ctx.globalAlpha=.85;ctx.filter='brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.5))';ctx.drawImage(lg,x,y,w,h);ctx.restore();xfE(ctx);}}
   // handle / website sign-off in the bottom strip
   if(b.signoff!=='off'){const t=[b.handle,b.site].map(s=>(s||'').trim()).filter(Boolean).join('   ·   ');
-    if(t){const [a,c]=CLEAN?[H-Math.round(50*k),H-Math.round(14*k)]:L.strip2,z=Math.round((c-a)*.5),ls=Math.round(z*.12);proText(ctx,t,b.signoff==='left'?X0:b.signoff==='center'?W/2:XR,(a+c)/2+1,z,{ink:'rgba(255,255,255,.95)',base:'middle',align:b.signoff,ls,blur:4});}}
+    if(t){const [a,c]=CLEAN?[H-Math.round(50*k),H-Math.round(14*k)]:L.strip2,z=Math.round((c-a)*.5),ls=Math.round(z*.12),hw=twOf(t,z,700,ls),hx=b.signoff==='left'?X0:b.signoff==='center'?W/2-hw/2:XR-hw;
+      xfB(ctx,'handle','Handle',hx,(a+c)/2-z*.5,hw,z);proText(ctx,t,b.signoff==='left'?X0:b.signoff==='center'?W/2:XR,(a+c)/2+1,z,{ink:'rgba(255,255,255,.95)',base:'middle',align:b.signoff,ls,blur:4});xfE(ctx);}}
   if(b.guides)drawGuides(ctx);
 }
 // safe zones, on the preview only (never exported): the story's own header and reply bar, the profile grid's 3:4 crop
@@ -2079,7 +2155,9 @@ const PRO_DEFAULT={
   preview:{round:'Round 14 of 14',flag:'',name:'Rally Japan',dates:'6 – 9 November',place:'Toyota City',count:'',countLbl:'Days to go',pos:'bottom',align:'left',size:150,fade:65,facts:'cells'},
   h2h:{kicker:'Season so far',aName:'Elfyn Evans',aFlag:'',aBadge:'toyota',bName:'Sébastien Ogier',bFlag:'',bBadge:'toyota',bars:true,teamBars:false,size:44,fade:55},
   schedule:{head:'',dayStyle:'gold',size:100,fade:60},
-  bars:{barCol:'team'}
+  bars:{barCol:'team'},
+  live:{stage:'SS7 · Forest 2',kicker:'Stage winner',leader:'Rally leader: Elfyn Evans +4.2',pos:'left',vpos:'bottom',size:100,fade:65},
+  calendar:{head:'',winners:true,fade:55}
 };
 let PRO_RECTS=[],SLOT_RECTS=[],PRO_OFF={},PRO_CROP=[],SLOT_LOAD=0;
 const SLOT_IMG=[];
@@ -2115,7 +2193,7 @@ function drawSlot(ctx,st,i,x,y,w,h){
 // a part of the layout that can be dragged on the preview (its offset is kept in the mode's settings)
 function proPart(ctx,st,key,x,y,w,h,fn){
   const [dx,dy]=(((st.pro||{}).off)||{})[key]||[0,0];
-  ctx.save();ctx.translate(dx,dy);fn();ctx.restore();
+  ctx.save();ctx.translate(dx,dy);xfB(ctx,key,{block:'Text block',count:'Countdown',table:'Stats table'}[key]||key,x,y,w,h);fn();xfE(ctx);ctx.restore();
   if(ctx.canvas.id==='cv')PRO_RECTS.push({key,x:x+dx,y:y+dy,w,h});
 }
 function shadeRect(ctx,x,y,w,h,a,share){
@@ -2185,14 +2263,15 @@ function drawPreview(ctx,st,T){
   proPart(ctx,st,'block',X0,top,maxW,D.H,()=>{
     let y=top;const g=D.g;
     if(D.rh){const tw=Math.round(D.rh*TILE_W/62),gg=Math.round(D.rh*GAP/62),cw=round?proChip(ctx,round,0,0,D.rh,'gold',T,'left',{dry:true}):0,tot=(fl?tw:0)+(fl&&round?gg:0)+cw;
-      let x=cen?Math.round(ax-tot/2):X0;
+      let x=cen?Math.round(ax-tot/2):X0;xfB(ctx,'round','Round + flag',x,y,tot,D.rh);
       if(fl){drawFlagTile(ctx,x,y,tw,D.rh,fl,T);ctx.fillStyle=T.drop;ctx.fillRect(x,y+D.rh,tw,5);x+=tw+gg;}
       if(round)proChip(ctx,round,x,y,D.rh,'gold',T,'left');
-      y+=D.rh+g;}
-    if(D.nh){D.ls.forEach((l,i)=>proText(ctx,l,ax,y+Math.round(D.nz*.8)+i*D.lh,D.nz,{align:al,blur:26*k}));y+=D.nh+g;}
-    if(D.dh){const lsp=Math.round(D.dz*.1),w=Math.round(twOf(line,D.dz,700,lsp)+D.dz*1.3),x=cen?Math.round(ax-w/2):X0,P=paint(ctx,y,D.dh,'strip',T);
-      cell(ctx,x,y,w,D.dh,P.fill,T);proText(ctx,line,x+Math.round(D.dz*.65),y+D.dh/2+2*k,D.dz,{ink:P.ink,base:'middle',ls:lsp,shadow:false});y+=D.dh+g;}
-    if(D.fh){if(y>top)y+=g;proFacts(ctx,T,facts,cen?Math.round(ax-D.fw/2):X0,y,D.fw,D.fz,pv.facts,al);}
+      xfE(ctx);y+=D.rh+g;}
+    if(D.nh){const nw=Math.max(...D.ls.map(l=>twOf(l,D.nz)));xfB(ctx,'name','Event name',cen?Math.round(ax-nw/2):X0,y,nw,D.nh);
+      D.ls.forEach((l,i)=>proText(ctx,l,ax,y+Math.round(D.nz*.8)+i*D.lh,D.nz,{align:al,blur:26*k}));xfE(ctx);y+=D.nh+g;}
+    if(D.dh){const lsp=Math.round(D.dz*.1),w=Math.round(twOf(line,D.dz,700,lsp)+D.dz*1.3),x=cen?Math.round(ax-w/2):X0,P=paint(ctx,y,D.dh,'strip',T);xfB(ctx,'dates','Dates line',x,y,w,D.dh);
+      cell(ctx,x,y,w,D.dh,P.fill,T);proText(ctx,line,x+Math.round(D.dz*.65),y+D.dh/2+2*k,D.dz,{ink:P.ink,base:'middle',ls:lsp,shadow:false});xfE(ctx);y+=D.dh+g;}
+    if(D.fh){if(y>top)y+=g;const fx=cen?Math.round(ax-D.fw/2):X0;xfB(ctx,'facts','Key numbers',fx,y,D.fw,D.fh);proFacts(ctx,T,facts,fx,y,D.fw,D.fz,pv.facts,al);xfE(ctx);}
   });
   if(cnt){
     const lab=(pv.countLbl||'').trim().toLocaleUpperCase(),ch=Math.round(Math.min(cntW*1.08,p1-p0-2*m)),cx=XR-cntW;
@@ -2219,8 +2298,10 @@ function drawH2H(ctx,st,T){
     const d=P2[i],gT=Math.round(plH*GAP/62),tilesH=d.fl||d.bd?plH+5+gT:0,stackH=tilesH+(d.name?plH+5:0),y0=p1-m-stackH;
     if(!drawSlot(ctx,st,i,sx,p0,sw,ph)&&d.bd)bigTile(ctx,d.bd,sx+sw/2,p0+(ph-stackH-m)*.48,Math.round(Math.min(sw*.6,(ph-stackH)*.5)),T);
     shadeRect(ctx,sx,p0,sw,ph,a,.55);
+    xfB(ctx,i?'plateB':'plateA',i?'Driver B name':'Driver A name',sx+m,y0,sw-2*m,stackH);
     if(tilesH)proPlate(ctx,T,sx+m,y0,plH,'',d.fl,d.bd,sw-2*m,false);
     if(d.name)proPlate(ctx,T,sx+m,y0+tilesH,plH,d.name,'','',sw-2*m,true,'light');
+    xfE(ctx);
   });
   const cx0=x0+sw+Math.round(28*k),cx1=x1-sw-Math.round(28*k),cw=cx1-cx0,cx=Math.round((cx0+cx1)/2);
   const rows=st.rows.map(r=>({l:(r.name||'').trim(),a:(r.a||'').trim(),b:(r.b||'').trim(),mv:normMove(r.move)})).filter(r=>r.l||r.a||r.b).slice(0,10);
@@ -2236,8 +2317,8 @@ function drawH2H(ctx,st,T){
   const top=Math.round(p0+(ph-D.H)/2);
   proPart(ctx,st,'table',cx0,top,cw,D.H,()=>{
     let y=top;
-    if(D.kh){proText(ctx,kick,cx,y+D.kh,D.kz,{align:'center',ls:D.ksp,blur:16*k});y+=D.kh+D.sp;}
-    proChip(ctx,'VS',cx,y,D.vs,'gold',T,'center');y+=D.vs+D.sp;
+    if(D.kh){const kw=twOf(kick,D.kz,700,D.ksp);xfB(ctx,'kicker','Line above',cx-kw/2,y,kw,D.kh);proText(ctx,kick,cx,y+D.kh,D.kz,{align:'center',ls:D.ksp,blur:16*k});xfE(ctx);y+=D.kh+D.sp;}
+    {const vw0=proChip(ctx,'VS',0,0,D.vs,'gold',T,'center',{dry:true});xfB(ctx,'vs','VS',cx-vw0/2,y,vw0,D.vs);proChip(ctx,'VS',cx,y,D.vs,'gold',T,'center');xfE(ctx);}y+=D.vs+D.sp;
     const vw=Math.round(cw*.27),gg=Math.round(6*k),lw=cw-2*vw-2*gg;
     rows.forEach(r=>{
       const va=h2hVal(r.a),vb=h2hVal(r.b),ok=isFinite(va)&&isFinite(vb);
@@ -2273,7 +2354,7 @@ function drawSchedule(ctx,st,T){
   const head=(sc.head||'').trim()||(CLEAN?(st.title||'').trim():'');
   if(!items.length&&!head)return;
   const hz=head?Math.round(64*k*(sc.size||100)/100):0,hgap=head?Math.round(24*k):0,top=p0+m+(head?Math.round(hz*.8)+hgap:0),avail=p1-m-top;
-  if(head)proText(ctx,head.toLocaleUpperCase(),X0,p0+m+Math.round(hz*.8),hz,{ls:Math.round(hz*.06),blur:18*k});
+  if(head){const ht=head.toLocaleUpperCase();xfB(ctx,'schedHead','Heading',X0,p0+m,twOf(ht,hz,700,Math.round(hz*.06)),Math.round(hz*.8));proText(ctx,ht,X0,p0+m+Math.round(hz*.8),hz,{ls:Math.round(hz*.06),blur:18*k});xfE(ctx);}
   const hdrs=items.filter(t=>t.day).length,rowsN=items.length-hdrs;
   const fit=n=>{const its=n,h=its.filter(t=>t.day).length,r=its.length-h;return r+h*.9+(its.length-1)*.18+h*.2;};
   const maxRh=Math.round(62*k*(sc.size||100)/100);
@@ -2286,6 +2367,8 @@ function drawSchedule(ctx,st,T){
   const tw=Math.max(Math.round(rh*1.7),Math.round(Math.max(0,...items.filter(t=>t.r).map(t=>twOf((t.r.a||'').trim(),z)))+pad*2));
   const dwMax=Math.round(Math.max(0,...items.filter(t=>t.r&&(t.r.b||'').trim()).map(t=>twOf(t.r.b.trim(),Math.round(z*.86))+pad*2)));
   const dw=Math.min(Math.round(cw*.3),dwMax),gg=Math.round(6*k);
+  const colH=cols.map(col=>col.reduce((a,t,j)=>a+(t.day?(j?Math.round(g*1.2):0)+hh+g:rh+g),0)-g);
+  xfB(ctx,'schedule','Schedule',X0,top,XR-X0,Math.max(...colH));
   cols.forEach((col,c)=>{
     const x=X0+c*(cw+gc);let y=top;
     col.forEach((t,j)=>{
@@ -2301,6 +2384,7 @@ function drawSchedule(ctx,st,T){
       y+=rh+g;
     });
   });
+  xfE(ctx);
 }
 
 // standings or any number as bars: name cells on the left, a bar per row scaled to the biggest value, the value at its end
@@ -2312,6 +2396,7 @@ function drawBars(ctx,st,T){
   const pw=Math.round(h*1.15),fl=show.flag,bd=show.badge;
   const nameW=Math.min(Math.round((XR-X0)*.34),Math.round(Math.max(...rows.map(o=>twOf(o.r.name||'',z)))+pad*2));
   const bx=X0+pw+gp+(fl?tw+gp:0)+(bd?tw+gp:0)+nameW+gp,valW=Math.round(Math.max(...rows.map(o=>twOf(o.r.b||'',z)))+pad*2),bw=XR-bx-valW;
+  xfB(ctx,'bars','Bars',X0,L.rowTop,XR-X0,(rows.length-1)*L.pitch+h);
   rows.forEach((o,n)=>{
     const r=o.r,y=L.rowTop+n*L.pitch,hl=st.hl===o.i;let x=X0;
     const Pp=paint(ctx,y,h,hl?'gold':'light',T);cell(ctx,x,y,pw,h,Pp.fill,T);proText(ctx,posLabel(st,o.i),x+pw/2,y+h/2+2*k,z,{ink:Pp.ink,base:'middle',align:'center',shadow:false});x+=pw+gp;
@@ -2324,6 +2409,7 @@ function drawBars(ctx,st,T){
     if(fw){const style=hl?'gold':bs.barCol==='team'&&BADGES[r.badge]?'brand':bs.barCol==='gold'?'gold':'strip';const P=paint(ctx,by,bh,style,T,{badge:r.badge});cell(ctx,bx,by,fw,bh,P.fill,T);}
     proText(ctx,r.b||'',bx+fw+Math.round(12*k),y+h/2+2*k,z,{base:'middle',blur:8});
   });
+  xfE(ctx);
 }
 function drawProMode(ctx,st,T){
   const M=MODES[st.mode];if(ctx.canvas.id==='cv'){PRO_RECTS=[];SLOT_RECTS=[];}
@@ -2331,9 +2417,170 @@ function drawProMode(ctx,st,T){
   drawPhoto(ctx,st.quote);blendDraw(ctx,T,drawOuterRails);
   if(M.pro==='preview')drawPreview(ctx,st,T);
   else if(M.pro==='h2h')drawH2H(ctx,st,T);
+  else if(M.pro==='live')drawLive(ctx,st,T);
+  else if(M.pro==='calendar')drawCalendar(ctx,st,T);
   else drawSchedule(ctx,st,T);
 }
 
+/* ---------- move / resize any element ----------
+   Every element is drawn between xfB and xfE. xfB applies the element's own move (dx, dy) and size (s) for the
+   current format around the centre of its box (and hides it when asked); xfE records, on the preview, where the
+   box landed on the canvas so it can be clicked, dragged, resized from a corner, scaled with the wheel, nudged
+   with the arrows or hidden. Blocks nest: a whole headline is one element and its big word another inside it.
+   Offsets live in the mode's state as xf[format][key], so Screen, 4:5 and Story each keep their own. */
+let XST=null,XF={},XF_RECTS=[],XF_SEL=null,XF_HOVER=null,XF_SNAP=[],XF_ORD=0;
+const XF_STACK=[];
+function xfAll(){return XF[FMT]||(XF[FMT]={});}
+function xfGet(key){return xfAll()[key]||{};}
+function xfSet(key,o){
+  const a=xfAll(),t={...(a[key]||{}),...o};
+  if(!t.dx)delete t.dx;if(!t.dy)delete t.dy;if(!t.s||Math.abs(t.s-1)<.001)delete t.s;if(!t.hide)delete t.hide;
+  if(Object.keys(t).length)a[key]=t;else delete a[key];
+}
+function xfB(ctx,key,label,x,y,w,h){
+  const t=((((XST&&XST.xf)||{})[FMT])||{})[key]||{},s=t.s||1,cx=x+w/2,cy=y+h/2,m0=ctx.getTransform();
+  const parent=XF_STACK.length?XF_STACK[XF_STACK.length-1].key:null;
+  ctx.save();
+  if(t.dx||t.dy||s!==1){ctx.translate(cx+(t.dx||0),cy+(t.dy||0));ctx.scale(s,s);ctx.translate(-cx,-cy);}
+  if(t.hide){ctx.beginPath();ctx.rect(0,0,0,0);ctx.clip();}   // hidden: nothing inside gets drawn
+  XF_STACK.push({key,label,x,y,w,h,m0,parent,hide:!!t.hide,s,ord:XF_ORD++});
+}
+function xfE(ctx){
+  const f=XF_STACK.pop();if(!f)return;
+  if(ctx.canvas.id==='cv'){
+    const m=ctx.getTransform(),pts=[[f.x,f.y],[f.x+f.w,f.y],[f.x,f.y+f.h],[f.x+f.w,f.y+f.h]].map(([px,py])=>[m.a*px+m.c*py+m.e,m.b*px+m.d*py+m.f]);
+    const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),r={key:f.key,label:f.label,parent:f.parent,hide:f.hide,s:f.s,ord:f.ord,ps:Math.hypot(f.m0.a,f.m0.b)||1,x:Math.min(...xs),y:Math.min(...ys)};
+    r.w=Math.max(...xs)-r.x;r.h=Math.max(...ys)-r.y;
+    if(r.w>0&&r.h>0&&!XF_RECTS.some(q=>q.key===r.key))XF_RECTS.push(r);
+  }
+  ctx.restore();
+}
+const xfCorners=r=>[[r.x,r.y],[r.x+r.w,r.y],[r.x,r.y+r.h],[r.x+r.w,r.y+r.h]];
+// selection box, hover outline and snap lines: preview only, never exported
+function drawXfOverlay(ctx){
+  if(ctx.canvas.id!=='cv')return;
+  const ks=ctx.canvas.width/Math.max(1,ctx.canvas.getBoundingClientRect().width);
+  const box=(r,dash,col,lw)=>{ctx.save();ctx.setLineDash(dash);ctx.lineWidth=lw*ks;ctx.strokeStyle=col;ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.restore();};
+  const hv=XF_HOVER&&XF_HOVER!==XF_SEL&&XF_RECTS.find(r=>r.key===XF_HOVER);
+  if(hv)box(hv,[5*ks,4*ks],'rgba(80,170,255,.95)',1.5);
+  const sr=XF_SEL&&XF_RECTS.find(r=>r.key===XF_SEL);
+  if(sr){box(sr,sr.hide?[5*ks,4*ks]:[],'#2f8be6',2);const hs=9*ks;ctx.save();ctx.fillStyle='#ffffff';ctx.strokeStyle='#2f8be6';ctx.lineWidth=1.5*ks;
+    xfCorners(sr).forEach(([x,y])=>{ctx.fillRect(x-hs/2,y-hs/2,hs,hs);ctx.strokeRect(x-hs/2,y-hs/2,hs,hs);});ctx.restore();}
+  XF_SNAP.forEach(([o,v])=>{ctx.save();ctx.strokeStyle='#ff3df2';ctx.lineWidth=1.5*ks;ctx.beginPath();if(o==='x'){ctx.moveTo(v,0);ctx.lineTo(v,H);}else{ctx.moveTo(0,v);ctx.lineTo(W,v);}ctx.stroke();ctx.restore();});
+}
+// the Elements list in the panel and the bar under the preview
+let XF_SIG='';
+function xfPanel(){
+  const list=$('xfList');if(!list)return;
+  const els=[...XF_RECTS].sort((a,b)=>a.ord-b.ord),sig=els.map(r=>r.key+(r.hide?'-':'')).join(',');
+  if(sig!==XF_SIG){XF_SIG=sig;
+    const depth=r=>{let d=0,p=r.parent;while(p&&d<4){d++;const q=els.find(e=>e.key===p);p=q&&q.parent;}return d;};
+    list.innerHTML=els.length?els.map(r=>`<div class="xfRow" data-k="${escA(r.key)}" style="padding-left:${6+depth(r)*14}px"><input type="checkbox" data-xv title="Show"${r.hide?'':' checked'}><span>${escA(r.label)}</span><small></small><button type="button" data-xr title="Reset position and size">↺</button></div>`).join('')
+      :'<div class="note" style="margin:0">Nothing to move in this mode yet.</div>';}
+  list.querySelectorAll('.xfRow').forEach(d=>{const r=els.find(e=>e.key===d.dataset.k),t=xfGet(d.dataset.k);d.classList.toggle('sel',d.dataset.k===XF_SEL);
+    d.querySelector('small').textContent=(t.dx||t.dy?'moved · ':'')+Math.round((t.s||1)*100)+'%';});
+  xfBar();
+}
+function xfBar(){
+  const bar=$('xfBar');if(!bar)return;const r=XF_SEL&&XF_RECTS.find(q=>q.key===XF_SEL);
+  if(!r){bar.innerHTML='Click any text, logo or block on the preview to move it · drag a corner to resize · <b>Alt</b>+click picks the whole block';return;}
+  const t=xfGet(r.key);
+  bar.innerHTML=`<b>${escA(r.label)}</b> ${Math.round((t.s||1)*100)}% <button type="button" data-x="-" title="Smaller (−)">−</button><button type="button" data-x="+" title="Bigger (+)">+</button>`
+    +(r.parent?'<button type="button" data-x="up" title="Select the block it sits in (Alt+click)">Whole block</button>':'')
+    +`<button type="button" data-x="hide">${t.hide?'Show':'Hide'}</button><button type="button" data-x="reset" title="R">Reset</button><span class="hint">arrows nudge · Alt: no snap</span>`;
+}
+function xfAct(a,key){
+  key=key||XF_SEL;if(!key)return;const t=xfGet(key);
+  if(a==='+'||a==='-')xfSet(key,{s:+Math.min(6,Math.max(.15,(t.s||1)*(a==='+'?1.05:1/1.05))).toFixed(3)});
+  else if(a==='hide')xfSet(key,{hide:!t.hide});
+  else if(a==='reset')xfSet(key,{dx:0,dy:0,s:1,hide:false});
+  else if(a==='up'){const r=XF_RECTS.find(q=>q.key===key);if(r&&r.parent)XF_SEL=r.parent;}
+  redraw();
+}
+
+// in-rally update (the WRC / DirtFish "SS7 · stage winner" stories): stage chip and a big line, the top of the
+// stage as tile rows with times (the first in gold), the rally leader underneath
+function drawLive(ctx,st,T){
+  const lv={...PRO_DEFAULT.live,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(40*k),show=st.show||{};
+  const rows=st.rows.filter(r=>r.name||r.b).slice(0,5),stage=(lv.stage||'').trim(),kick=(lv.kicker||'').trim().toLocaleUpperCase(),lead=(lv.leader||'').trim();
+  if(!rows.length&&!stage&&!kick&&!lead)return;
+  const side=lv.pos!=='bottom',bw=side?Math.round((XR-X0)*.56):XR-X0,bx=lv.pos==='right'?XR-bw:X0;
+  let s=(lv.size||100)/100,D;
+  const measure=()=>{
+    const ch=stage?Math.round(50*k*s):0;let kz=kick?Math.round(96*k*s):0;while(kz>20&&twOf(kick,kz)>bw)kz-=2;
+    const rh=Math.round(62*k*s),rg=Math.round(12*k*s),g=Math.round(20*k*s),lh=lead?Math.round(54*k*s):0;
+    const u=[ch,kz?Math.round(kz*.8):0,rows.length?rows.length*(rh+5)+(rows.length-1)*rg:0,lh].filter(Boolean);
+    D={ch,kz,rh,rg,g,lh,H:u.reduce((a,b)=>a+b,0)+g*(u.length-1)};
+  };
+  measure();while(D.H>p1-p0-2*m&&s>.35){s*=.92;measure();}
+  const top=Math.round(lv.vpos==='top'?p0+m:lv.vpos==='center'?p0+(p1-p0-D.H)/2:p1-m-D.H),a=(lv.fade||0)/100;
+  if(lv.pos==='right')shadePic(ctx,a,'x',PX1(),Math.max(PX0(),bx-260*k));else if(lv.pos==='left')shadePic(ctx,a,'x',PX0(),Math.min(PX1(),bx+bw+260*k));else shadePic(ctx,a,'y',p1,Math.max(p0,top-240*k));
+  xfB(ctx,'live','Update block',bx,top,bw,D.H);let y=top;
+  if(D.ch){const w=proChip(ctx,stage,0,0,D.ch,'gold',T,'left',{dry:true});xfB(ctx,'liveStage','Stage chip',bx,y,w,D.ch);proChip(ctx,stage,bx,y,D.ch,'gold',T,'left');xfE(ctx);y+=D.ch+D.g;}
+  if(D.kz){const kh=Math.round(D.kz*.8);xfB(ctx,'liveKick','Big line',bx,y,twOf(kick,D.kz),kh);proText(ctx,kick,bx,y+kh,D.kz,{blur:22*k});xfE(ctx);y+=kh+D.g;}
+  if(rows.length){
+    const rh=D.rh,tw=Math.round(rh*TILE_W/62),gp=Math.round(rh*GAP/62),pw=Math.round(rh*1.05),z=Math.round(rh*.56);
+    const tmax=Math.round(Math.max(...rows.map(r=>twOf((r.b||'').trim(),z)))+rh*.7),tH=rows.length*(rh+5)+(rows.length-1)*D.rg;
+    xfB(ctx,'liveRows','Times',bx,y,bw,tH);
+    rows.forEach((r,n)=>{
+      let x=bx;const P0=paint(ctx,y,rh,n===0?'gold':'light',T);cell(ctx,x,y,pw,rh,P0.fill,T);
+      proText(ctx,String(n+1),x+pw/2,y+rh/2+2*k,z,{ink:P0.ink,base:'middle',align:'center',shadow:false});x+=pw+gp;
+      const fl=show.flag?resolveFlag(r):'',bd=show.badge&&BADGES[r.badge]?r.badge:'';
+      if(fl){drawFlagTile(ctx,x,y,tw,rh,fl,T);ctx.fillStyle=T.drop;ctx.fillRect(x,y+rh,tw,5);x+=tw+gp;}
+      if(bd){drawTile(ctx,x,y,tw,rh,bd,T);ctx.fillStyle=T.drop;ctx.fillRect(x,y+rh,tw,5);x+=tw+gp;}
+      const tx=bx+bw-tmax,nw=Math.max(20,tx-gp-x),nm=(r.name||'').trim(),Pn=paint(ctx,y,rh,'light',T);cell(ctx,x,y,nw,rh,Pn.fill,T);
+      let nz=z;while(nz>12&&twOf(nm,nz)>nw-rh*.5)nz--;proText(ctx,nm,x+Math.round(rh*.25),y+rh/2+2*k,nz,{ink:Pn.ink,base:'middle',shadow:false});
+      const Pt=paint(ctx,y,rh,n===0?'gold':'dark',T);cell(ctx,tx,y,tmax,rh,Pt.fill,T);
+      proText(ctx,(r.b||'').trim(),tx+tmax/2,y+rh/2+2*k,z,{ink:Pt.ink,base:'middle',align:'center',shadow:false});
+      y+=rh+5+D.rg;
+    });
+    y-=D.rg;xfE(ctx);y+=D.g;
+  }
+  if(D.lh){const lz=Math.round(D.lh*.5),lsp=Math.round(lz*.06),w=Math.min(bw,Math.round(twOf(lead,lz,700,lsp)+D.lh*.8)),P=paint(ctx,y,D.lh,'strip',T);
+    xfB(ctx,'liveLead','Leader line',bx,y,w,D.lh);cell(ctx,bx,y,w,D.lh,P.fill,T);
+    proText(ctx,lead,bx+Math.round(D.lh*.4),y+D.lh/2+2*k,lz,{ink:P.ink,base:'middle',ls:lsp,shadow:false});xfE(ctx);}
+  xfE(ctx);
+}
+
+// season calendar as cards (the F1 / WRC season-launch posts): flag and round, the rally, its dates and, once it
+// has run, the winner with the car's tile; the highlighted row (the next round) is gold
+function drawCalendar(ctx,st,T){
+  const cl={...PRO_DEFAULT.calendar,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(30*k),show=st.show||{};
+  shadePic(ctx,(cl.fade||0)/100);
+  const rows=st.rows.map((r,i)=>({r,i})).filter(o=>o.r.name||o.r.pos||o.r.a);
+  const head=(cl.head||'').trim()||(CLEAN?(st.title||'').trim():'');
+  let top=p0+m;
+  if(head){const hz=Math.round(60*k),ht=head.toLocaleUpperCase(),hl=Math.round(hz*.06);
+    xfB(ctx,'calHead','Heading',X0,top,twOf(ht,hz,700,hl),Math.round(hz*.8));proText(ctx,ht,X0,top+Math.round(hz*.8),hz,{ls:hl,blur:18*k});xfE(ctx);
+    top+=Math.round(hz*.8)+Math.round(26*k);}
+  if(!rows.length)return;
+  const n=rows.length,AW=XR-X0,AH=p1-m-top,g=Math.round(14*k);
+  let best=null;
+  for(let c=1;c<=7;c++){const r=Math.ceil(n/c),cw=(AW-(c-1)*g)/c,ch=(AH-(r-1)*g)/r;if(ch<30||cw<60)continue;const sc=Math.min(cw,ch*1.6);if(!best||sc>best.sc)best={c,r,cw,ch,sc};}
+  if(!best)return;
+  const cols=best.c,cw=best.cw,ch=Math.min(best.ch,cw*.9),gridH=best.r*ch+(best.r-1)*g,hlC=tk(T,'hl')[1][1];
+  xfB(ctx,'calGrid','Calendar',X0,top,AW,gridH);
+  rows.forEach((o,j)=>{
+    const r=o.r,x=Math.round(X0+(j%cols)*(cw+g)),y=Math.round(top+Math.floor(j/cols)*(ch+g)),w=Math.round(cw),h=Math.round(ch),hl=st.hl===o.i;
+    const P=hl?{fill:vgrad(ctx,y,y+h,tk(T,'hl')),ink:tk(T,'inkHl')}:{fill:T.dark,ink:'#ffffff'};cell(ctx,x,y,w,h,P.fill,T);
+    const pad=Math.round(Math.min(w,h)*.08),th=Math.round(h*.24),tw=Math.round(th*TILE_W/62);
+    const fl=show.flag!==false?resolveFlag({name:r.name||'',flag:r.flag||'',pos:''}):'';
+    if(fl)drawFlagTile(ctx,x+pad,y+pad,tw,th,fl,T);
+    const rl=((r.pos||'').trim()||('R'+(j+1))).toLocaleUpperCase(),rz=Math.round(th*.6);
+    proText(ctx,rl,x+w-pad,y+pad+th/2+2*k,rz,{ink:hl?P.ink:hlC,base:'middle',align:'right',shadow:false});
+    const name=(r.name||'').trim();let nz=Math.round(h*.15),ls=[];
+    for(;;){measureCtx.font=`700 ${nz}px "WRC Clean"`;ls=wrapLines(measureCtx,name,w-pad*2);if((ls.length<=2&&ls.every(l=>measureCtx.measureText(l).width<=w-pad*2))||nz<=10)break;nz--;}
+    ls=ls.slice(0,2);const lh=Math.round(nz*1.02);let ty=y+pad+th+Math.round(h*.05)+Math.round(nz*.8);
+    ls.forEach((l,i)=>proText(ctx,l,x+pad,ty+i*lh,nz,{ink:P.ink,shadow:false}));ty+=(ls.length-1)*lh;
+    const dt=(r.a||'').trim();if(dt){const dz=Math.round(nz*.72);proText(ctx,dt.toLocaleUpperCase(),x+pad,ty+Math.round(dz*1.5),dz,{ink:hl?P.ink:'rgba(255,255,255,.72)',ls:Math.round(dz*.08),shadow:false});}
+    const win=(r.b||'').trim();
+    if(win&&cl.winners){const bh=Math.round(h*.22),by=y+h-bh,bd=show.badge!==false&&BADGES[r.badge]?r.badge:'',Pw=paint(ctx,by,bh,hl?'dark':'strip',T);
+      ctx.fillStyle=Pw.fill;ctx.fillRect(x,by,w,bh);let wx=x+pad;
+      if(bd){const bt=Math.round(bh*TILE_W/62);drawTile(ctx,x,by,bt,bh,bd,T);wx=x+bt+Math.round(pad*.7);}
+      let wz=Math.round(bh*.5);while(wz>9&&twOf(win,wz)>x+w-pad-wx)wz--;proText(ctx,win,wx,by+bh/2+2*k,wz,{ink:Pw.ink,base:'middle',shadow:false});}
+  });
+  xfE(ctx);
+}
 const $=id=>document.getElementById(id);
 const badgeOptions='<option value="">— none —</option>'+BADGE_KEYS.map(k=>`<option value="${k}">${BADGES[k].name}</option>`).join('');
 const flagOptions='<option value="">auto</option><option value="-">none</option>'+FLAG_KEYS.map(k=>`<option value="${k}">${k} · ${FLAGS[k][1]}</option>`).join('');
@@ -2391,7 +2638,7 @@ function refreshFieldVisibility(){
 }
 function readRows(){return [...$('rows').children].map(d=>{const o={pos:'',name:'',flag:'',badge:'',move:'',a:'',b:''};d.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value.trim());return o;});}
 function readState(){
-  return {mode:MODE,look:$('look').value,title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,blend:$('themeBlend').checked,themeCol2:$('themeCol2').value,blendDir:$('blendDir').value,collage:MODES[MODE].collage?JSON.parse(JSON.stringify(COL)):undefined,tint:+$('pTint').value,
+  return {mode:MODE,look:$('look').value,xf:JSON.parse(JSON.stringify(XF)),title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,blend:$('themeBlend').checked,themeCol2:$('themeCol2').value,blendDir:$('blendDir').value,collage:MODES[MODE].collage?JSON.parse(JSON.stringify(COL)):undefined,tint:+$('pTint').value,
           logo:$('logo').value,valAlign:$('valAlign').value,hl:$('hl').value===''?-1:+$('hl').value,
           show:{flag:$('showFlag').checked,badge:$('showBadge').checked,move:$('showMove').checked},rows:readRows(),
           quote:{text:$('qText').value,sub:$('qSub').value,who:$('qWho').value,tcase:$('qCase').value,ink:$('qInk').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
@@ -2458,7 +2705,7 @@ function loadMode(m){
   $('mode').value=m;
   $('rallyBox').hidden=!M.rightCell;$('rallyLbl').textContent=M.rightLabel||'Rally';
   $('startBox').hidden=!M.labels;
-  $('alignBox').hidden=!!(M.quote||M.strips||M.pro);$('lookBox').hidden=!M.quote;$('look').value=(s&&s.look)||'classic';lookUI();$('alignLbl').textContent=m==='results'?'Time alignment':m==='points'?'Points alignment':'Value alignment';
+  $('alignBox').hidden=!!(M.quote||M.strips||M.pro);$('lookBox').hidden=!M.quote;$('look').value=(s&&s.look)||'classic';lookUI();XF=JSON.parse(JSON.stringify((s&&s.xf)||{}));XF_SEL=XF_HOVER=null;XF_SIG='';$('alignLbl').textContent=m==='results'?'Time alignment':m==='points'?'Points alignment':'Value alignment';
   $('valAlign').value=(s&&s.valAlign)||'';
   $('bulk').placeholder='One row per line:\n'+M.paste;
   const show=(s&&s.show)||M.show;
@@ -2530,7 +2777,7 @@ function redraw(fromImage){
   $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');$('tabYt').classList.toggle('on',FMT==='thumb');$('tabStory').classList.toggle('on',FMT==='story');
   $('sbMode').textContent=MODES[MODE].label;$('sbSize').textContent=W+' × '+H;
   $('sbExp').textContent=FMT==='thumb'?'1280×720 · 1920×1080':FMT==='story'?'1080×1920 · 2160×3840':FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
-  render(cv.getContext('2d'),st);if(!fromImage)save(st);teamColUI();colThumbs();
+  render(cv.getContext('2d'),st);if(!fromImage)save(st);teamColUI();colThumbs();if(!MODES[MODE].collage)xfPanel();
 }
 
 function matchBadge(s){
@@ -3217,6 +3464,86 @@ async function colExport(scale){
   const cv=$('cv');
   // drag the text box on the preview
   const toCanvas=e=>{const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height};};
+  // move / resize: click an element to select it, drag to move (snaps to the centre lines and the margins; Alt = no
+  // snapping), drag a corner to resize, wheel to scale, double-click to reset; Alt+click takes the block it sits in.
+  // Runs before the older per-mode drags, which still handle pictures, chips and anything not marked as an element.
+  {
+    let xd=null;
+    const usable=()=>!MODES[MODE].collage;
+    const ks=()=>cv.width/Math.max(1,cv.getBoundingClientRect().width);
+    const hits=pt=>XF_RECTS.filter(r=>!r.hide&&pt.x>=r.x&&pt.x<=r.x+r.w&&pt.y>=r.y&&pt.y<=r.y+r.h);
+    const pick=(pt,alt)=>{
+      const hs=hits(pt);if(!hs.length)return null;
+      if(!alt){const sel=XF_SEL&&hs.find(r=>r.key===XF_SEL);if(sel)return sel;}   // keep dragging the selection (a whole block once picked)
+      hs.sort((a,b)=>a.w*a.h-b.w*b.h);let r=hs[0];
+      if(alt&&r.parent){const p=XF_RECTS.find(q=>q.key===r.parent);if(p)r=p;}
+      return r;
+    };
+    const corner=pt=>{const r=XF_SEL&&XF_RECTS.find(q=>q.key===XF_SEL);if(!r)return null;const tol=9*ks();
+      const c=xfCorners(r).findIndex(([x,y])=>Math.abs(pt.x-x)<=tol&&Math.abs(pt.y-y)<=tol);return c<0?null:{r,c};};
+    cv.addEventListener('pointerdown',e=>{
+      if(!usable()||e.button!==0)return;const pt=toCanvas(e),cn=corner(pt);
+      if(cn){const r=cn.r,t=xfGet(r.key);xd={size:1,r,o:xfCorners(r)[3-cn.c],start:pt,s0:t.s||1,dx0:t.dx||0,dy0:t.dy||0,c0:[r.x+r.w/2,r.y+r.h/2]};}
+      else{const r=pick(pt,e.altKey);
+        if(!r){if(XF_SEL){XF_SEL=null;redraw(true);xfPanel();}return;}   // empty spot: pictures, chips etc. carry on as before
+        XF_SEL=r.key;const t=xfGet(r.key);xd={r,start:pt,dx0:t.dx||0,dy0:t.dy||0};}
+      cv.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();redraw(true);xfPanel();
+    },true);
+    cv.addEventListener('pointermove',e=>{
+      if(!usable())return;const pt=toCanvas(e);
+      if(!xd){
+        const cn=corner(pt),r=cn?null:pick(pt,e.altKey),hk=cn?XF_SEL:r?r.key:null;
+        if(cn){cv.style.cursor=cn.c===0||cn.c===3?'nwse-resize':'nesw-resize';e.stopImmediatePropagation();}
+        else if(r){cv.style.cursor='move';e.stopImmediatePropagation();}
+        if(hk!==XF_HOVER){XF_HOVER=hk;redraw(true);}
+        return;
+      }
+      const r=xd.r,ps=r.ps;
+      if(!xd.size){
+        let dx=pt.x-xd.start.x,dy=pt.y-xd.start.y;XF_SNAP=[];
+        if(!e.altKey){const tol=8*ks(),cx=r.x+r.w/2+dx,cy=r.y+r.h/2+dy,l=r.x+dx,rt=r.x+r.w+dx,tp=r.y+dy,bt=r.y+r.h+dy,[p0,p1]=L.panel;
+          for(const [a,b] of [[cx,W/2],[l,X0],[rt,XR],[l,PX0()],[rt,PX1()]])if(Math.abs(a-b)<tol){dx+=b-a;XF_SNAP.push(['x',b]);break;}
+          for(const [a,b] of [[cy,(p0+p1)/2],[cy,H/2],[tp,p0+40*L.rowH/62],[bt,p1-40*L.rowH/62]])if(Math.abs(a-b)<tol){dy+=b-a;XF_SNAP.push(['y',b]);break;}}
+        xfSet(r.key,{dx:Math.round(xd.dx0+dx/ps),dy:Math.round(xd.dy0+dy/ps)});
+      } else {   // resize from a corner: the opposite corner stays put
+        const d0=Math.hypot(xd.start.x-xd.o[0],xd.start.y-xd.o[1]),d1=Math.hypot(pt.x-xd.o[0],pt.y-xd.o[1]);
+        const sNew=Math.min(6,Math.max(.15,xd.s0*d1/Math.max(1,d0))),kk=sNew/xd.s0,nc=[xd.o[0]+(xd.c0[0]-xd.o[0])*kk,xd.o[1]+(xd.c0[1]-xd.o[1])*kk];
+        xfSet(r.key,{s:+sNew.toFixed(3),dx:Math.round(xd.dx0+(nc[0]-xd.c0[0])/ps),dy:Math.round(xd.dy0+(nc[1]-xd.c0[1])/ps)});
+      }
+      redraw();e.stopImmediatePropagation();
+    },true);
+    const endX=()=>{if(!xd)return;xd=null;XF_SNAP=[];redraw();};
+    cv.addEventListener('pointerup',endX);cv.addEventListener('pointercancel',endX);
+    cv.addEventListener('pointerleave',()=>{if(!xd&&XF_HOVER){XF_HOVER=null;redraw(true);}});
+    cv.addEventListener('wheel',e=>{
+      if(!usable())return;const r=pick(toCanvas(e),e.altKey);if(!r)return;
+      e.preventDefault();e.stopImmediatePropagation();XF_SEL=r.key;
+      const t=xfGet(r.key);xfSet(r.key,{s:+Math.min(6,Math.max(.15,(t.s||1)*(e.deltaY<0?1.05:1/1.05))).toFixed(3)});redraw();
+    },{passive:false,capture:true});
+    cv.addEventListener('dblclick',e=>{if(!usable())return;const r=pick(toCanvas(e),e.altKey);if(r){xfAct('reset',r.key);e.stopImmediatePropagation();}},true);
+    document.addEventListener('keydown',e=>{
+      if(!usable()||!XF_SEL||e.ctrlKey||e.metaKey||/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;
+      const r=XF_RECTS.find(q=>q.key===XF_SEL),ps=r?r.ps:1,st=e.shiftKey?10:1,t=xfGet(XF_SEL);let done=true;
+      if(e.key==='ArrowLeft')xfSet(XF_SEL,{dx:Math.round((t.dx||0)-st/ps)});
+      else if(e.key==='ArrowRight')xfSet(XF_SEL,{dx:Math.round((t.dx||0)+st/ps)});
+      else if(e.key==='ArrowUp')xfSet(XF_SEL,{dy:Math.round((t.dy||0)-st/ps)});
+      else if(e.key==='ArrowDown')xfSet(XF_SEL,{dy:Math.round((t.dy||0)+st/ps)});
+      else if(e.key==='+'||e.key==='=')xfAct('+');else if(e.key==='-'||e.key==='_')xfAct('-');
+      else if(e.key==='Delete'||e.key==='Backspace')xfAct('hide');else if(e.key==='r'||e.key==='R')xfAct('reset');
+      else if(e.key==='Escape'){XF_SEL=null;}else done=false;
+      if(done){e.preventDefault();redraw();}
+    });
+    $('xfBar').addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(b)xfAct(b.dataset.x);});
+    $('xfList').addEventListener('click',e=>{
+      const row=e.target.closest('.xfRow');if(!row)return;const k=row.dataset.k;
+      if(e.target.matches('[data-xv]'))xfSet(k,{hide:!e.target.checked});
+      else if(e.target.closest('[data-xr]'))xfAct('reset',k);
+      XF_SEL=k;redraw();
+    });
+    $('xfList').addEventListener('mouseover',e=>{const row=e.target.closest('.xfRow');const k=row?row.dataset.k:null;if(k!==XF_HOVER){XF_HOVER=k;redraw(true);}});
+    $('xfList').addEventListener('mouseleave',()=>{if(XF_HOVER){XF_HOVER=null;redraw(true);}});
+    $('xfResetAll').onclick=()=>{XF[FMT]={};redraw();};
+  }
   const inBox=pt=>QBOX&&pt.x>=QBOX.x&&pt.x<=QBOX.x+QBOX.w&&pt.y>=QBOX.y&&pt.y<=QBOX.y+QBOX.h;
   let drag=null;
   cv.addEventListener('pointerdown',e=>{
@@ -3264,7 +3591,7 @@ async function colExport(scale){
   },true);
   const endH=()=>{hdrag=null;};cv.addEventListener('pointerup',endH);cv.addEventListener('pointercancel',endH);
   $('hShadeCol').addEventListener('input',()=>{$('hShadeAuto').checked=false;redraw();});
-  $('hReset').onclick=()=>{HEAD_OFF={};redraw();};
+  $('hReset').onclick=()=>{HEAD_OFF={};XF[FMT]={};redraw();};
   cv.addEventListener('dragover',e=>{if(MODES[MODE].quote){e.preventDefault();cv.classList.add('dropping');}});
   cv.addEventListener('dragleave',()=>cv.classList.remove('dropping'));
   cv.addEventListener('drop',e=>{cv.classList.remove('dropping');if(!MODES[MODE].quote)return;e.preventDefault();setPhoto(e.dataTransfer.files[0]);});
@@ -3278,7 +3605,7 @@ async function colExport(scale){
   $('proUI').addEventListener('input',e=>{if(e.target.dataset.p!==undefined)redraw();});
   $('proUI').addEventListener('change',e=>{const t=e.target;if(t.dataset.slot!==undefined){setSlotPhoto(+t.dataset.slot,t.files[0]);t.value='';}else if(t.dataset.p!==undefined)redraw();});
   $('proUI').addEventListener('click',e=>{const b=e.target.closest('[data-slotdel]');if(b)clearSlot(+b.dataset.slotdel);});
-  $('proReset').onclick=()=>{PRO_OFF={};redraw();};
+  $('proReset').onclick=()=>{PRO_OFF={};XF[FMT]={};redraw();};
   {
     let pdrag=null;
     const hitIn=(arr,pt)=>[...arr].reverse().find(b=>pt.x>=b.x&&pt.x<=b.x+b.w&&pt.y>=b.y&&pt.y<=b.y+b.h);

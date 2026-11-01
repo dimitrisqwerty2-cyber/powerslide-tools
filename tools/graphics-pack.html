@@ -2711,8 +2711,9 @@ function drawWx(ctx,kind,cx,cy,s){
   ctx.save();ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=s*.06;ctx.shadowOffsetY=s*.02;ctx.lineCap='round';
   const sun=(x,y,r)=>{ctx.fillStyle='#f6b51e';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f6b51e';ctx.lineWidth=r*.22;
     for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*r*1.38,y+Math.sin(a)*r*1.38);ctx.lineTo(x+Math.cos(a)*r*1.78,y+Math.sin(a)*r*1.78);ctx.stroke();}};
-  const cloud=(x,y,w,col)=>{ctx.fillStyle=col||'#eef2f6';ctx.beginPath();ctx.arc(x-w*.22,y+w*.05,w*.2,0,Math.PI*2);ctx.arc(x+w*.02,y-w*.08,w*.27,0,Math.PI*2);
-    ctx.arc(x+w*.26,y+w*.06,w*.19,0,Math.PI*2);ctx.fill();ctx.fillRect(x-w*.22,y+w*.05,w*.48,w*.2);};
+  const cloud=(x,y,w,col)=>{ctx.fillStyle=col||'#eef2f6';ctx.beginPath();
+    for(const [ax,ay,r] of [[-.22,.05,.2],[.02,-.08,.27],[.26,.06,.19]]){ctx.moveTo(x+w*(ax+r),y+w*ay);ctx.arc(x+w*ax,y+w*ay,w*r,0,Math.PI*2);}
+    ctx.rect(x-w*.22,y+w*.05,w*.48,w*.2);ctx.fill();};
   const drops=(col,sym)=>{ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=s*.05;
     for(let i=-1;i<=1;i++){const x=cx+i*s*.2,y=cy+s*.3;if(sym){ctx.beginPath();ctx.arc(x,y,s*.045,0,Math.PI*2);ctx.arc(x+s*.08,y+s*.13,s*.045,0,Math.PI*2);ctx.fill();}
       else{ctx.beginPath();ctx.moveTo(x+s*.04,y-s*.02);ctx.lineTo(x-s*.04,y+s*.16);ctx.stroke();}}};

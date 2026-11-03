@@ -449,6 +449,22 @@
         </div>
         <div class="note">The rows (Stat | Value) are key numbers under it, up to four. Put the driver's photo under Picture below.</div>
       </div>
+      <div data-pro="form">
+        <div class="grid2">
+          <div><label>Line above <small>(small, spaced)</small></label><input data-p="kicker" placeholder="WRC Rally Chile"></div>
+          <div><label>Heading</label><input data-p="head" placeholder="Last three results by driver"></div>
+          <div><label>Column headings <small>(optional, comma-separated)</small></label><input data-p="cols" placeholder="2023, 2024, 2025"></div>
+          <div><label>Heading alignment</label><select data-p="align"><option value="center">Centre</option><option value="left">Left</option></select></div>
+          <div><label>Class legend <small>(results marked *)</small></label><div style="display:flex;gap:4px"><input data-p="legend" placeholder="WRC2"><input type="color" data-p="tagCol" style="width:44px;flex:none"></div></div>
+          <div><label>Result colours</label><select data-p="medals"><option value="medal">Gold / silver / bronze</option><option value="wins">Theme gold for wins only</option><option value="none">All dark</option></select></div>
+          <div><label>Name plates</label><select data-p="plate"><option value="team">Team colours (from the badge)</option><option value="light">Theme cell</option><option value="strip">Theme strip</option><option value="dark">Dark</option></select></div>
+          <div><label>Table side / height</label><div style="display:flex;gap:4px"><select data-p="side"><option value="right">Right</option><option value="center">Centre</option><option value="left">Left</option></select><select data-p="vpos"><option value="bottom">Bottom</option><option value="center">Middle</option><option value="top">Top</option></select></div></div>
+          <div><label>Size</label><input type="range" data-p="size" min="50" max="150"></div>
+          <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="checks"><label><input type="checkbox" data-p="caps">Names in capitals</label></div>
+        <div class="note">One row per driver: Name | Flag | Badge | Results, with the results separated by spaces in the order you want them shown (e.g. <b>2 2 3</b>). Use <b>-</b> for a year they didn't start, <b>R</b> / DNF / DSQ for a retirement (red), and add <b>*</b> to a result in another class (<b>8*</b>): it glows in the legend colour and the legend chip appears under the table. Up to 12 drivers; the highlighted row's plate turns gold.</div>
+      </div>
       <div data-pro="bars">
         <div class="grid2">
           <div><label>Bar colour</label><select data-p="barCol"><option value="team">Team colours (from the badge)</option><option value="strip">Theme strip</option><option value="gold">Gold</option></select></div>
@@ -968,6 +984,13 @@ const MODES = {
     fields:[['name','Driver'],['flag','Flag'],['badge','Badge'],['b','Points']], right:[], bulk:['name','badge','b','flag'],
     paste:'Name | Badge | Points | Flag\nElfyn Evans | Toyota | 254'
   },
+  // form guide: each driver's last few results as coloured cells (DirtFish "last three results by driver")
+  form: {
+    label:'Form guide (last results)', title:'Form guide', foot:'Powerslide Media', rally:'Rally Chile', theme:'siteDark', file:'wrc_form_guide',
+    show:{flag:false,badge:true,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'form', proLabel:'Form guide', hlOk:true, checks:true,
+    fields:[['name','Driver'],['flag','Flag'],['badge','Badge'],['b','Results']], fieldW:{b:'minmax(120px,1fr)'}, right:[], bulk:['name','badge','b','flag'],
+    paste:'Name | Badge | Results (space between, - = no start, * = class) | Flag\nElfyn Evans | Toyota | 2 2 3\nSami Pajari | Toyota | 5 6 8*'
+  },
   // road conditions: the DB's diverging bars per road position
   road: {
     label:'Road conditions (road position)', title:'Road order', foot:'Powerslide Media', rally:'Rally Italia Sardegna', theme:'siteDark', file:'wrc_road_conditions',
@@ -1029,7 +1052,7 @@ const MODES = {
   }
 };
 // the mode menu, by what the post is for
-const MODE_GROUPS=[['Results & standings',['points','results','custom','bars','h2h','fight']],['Race weekend',['preview','schedule','entry','live','stagemap','road','weather']],
+const MODE_GROUPS=[['Results & standings',['points','results','custom','bars','h2h','fight']],['Race weekend',['preview','form','schedule','entry','live','stagemap','road','weather']],
   ['News & social',['headline','quote','poll']],['Numbers',['stats','milestone']],['Season',['calendar']],['Photos',['strips','grid','collage']],['Video',['thumb']]];
 const HEAD_DEFAULT={kicker:'CHAMPIONS',style:'white',above:'2026 FIA World Rally Championship',below:'',pos:'bottom',size:190,fade:65,
   names:[{name:'Elfyn Evans',flag:'',badge:'toyota'},{name:'Scott Martin',flag:'GB',badge:''},{name:'',flag:'',badge:''}]};
@@ -1059,6 +1082,9 @@ const DEFAULTS = {
   entry:[R('Elfyn Evans','toyota','','Scott Martin','Rally1','33'),R('Sébastien Ogier','toyota','','Vincent Landais','Rally1','17'),R('Oliver Solberg','toyota','','Elliott Edmondson','Rally1','99'),
          R('Thierry Neuville','hyundai','','Martijn Wydaeghe','Rally1','1'),R('Adrien Fourmaux','hyundai','','Alexandre Coria','Rally1','16'),R('Sami Pajari','toyota','','Marko Salminen','Rally1','5')],
   fight:[R('Elfyn Evans','toyota','','','254'),R('Sébastien Ogier','toyota','','','231'),R('Oliver Solberg','toyota','','','198'),R('Thierry Neuville','hyundai','','','176'),R('Adrien Fourmaux','hyundai','','','142')],
+  form:[R('Elfyn Evans','toyota','','','2 2 3'),R('Sami Pajari','toyota','','','5 6 8*'),R('Oliver Solberg','toyota','','','9* 11* 6*'),R('Takamoto Katsuta','toyota','','','7 R 5'),
+        R('Adrien Fourmaux','hyundai','','','3 5'),R('Sébastien Ogier','toyota','','','1 9 2'),R('Thierry Neuville','hyundai','','','4 4 2'),R('Josh McErlean','ford','','','37'),
+        R('Esapekka Lappi','hyundai','','','R R 6'),R('Jon Armstrong','ford','','','')],
   road:[R('1st on the road','','','','+0.36'),R('2nd','','','','+0.17'),R('3rd','','','','+0.12'),R('4th','','','','+0.02'),R('5th','','','','-0.06'),R('6th','','','','-0.19'),R('7th','','','','-0.19')],
   weather:[R('Thursday','','','Sunny','27','Wind 10 km/h'),R('Friday','','','Partly cloudy','25','Rain 10%'),R('Saturday','','','Showers','21','Rain 60%'),R('Sunday','','','Sunny','26','Rain 0%')],
   stagemap:[],
@@ -2317,6 +2343,7 @@ const PRO_DEFAULT={
   calendar:{head:'',winners:true,fade:55},
   entry:{head:'',numStyle:'team',fade:55},
   fight:{head:'Who can still win?',left:'60',note:'',barCol:'team',zoom:true,fade:55},
+  form:{kicker:'WRC Rally Chile',head:'Last three results by driver',cols:'',legend:'WRC2',tagCol:'#1f3cff',medals:'medal',plate:'team',caps:true,align:'center',side:'right',vpos:'bottom',size:100,fade:30},
   road:{head:'Sweeping the road',sub:'Friday · Rally Italia Sardegna 2017–25 · s/km vs own pace',slowerLeft:true,fade:60},
   weather:{head:'Weekend weather',sub:'Olbia',fade:55},
   stagemap:{caption:'Rally Italia Sardegna • 2026',name:'SS3 Monte Lerno',pills:'SS3, {km}, Gravel',big:'Friday · 09:05',foot:'Every stage, every corner: powerslideblog.com',style:'navy',route:'#fe4d02',markers:true,zoom:0,mx:0,my:0},
@@ -2666,6 +2693,62 @@ function drawFight(ctx,st,T){
   xfE(ctx);
 }
 
+// form guide: a name plate per driver and their last results in cells - gold / silver / bronze for a podium,
+// red for a retirement, and the class colour glowing up from the bottom for a result marked * (the legend chip)
+const FORM_RET=/^(r|ret|dnf|dsq|dq|dns|wd|nc|x)$/i;
+const formCells=s=>String(s||'').trim().split(/[\s,;|]+/).filter(Boolean).map(t=>/^[-–—]$/.test(t)?null:{t:t.replace(/\*+$/,''),tag:/\*$/.test(t)});
+const FORM_MEDAL={1:['#f6e7b4','#c6a259'],2:['#f4f5f7','#a3a7ae'],3:['#ecd0ac','#a97b52']};
+function drawForm(ctx,st,T){
+  const fm={...PRO_DEFAULT.form,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,m=Math.round(40*k),show=st.show||{};
+  shadePic(ctx,(fm.fade||0)/100);
+  const al=fm.align==='left'?'left':'center',caps=t=>fm.caps?t.toLocaleUpperCase():t;
+  let top=p0+m;const sh=proSub(ctx,'formKick',fm.kicker,top,k,al);if(sh)top+=sh+Math.round(16*k);
+  const hh=proHead(ctx,'formHead',(fm.head||'').trim()||(CLEAN?st.title:''),top,k,64,al);if(hh)top+=hh;if(sh||hh)top+=Math.round(40*k);
+  const rows=st.rows.map((r,i)=>({r,i,c:formCells(r.b),nm:caps((r.name||'').trim())})).filter(o=>o.nm).slice(0,12);
+  if(!rows.length)return;
+  const heads=String(fm.cols||'').split(',').map(t=>caps(t.trim())),hasHead=heads.some(Boolean);
+  const nc=Math.max(1,...rows.map(o=>o.c.length)),n=rows.length,leg=(fm.legend||'').trim()&&rows.some(o=>o.c.some(c=>c&&c.tag))?caps(fm.legend.trim()):'';
+  const tc=hexRgb(fm.tagCol||'#1f3cff'),AW=XR-X0,AH=p1-m-top;
+  // sizes from the row height; shrink until the block fits under the heading
+  let s=(fm.size||100)/100,D;
+  const measure=()=>{
+    const rh=Math.round(62*k*s),z=Math.round(rh*.56),pad=Math.round(rh*.3),g=Math.round(rh*.13),gc=Math.round(rh*.1),tw=Math.round(rh*TILE_W/62),gp=Math.round(rh*GAP/62);
+    const nameW=Math.max(Math.round(rh*3),Math.min(Math.round(AW*.42),Math.round(Math.max(...rows.map(o=>twOf(o.nm,z)))+pad*2))),cw=Math.round(rh*1.65);
+    const plate=(show.flag?tw+gp:0)+(show.badge?tw+gp:0)+nameW,hz=Math.round(rh*.34),hH=hasHead?Math.round(hz*1.9):0,lh=leg?Math.round(rh*.72):0;
+    D={rh,z,pad,g,gc,tw,gp,nameW,cw,plate,hz,hH,lh,W:plate+gp+nc*cw+(nc-1)*gc,H:hH+n*rh+(n-1)*g+5+(lh?Math.round(rh*.4)+lh:0)};
+  };
+  measure();while((D.W>AW||D.H>AH)&&s>.3){s*=.94;measure();}
+  const bx=Math.round(fm.side==='left'?X0:fm.side==='center'?X0+(AW-D.W)/2:XR-D.W);
+  const by=Math.round(fm.vpos==='top'?top:fm.vpos==='center'?top+(AH-D.H)/2:p1-m-D.H);
+  const {rh,z,pad,g,gc,tw,gp,nameW,cw,plate}=D,cx0=bx+plate+gp;
+  xfB(ctx,'form','Form table',bx,by,D.W,D.H);
+  if(hasHead)heads.forEach((t,j)=>{if(!t||j>=nc)return;let hz=D.hz;const ls=Math.round(hz*.1);while(hz>9&&twOf(t,hz,700,ls)>cw)hz--;
+    proText(ctx,t,cx0+j*(cw+gc)+cw/2,by+Math.round(D.hH*.62),hz,{align:'center',ls,ink:'rgba(255,255,255,.85)',blur:8});});
+  rows.forEach((o,j)=>{
+    const r=o.r,y=Math.round(by+D.hH+j*(rh+g)),hl=st.hl===o.i;let x=bx;
+    if(show.flag){const f=resolveFlag(r);if(f)drawFlagTile(ctx,x,y,tw,rh,f,T);else emptyTile(ctx,x,y,tw,rh,T);ctx.fillStyle=T.drop;ctx.fillRect(x,y+rh,tw,5);x+=tw+gp;}
+    if(show.badge){drawTile(ctx,x,y,tw,rh,r.badge,T);ctx.fillStyle=T.drop;ctx.fillRect(x,y+rh,tw,5);x+=tw+gp;}
+    const Pn=paint(ctx,y,rh,hl?'gold':fm.plate==='team'&&BADGES[r.badge]?'brand':fm.plate==='team'?'light':fm.plate,T,{badge:r.badge});cell(ctx,x,y,nameW,rh,Pn.fill,T);
+    let nz=z;while(nz>11&&twOf(o.nm,nz)>nameW-pad*2)nz--;proText(ctx,o.nm,x+pad,y+rh/2+2*k,nz,{ink:Pn.ink,base:'middle',shadow:false});
+    o.c.slice(0,nc).forEach((c,i)=>{
+      if(!c)return;const x=cx0+i*(cw+gc),pl=parseInt(c.t,10),ret=FORM_RET.test(c.t),med=fm.medals==='medal'&&!ret&&String(pl)===c.t&&FORM_MEDAL[pl];
+      let P;
+      if(ret)P=paint(ctx,y,rh,'red',T);
+      else if(med)P={fill:vgrad(ctx,y,y+rh,[[0,med[0]],[1,med[1]]]),ink:'#1c1c1c'};
+      else if(fm.medals==='wins'&&c.t==='1')P=paint(ctx,y,rh,'gold',T);
+      else P=paint(ctx,y,rh,'dark',T);
+      cell(ctx,x,y,cw,rh,P.fill,T);
+      if(c.tag&&!ret&&!med){const gr=ctx.createLinearGradient(0,y+rh,0,y+rh*.4);gr.addColorStop(0,`rgba(${tc},1)`);gr.addColorStop(.35,`rgba(${tc},.55)`);gr.addColorStop(1,`rgba(${tc},0)`);
+        ctx.fillStyle=gr;ctx.fillRect(x,y+Math.round(rh*.4),cw,rh-Math.round(rh*.4));}
+      const t=c.t.toLocaleUpperCase();let vz=Math.round(rh*.6);while(vz>10&&twOf(t,vz)>cw-pad)vz--;
+      proText(ctx,t,x+cw/2,y+rh/2+2*k,vz,{ink:P.ink,base:'middle',align:'center',shadow:false});
+    });
+  });
+  if(leg){const ly=Math.round(by+D.hH+n*rh+(n-1)*g+5+rh*.4),w=proChip(ctx,leg,0,0,D.lh,'custom',T,'left',{dry:true});
+    xfB(ctx,'formLegend','Legend',bx,ly,w,D.lh);proChip(ctx,leg,bx,ly,D.lh,'custom',T,'left',{color:fm.tagCol||'#1f3cff'});xfE(ctx);}
+  xfE(ctx);
+}
+
 // road conditions: one diverging bar per road position (your DB's chart: slower to the left, 1st at the top)
 function niceStep(range){const raw=range/4,p=Math.pow(10,Math.floor(Math.log10(raw||1))),f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
 function drawRoad(ctx,st,T){
@@ -2940,6 +3023,7 @@ function drawProMode(ctx,st,T){
   if(M.pro==='preview')drawPreview(ctx,st,T);
   else if(M.pro==='entry')drawEntry(ctx,st,T);
   else if(M.pro==='fight')drawFight(ctx,st,T);
+  else if(M.pro==='form')drawForm(ctx,st,T);
   else if(M.pro==='road')drawRoad(ctx,st,T);
   else if(M.pro==='weather')drawWeather(ctx,st,T);
   else if(M.pro==='poll')drawPoll(ctx,st,T);

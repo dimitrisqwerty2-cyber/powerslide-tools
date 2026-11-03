@@ -465,6 +465,30 @@
         <div class="checks"><label><input type="checkbox" data-p="caps">Names in capitals</label></div>
         <div class="note">One row per driver: Name | Flag | Badge | Results, with the results separated by spaces in the order you want them shown (e.g. <b>2 2 3</b>). Use <b>-</b> for a year they didn't start, <b>R</b> / DNF / DSQ for a retirement (red), and add <b>*</b> to a result in another class (<b>8*</b>): it glows in the legend colour and the legend chip appears under the table. Up to 12 drivers; the highlighted row's plate turns gold.</div>
       </div>
+      <div data-pro="behind">
+        <div class="grid2">
+          <div><label>Name <small>(the big word)</small></label><input data-p="word" placeholder="Loubet"></div>
+          <div><label>Second line</label><input data-p="line" placeholder="Is back"></div>
+          <div><label>Bar, left</label><input data-p="left" placeholder="Tandalò"></div>
+          <div><label>Bar, right</label><input data-p="right" placeholder="2026"></div>
+          <div style="grid-column:1/-1"><label>Front cut-out <small>(PNG with the background removed; in front of all the text)</small></label><div style="display:flex;gap:4px"><input type="file" data-slot="0" accept="image/*"><button type="button" data-slotdel="0">✕</button></div></div>
+          <div style="grid-column:1/-1"><label>Middle cut-out <small>(optional; in front of the name, behind the second line)</small></label><div style="display:flex;gap:4px"><input type="file" data-slot="1" accept="image/*"><button type="button" data-slotdel="1">✕</button></div></div>
+          <div style="grid-column:1/-1"><label>Make the cut-out from the picture</label><div style="display:flex;gap:4px"><button type="button" id="bhAuto">Cut out automatically</button><select id="bhAutoSlot" style="width:auto"><option value="0">as the front cut-out</option><option value="1">as the middle cut-out</option></select></div><div class="note" id="bhAutoMsg" style="margin-top:3px"></div></div>
+          <div style="grid-column:1/-1"><label>Event logo <small>(optional, bottom centre)</small></label><div style="display:flex;gap:4px"><input type="file" data-slot="2" accept="image/*"><button type="button" data-slotdel="2">✕</button></div></div>
+          <div><label>Width</label><input type="range" data-p="width" min="40" max="100"></div>
+          <div><label>Height from the top</label><input type="range" data-p="top" min="0" max="60"></div>
+          <div><label>Name height</label><input type="range" data-p="wordH" min="15" max="110"></div>
+          <div><label>Name letter spacing</label><input type="range" data-p="ls" min="-10" max="40"></div>
+          <div><label>Second line size</label><input type="range" data-p="lineH" min="4" max="30"></div>
+          <div><label>Gap above the second line</label><input type="range" data-p="gap" min="-20" max="15"></div>
+          <div><label>Name / line colour</label><div style="display:flex;gap:4px"><input type="color" data-p="wordCol"><input type="color" data-p="lineCol"></div></div>
+          <div><label>Bar colour / text / opacity</label><div style="display:flex;gap:4px"><input type="color" data-p="barCol"><input type="color" data-p="ink"><input type="range" data-p="barAlpha" min="0" max="100"></div></div>
+          <div><label>Logo size</label><input type="range" data-p="logoSize" min="40" max="200"></div>
+          <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
+        </div>
+        <div class="checks"><label><input type="checkbox" data-p="barOn">Top bar</label><label><input type="checkbox" data-p="caps">Capitals</label><label><input type="checkbox" data-p="cutShadow">Cut-out shadow on the letters</label></div>
+        <div class="note">Put the photo under Picture, then the same photo with the background removed as the front cut-out: it lines up with the photo by itself, so the name looks like it's behind the car. "Cut out automatically" makes that PNG here (it keeps everyone and everything in the foreground). A cut-out of another shape stands at the bottom; move and resize it on the preview like any element. For the driver behind the second line and the car in front of it, load the driver as the middle cut-out and the car as the front one.</div>
+      </div>
       <div data-pro="bars">
         <div class="grid2">
           <div><label>Bar colour</label><select data-p="barCol"><option value="team">Team colours (from the badge)</option><option value="strip">Theme strip</option><option value="gold">Gold</option></select></div>
@@ -991,6 +1015,12 @@ const MODES = {
     fields:[['name','Driver'],['flag','Flag'],['badge','Badge'],['b','Results']], fieldW:{b:'minmax(120px,1fr)'}, right:[], bulk:['name','badge','b','flag'],
     paste:'Name | Badge | Results (space between, - = no start, * = class) | Flag\nElfyn Evans | Toyota | 2 2 3\nSami Pajari | Toyota | 5 6 8*'
   },
+  // a huge squeezed name with the driver / car cut out in front of it ("LOUBET IS BACK")
+  behind: {
+    label:'Name behind cut-out', title:'Is back', foot:'Powerslide Media', rally:'2026', theme:'siteDark', file:'wrc_name_behind',
+    show:{flag:false,badge:false,move:false}, labels:false, rightCell:true, rightLabel:'Footer right', quote:true, pro:'behind', proLabel:'Name behind cut-out', slots:3, noRows:true, defLook:'clean',
+    fields:[], right:[], paste:''
+  },
   // road conditions: the DB's diverging bars per road position
   road: {
     label:'Road conditions (road position)', title:'Road order', foot:'Powerslide Media', rally:'Rally Italia Sardegna', theme:'siteDark', file:'wrc_road_conditions',
@@ -1053,7 +1083,7 @@ const MODES = {
 };
 // the mode menu, by what the post is for
 const MODE_GROUPS=[['Results & standings',['points','results','custom','bars','h2h','fight']],['Race weekend',['preview','form','schedule','entry','live','stagemap','road','weather']],
-  ['News & social',['headline','quote','poll']],['Numbers',['stats','milestone']],['Season',['calendar']],['Photos',['strips','grid','collage']],['Video',['thumb']]];
+  ['News & social',['headline','behind','quote','poll']],['Numbers',['stats','milestone']],['Season',['calendar']],['Photos',['strips','grid','collage']],['Video',['thumb']]];
 const HEAD_DEFAULT={kicker:'CHAMPIONS',style:'white',above:'2026 FIA World Rally Championship',below:'',pos:'bottom',size:190,fade:65,
   names:[{name:'Elfyn Evans',flag:'',badge:'toyota'},{name:'Scott Martin',flag:'GB',badge:''},{name:'',flag:'',badge:''}]};
 const STATS_DEFAULT={style:'ladder',pos:'right',size:46,fade:45,head:'',hStyle:'plain',hSize:54,hPos:'stats',fx:1,fy:.5,hfx:.5,hfy:0,
@@ -1067,6 +1097,7 @@ const DEFAULTS = {
   quote:[],
   strips:[],
   headline:[],
+  behind:[],
   collage:[],
   thumb:[],
   grid:[],
@@ -1243,13 +1274,17 @@ function wrapLines(ctx,text,maxW){
 }
 // the picture fills the panel between the rails (outside them the theme glow shows, as in the
 // table modes); zoom/fx/fy pick the crop
-function drawPhoto(ctx,q){
-  const im=PHOTO.img,p0=CLEAN?0:L.panel[0],p1=CLEAN?H:L.panel[1],h=p1-p0;if(!im)return;   // Clean: the whole canvas
+function photoRect(q){
+  const im=PHOTO.img,p0=CLEAN?0:L.panel[0],p1=CLEAN?H:L.panel[1],h=p1-p0;if(!im)return null;   // Clean: the whole canvas
   const x0=PX0(),w=PX1()-x0;
   if(PHOTO.cutOf!==im){PHOTO.cutOf=im;PHOTO.cut=hasAlpha(im);}   // a cut-out is fitted whole, on the theme glow
   const s=(PHOTO.cut?Math.min(w/im.width,h/im.height):Math.max(w/im.width,h/im.height))*(q.zoom||1),dw=im.width*s,dh=im.height*s;
+  return {x:x0+(w-dw)*q.fx,y:p0+(h-dh)*q.fy,w:dw,h:dh,clip:[x0,p0,w,h],im};
+}
+function drawPhoto(ctx,q){
+  const r=photoRect(q);if(!r)return;const [x0,p0,w,h]=r.clip;
   ctx.save();ctx.beginPath();ctx.rect(x0,p0,w,h);ctx.clip();
-  ctx.drawImage(im,x0+(w-dw)*q.fx,p0+(h-dh)*q.fy,dw,dh);if(PIC_TINT>0){ctx.fillStyle=`rgba(${SHADE_RGB},${PIC_TINT})`;ctx.fillRect(x0,p0,w,h);}ctx.restore();
+  ctx.drawImage(r.im,r.x,r.y,r.w,r.h);if(PIC_TINT>0){ctx.fillStyle=`rgba(${SHADE_RGB},${PIC_TINT})`;ctx.fillRect(x0,p0,w,h);}ctx.restore();
 }
 function drawOuterRails(ctx,T,pa){
   if(CLEAN)return;
@@ -2344,6 +2379,7 @@ const PRO_DEFAULT={
   entry:{head:'',numStyle:'team',fade:55},
   fight:{head:'Who can still win?',left:'60',note:'',barCol:'team',zoom:true,fade:55},
   form:{kicker:'WRC Rally Chile',head:'Last three results by driver',cols:'',legend:'WRC2',tagCol:'#1f3cff',medals:'medal',plate:'team',caps:true,align:'center',side:'right',vpos:'bottom',size:100,fade:30},
+  behind:{left:'Tandalò',right:'2026',word:'Loubet',line:'Is back',width:84,top:6,wordH:62,ls:3,lineH:11,lineLs:2,gap:2,barOn:true,barCol:'#4b3a12',barAlpha:90,ink:'#e6d3a3',wordCol:'#ffffff',lineCol:'#e6d3a3',caps:true,cutShadow:false,fade:0,logoSize:100},
   road:{head:'Sweeping the road',sub:'Friday · Rally Italia Sardegna 2017–25 · s/km vs own pace',slowerLeft:true,fade:60},
   weather:{head:'Weekend weather',sub:'Olbia',fade:55},
   stagemap:{caption:'Rally Italia Sardegna • 2026',name:'SS3 Monte Lerno',pills:'SS3, {km}, Gravel',big:'Friday · 09:05',foot:'Every stage, every corner: powerslideblog.com',style:'navy',route:'#fe4d02',markers:true,zoom:0,mx:0,my:0},
@@ -2749,6 +2785,64 @@ function drawForm(ctx,st,T){
   xfE(ctx);
 }
 
+// name behind a cut-out: a bar (left / right text), the name squeezed to fill the width, a second line, and up to two
+// cut-outs layered between them - the middle one in front of the name but behind the second line, the front one over
+// everything. A cut-out with the background photo's shape is the same photo cut out, so it sits exactly on it.
+function behindCut(ctx,st,i,key,label,shadow){
+  const im=SLOT_IMG[i];if(!im)return;
+  const r=photoRect(st.quote),k=L.rowH/62,[p0,p1]=CLEAN?[0,H]:L.panel;let x,y,w,h,clip=null;
+  if(r&&Math.abs(im.width/im.height-r.im.width/r.im.height)<.012){x=r.x;y=r.y;w=r.w;h=r.h;clip=r.clip;}
+  else{const sc=Math.min((PX1()-PX0())/im.width,(p1-p0)*.86/im.height);w=im.width*sc;h=im.height*sc;x=(PX0()+PX1())/2-w/2;y=p1-h;clip=[PX0(),p0,PX1()-PX0(),p1-p0];}
+  xfB(ctx,key,label,x,y,w,h);ctx.save();ctx.beginPath();ctx.rect(...clip);ctx.clip();
+  if(shadow){ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=40*k;ctx.shadowOffsetY=10*k;}
+  ctx.drawImage(im,x,y,w,h);ctx.restore();xfE(ctx);
+}
+// text whose ink box is stretched to exactly w x capH (cap height); returns the ink box
+function squeezeText(ctx,t,x,y,w,capH,ls,ink){
+  ctx.save();ctx.font='700 200px "WRC Clean"';ctx.textBaseline='alphabetic';ctx.textAlign='left';try{ctx.letterSpacing=ls+'px';}catch(e){}
+  const m=ctx.measureText(t),cap=ctx.measureText('H').actualBoundingBoxAscent||144,iw=m.actualBoundingBoxLeft+m.actualBoundingBoxRight||m.width;
+  ctx.translate(x,y+capH);ctx.scale(w/iw,capH/cap);ctx.fillStyle=ink;ctx.fillText(t,m.actualBoundingBoxLeft,0);ctx.restore();
+}
+function drawBehind(ctx,st,T){
+  const bh={...PRO_DEFAULT.behind,...(st.pro||{})},[p0,p1]=L.panel,k=L.rowH/62,caps=t=>{t=(t||'').trim();return bh.caps?t.toLocaleUpperCase():t;};
+  shadePic(ctx,(bh.fade||0)/100);
+  const word=caps(bh.word),line=caps(bh.line),left=caps(bh.left),right=caps(bh.right),bar=bh.barOn&&(left||right);
+  let W=Math.round((XR-X0)*(bh.width||84)/100);
+  const sizes=W=>{const barH=bar?Math.round(W*.062):0,wh=word?Math.round(W*(bh.wordH||62)/100):0,lh=line?Math.round(W*(bh.lineH||11)/100):0,g=Math.round(W*(bh.gap??2)/100),bg=Math.round(W*.012);
+    const H0=barH+(barH&&wh?bg:0)+wh+(lh?g+lh:0);return {barH,wh,lh,g,bg,H:H0,Hall:H0+(SLOT_IMG[2]?Math.round(W*.17*(bh.logoSize||100)/100+60*k):0)};};   // Hall leaves room for the logo
+  let S=sizes(W);while(S.Hall>(p1-p0)*.86&&W>200){W=Math.round(W*.95);S=sizes(W);}   // too tall for this format: narrower
+  const bx=Math.round((X0+XR)/2-W/2),top=Math.round(Math.min(p0+(p1-p0)*(bh.top||0)/100,p1-S.Hall));
+  let y=top;const wy=top+S.barH+(S.barH&&S.wh?S.bg:0),ly=wy+S.wh+S.g;
+  // the bar, then the name: both behind the cut-outs
+  if(bar){const h=S.barH,pad=Math.round(h*.3),z=Math.round(h*.78);
+    xfB(ctx,'bhBar','Top bar',bx,y,W,h);ctx.save();ctx.globalAlpha=(bh.barAlpha??90)/100;ctx.fillStyle=bh.barCol||'#4b3a12';ctx.fillRect(bx,y,W,h);ctx.restore();
+    const fit=t=>{let zz=z;while(zz>10&&twOf(t,zz)>W/2-pad*1.5)zz--;return zz;};
+    if(left)proText(ctx,left,bx+pad,y+h/2+h*.05,fit(left),{ink:bh.ink,base:'middle',shadow:false});
+    if(right)proText(ctx,right,bx+W-pad,y+h/2+h*.05,fit(right),{ink:bh.ink,base:'middle',align:'right',shadow:false});xfE(ctx);}
+  if(word){xfB(ctx,'bhWord','Name',bx,wy,W,S.wh);squeezeText(ctx,word,bx,wy,W,S.wh,bh.ls||0,bh.wordCol||'#ffffff');xfE(ctx);}
+  behindCut(ctx,st,1,'bhCutMid','Middle cut-out',bh.cutShadow);
+  if(line){ctx.save();ctx.font='700 200px "WRC Clean"';ctx.textBaseline='alphabetic';ctx.textAlign='left';const ls=(bh.lineLs||0)*5;try{ctx.letterSpacing=ls+'px';}catch(e){}
+    const m=ctx.measureText(line),cap=ctx.measureText('H').actualBoundingBoxAscent||144,sc=S.lh/cap,iw=Math.min(W,(m.actualBoundingBoxLeft+m.actualBoundingBoxRight)*sc);ctx.restore();
+    const lx=Math.round((X0+XR)/2-iw/2);xfB(ctx,'bhLine','Second line',lx,ly,iw,S.lh);squeezeText(ctx,line,lx,ly,iw,S.lh,ls,bh.lineCol||'#e6d3a3');xfE(ctx);}
+  behindCut(ctx,st,0,'bhCut','Front cut-out',bh.cutShadow);
+  // the event logo, bottom centre
+  const lg=SLOT_IMG[2];
+  if(lg){const bw=W*.3*(bh.logoSize||100)/100,bhh=W*.17*(bh.logoSize||100)/100,sc=Math.min(bw/lg.width,bhh/lg.height),w=lg.width*sc,h=lg.height*sc,x=(X0+XR)/2-w/2,y2=p1-Math.round(40*k)-h;
+    xfB(ctx,'bhLogo','Event logo',x,y2,w,h);ctx.save();ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=16*k;ctx.drawImage(lg,x,y2,w,h);ctx.restore();xfE(ctx);}
+}
+// one-click cut-out: the background photo through @imgly/background-removal (runs in the browser; the model loads once)
+async function autoCut(){
+  const out=$('bhAutoMsg'),im=PHOTO.img;if(!im){out.textContent='Add the background picture first (Picture, below).';return;}
+  out.textContent='Loading the cut-out model (about 40 MB, first time only)…';
+  try{
+    const {removeBackground}=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm');
+    const c=document.createElement('canvas'),sc=Math.min(1,CUT_MAX/Math.max(im.width,im.height));c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    const src=await new Promise(r=>c.toBlob(r,'image/png'));
+    const blob=await removeBackground(src,{model:'isnet_quint8',output:{format:'image/png'},progress:(key,cur,tot)=>{if(tot)out.textContent=`Loading the cut-out model… ${Math.round(cur/tot*100)}%`;}});
+    setSlotPhoto(+$('bhAutoSlot').value,new File([blob],'cutout.png',{type:'image/png'}));out.textContent='Done: everything in front of the background is now a cut-out. Erase what should sit behind the name in any editor and load it back, if needed.';
+  }catch(e){console.error(e);out.textContent='The automatic cut-out failed ('+(e.message||e)+'). Make one in Canva / remove.bg and load it as the front cut-out.';}
+}
+
 // road conditions: one diverging bar per road position (your DB's chart: slower to the left, 1st at the top)
 function niceStep(range){const raw=range/4,p=Math.pow(10,Math.floor(Math.log10(raw||1))),f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
 function drawRoad(ctx,st,T){
@@ -3024,6 +3118,7 @@ function drawProMode(ctx,st,T){
   else if(M.pro==='entry')drawEntry(ctx,st,T);
   else if(M.pro==='fight')drawFight(ctx,st,T);
   else if(M.pro==='form')drawForm(ctx,st,T);
+  else if(M.pro==='behind')drawBehind(ctx,st,T);
   else if(M.pro==='road')drawRoad(ctx,st,T);
   else if(M.pro==='weather')drawWeather(ctx,st,T);
   else if(M.pro==='poll')drawPoll(ctx,st,T);
@@ -4287,6 +4382,7 @@ async function colExport(scale){
   $('proUI').addEventListener('change',e=>{const t=e.target;if(t.dataset.slot!==undefined){setSlotPhoto(+t.dataset.slot,t.files[0]);t.value='';}else if(t.dataset.p!==undefined)redraw();});
   $('proUI').addEventListener('click',e=>{const b=e.target.closest('[data-slotdel]');if(b)clearSlot(+b.dataset.slotdel);});
   $('proReset').onclick=()=>{PRO_OFF={};XF[FMT]={};redraw();};
+  $('bhAuto').onclick=autoCut;
   {
     let pdrag=null;
     const hitIn=(arr,pt)=>[...arr].reverse().find(b=>pt.x>=b.x&&pt.x<=b.x+b.w&&pt.y>=b.y&&pt.y<=b.y+b.h);

@@ -244,8 +244,8 @@
       </div>
       <div class="qTxt"><label style="display:block;margin-top:8px">Headline</label>
       <textarea id="qText" style="font-family:inherit;font-size:13px;min-height:70px"></textarea>
-      <div class="qBold grid2" style="margin-top:8px"><div><label>Letter case (bold quote)</label><select id="qCase"><option value="upper">ALL CAPS</option><option value="asis">As typed</option><option value="title">Title Case</option><option value="lower">lower case</option></select></div><div><label>Quote text colour</label><input type="color" id="qInk" value="#ffffff" style="padding:0;height:28px"></div></div>
-      <div class="qBold"><label style="display:block;margin-top:8px">Name tag <small>(bold quote: who said it)</small></label><input id="qWho" placeholder="Josh McErlean"></div>
+      <div class="qBold grid2" style="margin-top:8px"><div><label>Letter case (bold quote / announcement)</label><select id="qCase"><option value="upper">ALL CAPS</option><option value="asis">As typed</option><option value="title">Title Case</option><option value="lower">lower case</option></select></div><div><label>Quote text colour</label><input type="color" id="qInk" value="#ffffff" style="padding:0;height:28px"></div></div>
+      <div class="qBold"><label style="display:block;margin-top:8px">Name tag <small>(bold quote: who said it; announcement: line above)</small></label><input id="qWho" placeholder="Josh McErlean"></div>
       <label style="display:block;margin-top:8px">Text under the headline <small>(optional, smaller box; under the name tag in a bold quote)</small></label>
       <textarea id="qSub" style="font-family:inherit;font-size:13px;min-height:70px"></textarea></div>
       <div class="note qTxt">You can also drop a picture on the preview, and drag the text box around on it. Footer = name or source (the logo replaces it when it's in the footer), footer right = rally or date; leave footer right empty to drop its darker cell. The picture takes the room of any band you turn off. Line breaks in the text are kept; long text shrinks to fit.</div>
@@ -1328,6 +1328,7 @@ function drawQuoteBox(ctx,q,T){
   if(ctx.canvas.id==="cv")QBOX=null;   // exports draw on their own canvas
   const text=(q.text||'').trim(),sub=(q.sub||'').trim();if(!text&&!sub)return;
   if(q.style==='bold')return drawBoldQuote(ctx,q,T);
+  if(q.style==='announce')return drawAnnounce(ctx,q,T);
   const [p0,p1]=L.panel,k=L.rowH/62,mark=q.style==='quote';
   const pad=Math.round(24*k),margin=Math.round(28*k),markW=mark?Math.round(87*k):Math.round(14*k);
   const full=XR-X0,bw=Math.round(full*Math.min(100,Math.max(25,q.bw||100))/100);
@@ -1363,6 +1364,51 @@ function drawQuoteBox(ctx,q,T){
   if(sh){cell(ctx,tx,sy,tw,sh,lightFill(ctx,sy,sh,T),T);lines(sb,sy,sh);}
   xfE(ctx);
   if(ctx.canvas.id==="cv")QBOX={x:bx,y:by,w:bw,h:total,full,maxH,top:p0+margin};
+}
+// Announcement, drawn like the Headline card: spaced line above (the name tag field), big
+// capitals in the middle, a line under (the sub text), all straight on the picture with a shade
+// from the nearer edge. Box colour: light/white = plain text, gold = gold text, others = a band
+// behind each line.
+function drawAnnounce(ctx,q,T){
+  const [p0,p1]=L.panel,k=L.rowH/62,m=Math.round(40*k),full=XR-X0,maxH=(p1-p0)-m*2;
+  const bw=Math.round(full*Math.min(100,Math.max(25,q.bw||100))/100);
+  const cs=q.tcase||'upper',text=caseOf((q.text||'').trim(),cs),above=(q.who||'').trim().toLocaleUpperCase(),below=(q.sub||'').trim(),INK=q.ink||'#ffffff';
+  const col=q.boxColor||'light',plain=col==='light'||col==='white',gold=col==='gold';
+  const al=q.align==='left'?'left':'center';
+  const sp=(z,f)=>{try{ctx.letterSpacing=Math.round(z*f)+'px';}catch(e){}};
+  const soft=b=>{ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=b*k;ctx.shadowOffsetY=Math.round(b*k/4);};
+  let z=Math.round((q.size||44)*k*2.2),ls,lh,pad,aZ,bZ,bl,gap,aH,tH,bH,tot;
+  for(;;){
+    pad=plain||gold?0:Math.round(z*.22);lh=Math.round(z*.78)+(pad?pad*2+Math.round(8*k):Math.round(z*.2));
+    ctx.font=`700 ${z}px "WRC Clean"`;ls=text?wrapLines(ctx,text,bw-pad*2):[];
+    aZ=Math.max(14,Math.round(z*.3));bZ=Math.max(16,Math.round(z*.42));gap=Math.round(z*.2);
+    ctx.font=`700 ${bZ}px "WRC Clean"`;bl=below?wrapLines(ctx,below,bw*.94):[];
+    aH=above?Math.round(aZ*1.2):0;tH=ls.length?ls.length*lh-(pad?Math.round(8*k):Math.round(z*.2)):0;bH=bl.length*Math.round(bZ*1.22);
+    const parts=[aH,tH,bH].filter(Boolean);tot=parts.reduce((x,y)=>x+y,0)+gap*(parts.length-1);
+    ctx.font=`700 ${z}px "WRC Clean"`;
+    if((tot<=maxH&&ls.every(l=>ctx.measureText(l).width<=bw-pad*2))||z<=20)break;z-=2;
+  }
+  const bx=Math.round(X0+(full-bw)*clamp01(q.px)),by=Math.round(p0+m+(maxH-tot)*clamp01(q.py));
+  const cx=al==='left'?bx:Math.round(bx+bw/2),mid=by+tot/2,ph=p1-p0;
+  if(mid>p0+ph*.62)shadePic(ctx,.65,'y',p1,Math.max(p0,by-200*k));
+  else if(mid<p0+ph*.38)shadePic(ctx,.65,'y',p0,Math.min(p1,by+tot+200*k));
+  else shadePic(ctx,.65);
+  ctx.textAlign=al;
+  xfB(ctx,'annBlock','Announcement',bx,by,bw,tot);
+  let y=by;
+  if(aH){const y0=y;xfB(ctx,'annAbove','Line above',bx,y0-4,bw,aH+8);ctx.save();ctx.font=`700 ${aZ}px "WRC Clean"`;sp(aZ,.18);
+    ctx.fillStyle=INK;ctx.textAlign=al;ctx.textBaseline='top';soft(8);ctx.fillText(above,cx,y0);ctx.restore();sp(0,0);xfE(ctx);y+=aH+gap;}
+  if(tH){const y0=y;xfB(ctx,'annText','Headline',bx,y0,bw,tH);ctx.save();ctx.font=`700 ${z}px "WRC Clean"`;ctx.textAlign=al;ctx.textBaseline='alphabetic';
+    ls.forEach((l,i)=>{const ly=y0+i*lh,base=ly+pad+Math.round(z*.78);
+      if(!plain&&!gold){const w=Math.round(ctx.measureText(l).width+pad*2),x=al==='left'?bx:Math.round(cx-w/2),hh=Math.round(z*.78)+pad*2;
+        const P=col==='strip'?{fill:vgrad(ctx,ly,ly+hh,[[0,T.strip[0]],[1,T.strip[1]]]),ink:'#ffffff'}:paint(ctx,ly,hh,col,T,{color:q.boxCustom});
+        cell(ctx,x,ly,w,hh,P.fill,T);ctx.fillStyle=P.ink;ctx.fillText(l,al==='left'?bx+pad:cx,base);}
+      else{ctx.save();soft(24);ctx.fillStyle=gold?vgrad(ctx,base-z*.78,base,tk(T,'hl')):INK;ctx.fillText(l,cx,base);ctx.restore();}
+    });ctx.restore();xfE(ctx);y+=tH+gap;}
+  if(bH){const y0=y,blh=Math.round(bZ*1.22);xfB(ctx,'annBelow','Line under',bx,y0,bw,bH);ctx.save();ctx.font=`700 ${bZ}px "WRC Clean"`;
+    ctx.fillStyle=INK;ctx.textAlign=al;ctx.textBaseline='top';soft(10);bl.forEach((l,i)=>ctx.fillText(l,cx,y0+i*blh));ctx.restore();xfE(ctx);}
+  xfE(ctx);ctx.textAlign='left';
+  if(ctx.canvas.id==="cv")QBOX={x:bx,y:by,w:bw,h:tot,full,maxH,top:p0+m};
 }
 // Bold quote (after the DirtFish quote cards): big white capitals with drawn “ ” marks over a picture
 // darkened from the left, a name tag in a highlight cell and a small spaced caption under it
@@ -4205,7 +4251,7 @@ async function colExport(scale){
   // drop a .wrcproj anywhere on the window to open it
   document.addEventListener('dragover',e=>{if([...e.dataTransfer.items].some(i=>i.kind==='file'))e.preventDefault();});
   document.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&/\.(wrcproj|json)$/i.test(f.name)&&!(MODES[MODE].pro==='stagemap'&&/\.json$/i.test(f.name))){e.preventDefault();e.stopPropagation();openProject(f);}},true);
-  $('qStyle').addEventListener('change',()=>{if($('qStyle').value==='bold'){$('qBw').value=50;$('qPx').value=0;$('qPy').value=.6;$('qPlace').value='free';}});
+  $('qStyle').addEventListener('change',()=>{if($('qStyle').value==='bold'){$('qBw').value=50;$('qPx').value=0;$('qPy').value=.6;$('qPlace').value='free';}else if($('qStyle').value==='announce'){$('qBw').value=90;$('qPx').value=.5;$('qPy').value=1;$('qPlace').value='free';$('qColor').value='light';$('qAlign').value='center';}});
   ['qText','qSub','qWho','qCase','qInk','qStyle','qPlace','qSize','qZoom','qFx','qFy','qLogoPos','qLogoSize','qLogoInk','qHead','qFootOn','qBw','qBh','qCredit','qCreditPos','qColor','qCustom','qAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('qLogoPos').addEventListener('input',picLogoUI);
   $('qColor').addEventListener('input',()=>{$('qCustomBox').hidden=$('qColor').value!=='custom';});

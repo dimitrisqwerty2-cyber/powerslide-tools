@@ -237,6 +237,8 @@
         <div class="qTxt"><label>Text box colour</label><select id="qColor"><option value="light">Light (theme cell)</option><option value="dark">Dark</option><option value="gold">Gold</option><option value="strip">Theme strip</option><option value="red">Red</option><option value="blue">Blue</option><option value="green">Green</option><option value="white">White</option><option value="custom">Custom colour…</option></select></div>
         <div id="qCustomBox" class="qTxt"><label>Custom colour</label><input type="color" id="qCustom" value="#888888"></div>
         <div class="qTxt"><label>Text alignment</label><select id="qAlign"><option value="auto">Automatic</option><option value="left">Left</option><option value="center">Centred</option></select></div>
+        <div class="qTxt qAnn"><label>Shade</label><input type="range" id="qFade" min="0" max="95" value="65"></div>
+        <div class="qTxt qAnn"><label>Shade from</label><select id="qShade"><option value="auto">Automatic (side the text is on)</option><option value="bottom">Bottom</option><option value="top">Top</option><option value="left">Left</option><option value="right">Right</option><option value="all">Even all over</option></select></div>
       </div>
       <div class="checks classicOnly">
         <label><input type="checkbox" id="qHead" checked>Header band</label>
@@ -1389,24 +1391,35 @@ function drawAnnounce(ctx,q,T){
     if((tot<=maxH&&ls.every(l=>ctx.measureText(l).width<=bw-pad*2))||z<=20)break;z-=2;
   }
   const bx=Math.round(X0+(full-bw)*clamp01(q.px)),by=Math.round(p0+m+(maxH-tot)*clamp01(q.py));
-  const cx=al==='left'?bx:Math.round(bx+bw/2),mid=by+tot/2,ph=p1-p0;
-  if(mid>p0+ph*.62)shadePic(ctx,.65,'y',p1,Math.max(p0,by-200*k));
-  else if(mid<p0+ph*.38)shadePic(ctx,.65,'y',p0,Math.min(p1,by+tot+200*k));
-  else shadePic(ctx,.65);
+  const cx=al==='left'?bx:Math.round(bx+bw/2);
+  // the block moves only through the Box sliders (and dragging, which sets them), so an old
+  // free-move offset can't fight them; its size can still be scaled from the Elements tab
+  const xa=(XST&&XST.xf&&XST.xf[FMT]&&XST.xf[FMT].annBlock)||{};delete xa.dx;delete xa.dy;
+  if(XF[FMT]&&XF[FMT].annBlock){delete XF[FMT].annBlock.dx;delete XF[FMT].annBlock.dy;}
+  const sc=xa.s||1,sx0=bx+bw/2-bw*sc/2,sx1=bx+bw/2+bw*sc/2,sy0=by+tot/2-tot*sc/2,sy1=by+tot/2+tot*sc/2;
+  const a=Math.min(.95,Math.max(0,(q.fade??65)/100)),x0=PX0(),x1=PX1(),reach=200*k;
+  let sd=q.shade||'auto';
+  if(sd==='auto'){const c=(sx0+sx1)/2,w=x1-x0;
+    sd=(sx1-sx0)<w*.75&&c<x0+w*.4?'left':(sx1-sx0)<w*.75&&c>x0+w*.6?'right':(sy0+sy1)/2>=(p0+p1)/2?'bottom':'top';}
+  if(sd==='bottom')shadePic(ctx,a,'y',p1,Math.max(p0,sy0-reach));
+  else if(sd==='top')shadePic(ctx,a,'y',p0,Math.min(p1,sy1+reach));
+  else if(sd==='left')shadePic(ctx,a,'x',x0,Math.min(x1,sx1+reach*1.5));
+  else if(sd==='right')shadePic(ctx,a,'x',x1,Math.max(x0,sx0-reach*1.5));
+  else shadePic(ctx,a);
   ctx.textAlign=al;
   xfB(ctx,'annBlock','Announcement',bx,by,bw,tot);
   let y=by;
-  if(aH){const y0=y;xfB(ctx,'annAbove','Line above',bx,y0-4,bw,aH+8);ctx.save();ctx.font=`700 ${aZ}px "WRC Clean"`;sp(aZ,.18);
-    ctx.fillStyle=INK;ctx.textAlign=al;ctx.textBaseline='top';soft(8);ctx.fillText(above,cx,y0);ctx.restore();sp(0,0);xfE(ctx);y+=aH+gap;}
-  if(tH){const y0=y;xfB(ctx,'annText','Headline',bx,y0,bw,tH);ctx.save();ctx.font=`700 ${z}px "WRC Clean"`;ctx.textAlign=al;ctx.textBaseline='alphabetic';
+  if(aH){const y0=y;ctx.save();ctx.font=`700 ${aZ}px "WRC Clean"`;sp(aZ,.18);
+    ctx.fillStyle=INK;ctx.textAlign=al;ctx.textBaseline='top';soft(8);ctx.fillText(above,cx,y0);ctx.restore();sp(0,0);y+=aH+gap;}
+  if(tH){const y0=y;ctx.save();ctx.font=`700 ${z}px "WRC Clean"`;ctx.textAlign=al;ctx.textBaseline='alphabetic';
     ls.forEach((l,i)=>{const ly=y0+i*lh,base=ly+pad+Math.round(z*.78);
       if(!plain&&!gold){const w=Math.round(ctx.measureText(l).width+pad*2),x=al==='left'?bx:Math.round(cx-w/2),hh=Math.round(z*.78)+pad*2;
         const P=col==='strip'?{fill:vgrad(ctx,ly,ly+hh,[[0,T.strip[0]],[1,T.strip[1]]]),ink:'#ffffff'}:paint(ctx,ly,hh,col,T,{color:q.boxCustom});
         cell(ctx,x,ly,w,hh,P.fill,T);ctx.fillStyle=P.ink;ctx.fillText(l,al==='left'?bx+pad:cx,base);}
       else{ctx.save();soft(24);ctx.fillStyle=gold?vgrad(ctx,base-z*.78,base,tk(T,'hl')):INK;ctx.fillText(l,cx,base);ctx.restore();}
-    });ctx.restore();xfE(ctx);y+=tH+gap;}
-  if(bH){const y0=y,blh=Math.round(bZ*1.22);xfB(ctx,'annBelow','Line under',bx,y0,bw,bH);ctx.save();ctx.font=`700 ${bZ}px "WRC Clean"`;
-    ctx.fillStyle=INK;ctx.textAlign=al;ctx.textBaseline='top';soft(10);bl.forEach((l,i)=>ctx.fillText(l,cx,y0+i*blh));ctx.restore();xfE(ctx);}
+    });ctx.restore();y+=tH+gap;}
+  if(bH){const y0=y,blh=Math.round(bZ*1.22);ctx.save();ctx.font=`700 ${bZ}px "WRC Clean"`;
+    ctx.fillStyle=INK;ctx.textAlign=al;ctx.textBaseline='top';soft(10);bl.forEach((l,i)=>ctx.fillText(l,cx,y0+i*blh));ctx.restore();}
   xfE(ctx);ctx.textAlign='left';
   if(ctx.canvas.id==="cv")QBOX={x:bx,y:by,w:bw,h:tot,full,maxH,top:p0+m};
 }
@@ -1460,6 +1473,7 @@ function drawBoldQuote(ctx,q,T){
 }
 // small dark label in a corner of the picture, e.g. "Photo: name / agency"
 // Quote mode: the logo placed in a corner of the picture, white (or black) with a soft shadow
+function annUI(){const on=$('qStyle').value==='announce';document.querySelectorAll('.qAnn').forEach(d=>d.hidden=!on);}
 function picLogoUI(){const on=$('qLogoPos').value.startsWith('pic-');document.querySelectorAll('.qPicLogo').forEach(d=>d.hidden=!on);}
 function drawPicLogo(ctx,st,q){
   let pos=q.logoPos||'';if(CLEAN&&(pos==='header'||pos==='footer'))pos='pic-tr';   // no bands: the logo goes on the picture
@@ -3412,7 +3426,7 @@ function readState(){
   return {mode:MODE,look:$('look').value,track:MODES[MODE].pro==='stagemap'?STAGE.track:undefined,xf:JSON.parse(JSON.stringify(XF)),title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,blend:$('themeBlend').checked,themeCol2:$('themeCol2').value,blendDir:$('blendDir').value,collage:MODES[MODE].collage?JSON.parse(JSON.stringify(COL)):undefined,tint:+$('pTint').value,
           logo:$('logo').value,valAlign:$('valAlign').value,hl:$('hl').value===''?-1:+$('hl').value,
           show:{flag:$('showFlag').checked,badge:$('showBadge').checked,move:$('showMove').checked},rows:readRows(),
-          quote:{text:$('qText').value,sub:$('qSub').value,who:$('qWho').value,tcase:$('qCase').value,ink:$('qInk').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
+          quote:{text:$('qText').value,fade:+$('qFade').value,shade:$('qShade').value,sub:$('qSub').value,who:$('qWho').value,tcase:$('qCase').value,ink:$('qInk').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
                 bw:+$('qBw').value,bh:+$('qBh').value,px:+$('qPx').value,py:+$('qPy').value,
                 showHead:$('qHead').checked,showFoot:$('qFootOn').checked,logoPos:$('qLogoPos').value,logoSize:+$('qLogoSize').value,logoInk:$('qLogoInk').value,
                 credit:$('qCredit').value,creditPos:$('qCreditPos').value,boxColor:$('qColor').value,boxCustom:$('qCustom').value,align:$('qAlign').value},
@@ -3510,7 +3524,7 @@ function loadMode(m){
   if(M.collage){$('rowsUI').hidden=$('quoteUI').hidden=true;COL=JSON.parse(JSON.stringify((s&&s.collage)||(M.thumb?THUMB_DEFAULT:COL_DEFAULT)));if(!COL.bgMode)COL.bgMode='custom';if(!COL.accentMode)COL.accentMode='custom';COL_SEL=-1;COL_SLIDE=0;COL_HIST.length=0;colUI();if(ready)colLoadImgs();}
   if(M.strips){SS=normStrips(s&&s.strips,M.grid?GRID_DEFAULT:STRIPS_DEFAULT);STRIP_IMG.length=0;buildStripUI();if(ready)loadStripImgs();}
   const q={...QUOTE_DEFAULT,...((s&&s.quote)||{})};
-  $('qText').value=q.text;$('qSub').value=q.sub;$('qWho').value=q.who||'';$('qCase').value=q.tcase||'upper';$('qInk').value=q.ink||'#ffffff';$('qStyle').value=q.style;$('qPlace').value=q.place;
+  $('qFade').value=q.fade??65;$('qShade').value=q.shade||'auto';$('qText').value=q.text;$('qSub').value=q.sub;$('qWho').value=q.who||'';$('qCase').value=q.tcase||'upper';$('qInk').value=q.ink||'#ffffff';$('qStyle').value=q.style;annUI();$('qPlace').value=q.place;
   if(!(s&&s.quote&&'bw' in s.quote)&&BOX_PRESETS[q.place])[q.px,q.py,q.bw]=BOX_PRESETS[q.place];   // saved before box sliders existed
   $('qBw').value=q.bw;$('qBh').value=q.bh;$('qPx').value=q.px;$('qPy').value=q.py;
   $('qHead').checked=q.showHead;$('qFootOn').checked=q.showFoot;$('qLogoPos').value=q.logoPos;$('qLogoSize').value=q.logoSize;$('qLogoInk').value=q.logoInk;picLogoUI();$('qCredit').value=q.credit;$('qCreditPos').value=q.creditPos;
@@ -4251,8 +4265,8 @@ async function colExport(scale){
   // drop a .wrcproj anywhere on the window to open it
   document.addEventListener('dragover',e=>{if([...e.dataTransfer.items].some(i=>i.kind==='file'))e.preventDefault();});
   document.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&/\.(wrcproj|json)$/i.test(f.name)&&!(MODES[MODE].pro==='stagemap'&&/\.json$/i.test(f.name))){e.preventDefault();e.stopPropagation();openProject(f);}},true);
-  $('qStyle').addEventListener('change',()=>{if($('qStyle').value==='bold'){$('qBw').value=50;$('qPx').value=0;$('qPy').value=.6;$('qPlace').value='free';}else if($('qStyle').value==='announce'){$('qBw').value=90;$('qPx').value=.5;$('qPy').value=1;$('qPlace').value='free';$('qColor').value='light';$('qAlign').value='center';}});
-  ['qText','qSub','qWho','qCase','qInk','qStyle','qPlace','qSize','qZoom','qFx','qFy','qLogoPos','qLogoSize','qLogoInk','qHead','qFootOn','qBw','qBh','qCredit','qCreditPos','qColor','qCustom','qAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
+  $('qStyle').addEventListener('change',()=>{annUI();if($('qStyle').value==='bold'){$('qBw').value=50;$('qPx').value=0;$('qPy').value=.6;$('qPlace').value='free';}else if($('qStyle').value==='announce'){$('qBw').value=90;$('qPx').value=.5;$('qPy').value=1;$('qPlace').value='free';$('qColor').value='light';$('qAlign').value='center';}});
+  ['qFade','qShade','qText','qSub','qWho','qCase','qInk','qStyle','qPlace','qSize','qZoom','qFx','qFy','qLogoPos','qLogoSize','qLogoInk','qHead','qFootOn','qBw','qBh','qCredit','qCreditPos','qColor','qCustom','qAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('qLogoPos').addEventListener('input',picLogoUI);
   $('qColor').addEventListener('input',()=>{$('qCustomBox').hidden=$('qColor').value!=='custom';});
   $('qPic').addEventListener('change',()=>{setPhoto($('qPic').files[0]);$('qPic').value='';});
@@ -4302,7 +4316,10 @@ async function colExport(scale){
         if(!e.altKey){const tol=8*ks(),cx=r.x+r.w/2+dx,cy=r.y+r.h/2+dy,l=r.x+dx,rt=r.x+r.w+dx,tp=r.y+dy,bt=r.y+r.h+dy,[p0,p1]=L.panel;
           for(const [a,b] of [[cx,W/2],[l,X0],[rt,XR],[l,PX0()],[rt,PX1()]])if(Math.abs(a-b)<tol){dx+=b-a;XF_SNAP.push(['x',b]);break;}
           for(const [a,b] of [[cy,(p0+p1)/2],[cy,H/2],[tp,p0+40*L.rowH/62],[bt,p1-40*L.rowH/62]])if(Math.abs(a-b)<tol){dy+=b-a;XF_SNAP.push(['y',b]);break;}}
-        xfSet(r.key,{dx:Math.round(xd.dx0+dx/ps),dy:Math.round(xd.dy0+dy/ps)});
+        if(r.key==='annBlock'&&QBOX){   // the announcement moves through its Box sliders, so presets and sliders stay in charge
+          if(!xd.q)xd.q={...QBOX};const b=xd.q;
+          $('qPx').value=b.full>b.w?clamp01((b.x+dx-X0)/(b.full-b.w)):.5;$('qPy').value=b.maxH>b.h?clamp01((b.y+dy-b.top)/(b.maxH-b.h)):1;$('qPlace').value='free';
+        } else xfSet(r.key,{dx:Math.round(xd.dx0+dx/ps),dy:Math.round(xd.dy0+dy/ps)});
       } else {   // resize from a corner: the opposite corner stays put
         const d0=Math.hypot(xd.start.x-xd.o[0],xd.start.y-xd.o[1]),d1=Math.hypot(pt.x-xd.o[0],pt.y-xd.o[1]);
         const sNew=Math.min(6,Math.max(.15,xd.s0*d1/Math.max(1,d0))),kk=sNew/xd.s0,nc=[xd.o[0]+(xd.c0[0]-xd.o[0])*kk,xd.o[1]+(xd.c0[1]-xd.o[1])*kk];

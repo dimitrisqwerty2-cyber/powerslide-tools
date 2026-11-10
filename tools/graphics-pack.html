@@ -630,6 +630,12 @@
       <button class="primary" id="story1">Story 1080×1920</button>
       <button id="story2">Story 2160×3840</button>
     </div>
+    <div class="grid2" style="margin-top:8px">
+      <div><label>Glitch word</label><input id="gwText" placeholder="the title if empty"></div>
+      <div><label>Colour</label><select id="gwCol"><option value="theme">Theme title colour</option><option value="#ffffff">White</option><option value="#303033">Dark grey</option></select></div>
+      <div><label>Size</label><select id="gwSize"><option value="200">Normal (200 px letters)</option><option value="400">Big (400 px letters)</option></select></div>
+      <div><label>&nbsp;</label><button id="gwPng" class="primary" style="width:100%">Glitch word PNG (transparent)</button></div>
+    </div>
     <div class="checks noCol"><label><input type="checkbox" id="previewIg">Preview Instagram 4:5 layout</label><label><input type="checkbox" id="previewStory">Preview Story 9:16 layout</label></div>
     <div class="note" id="saveDirRow">Saving to: <b id="saveDirName"></b>
       <div class="btns" style="margin-top:6px"><button id="saveDirPick">Choose save folder…</button><button id="saveDirClear" hidden>Use Downloads again</button></div>
@@ -3629,6 +3635,22 @@ async function exportPNG(scale,fmt='screen'){
     download(c,`${MODES[MODE].file}${fmt==='ig'?'_ig':fmt==='story'?'_story':''}_${c.width}x${c.height}.png`);
   });
 }
+// just the glitch word on a transparent background, cropped to the letters, for Canva / Photoshop
+async function glitchWordPNG(){
+  const st=readState(),T=themeOf(st),txt=($('gwText').value.trim()||st.title||'').trim();
+  if(!txt){saveMsg('Type a word in "Glitch word" first.');return;}
+  const size=+$('gwSize').value||200,col=$('gwCol').value;
+  try{await document.fonts.load(`700 ${size}px "WRC Clean"`);}catch(e){}
+  const ink=col==='theme'?tk(T,'glitchInk'):col,speck=col==='theme'?tk(T,'speck'):col==='#ffffff'?150:200;
+  const c=document.createElement('canvas');c.width=Math.ceil(size*txt.length*0.8+40+size*.2);c.height=Math.ceil(size*1.5);
+  const x=c.getContext('2d');drawGlitchTitle(x,txt,size*.1,size*1.12,size,ink,speck);
+  const d=x.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=-1,y1=-1;   // crop to what was drawn
+  for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++)if(d[(y*c.width+i)*4+3]>0){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y;}
+  if(x1<0){saveMsg('Nothing to export.');return;}
+  const p=8,o=document.createElement('canvas');o.width=x1-x0+1+2*p;o.height=y1-y0+1+2*p;
+  o.getContext('2d').drawImage(c,x0-p,y0-p,o.width,o.height,0,0,o.width,o.height);
+  o.toBlob(b=>saveBlob(b,`glitch_${slug(txt)||'word'}_${o.width}x${o.height}.png`),'image/png');
+}
 function tileCanvas(key,scale){
   const w=92*scale,h=64*scale,c=document.createElement('canvas');c.width=w;c.height=h;
   drawTile(c.getContext('2d'),0,0,w,h,key);return c;
@@ -4249,6 +4271,7 @@ async function colExport(scale){
   ['showFlag','showBadge','showMove'].forEach(id=>$(id).addEventListener('change',()=>{refreshFieldVisibility();redraw();}));
   $('rows').addEventListener('keydown',onGridKey);
   $('applyBulk').onclick=()=>{buildRows(parseBulk($('bulk').value));redraw();};
+  $('gwPng').onclick=glitchWordPNG;
   $('png1').onclick=()=>exportPNG(1);$('png2').onclick=()=>exportPNG(2);
   $('ig1').onclick=()=>exportPNG(.75,'ig');$('ig2').onclick=()=>exportPNG(1.5,'ig');
   $('story1').onclick=()=>exportPNG(.75,'story');$('story2').onclick=()=>exportPNG(1.5,'story');

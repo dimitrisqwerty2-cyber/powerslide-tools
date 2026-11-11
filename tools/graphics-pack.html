@@ -370,6 +370,14 @@
           <div><label>Shade over the picture</label><input type="range" data-p="fade" min="0" max="95"></div>
           <div><label>&nbsp;</label><label><input type="checkbox" data-p="winners">Show winners</label></div>
         </div>
+        <label style="margin-top:8px">Box colours <small>(rounds like "R4, R9" or "4 9 12-14"; the name goes in the key under the grid)</small></label>
+        <div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:6px;margin-top:4px"><input type="color" data-p="c1" title="Colour 1"><input data-p="r1" placeholder="Rounds"><input data-p="n1" placeholder="Key name (optional)"></div>
+        <div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:6px;margin-top:4px"><input type="color" data-p="c2" title="Colour 2"><input data-p="r2" placeholder="Rounds"><input data-p="n2" placeholder="Key name (optional)"></div>
+        <div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:6px;margin-top:4px"><input type="color" data-p="c3" title="Colour 3"><input data-p="r3" placeholder="Rounds"><input data-p="n3" placeholder="Key name (optional)"></div>
+        <div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:6px;margin-top:4px"><input type="color" data-p="c4" title="Colour 4"><input data-p="r4" placeholder="Rounds"><input data-p="n4" placeholder="Key name (optional)"></div>
+        <div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:6px;margin-top:4px"><input type="color" data-p="c5" title="Colour 5"><input data-p="r5" placeholder="Rounds"><input data-p="n5" placeholder="Key name (optional)"></div>
+        <label style="margin-top:8px">Footnotes <small>(one per line, e.g. "* Cancelled after the floods"; mark the box by adding * to the rally's name)</small></label>
+        <textarea data-p="notes" rows="3" placeholder="* Run as a round of the Drivers' Cup only"></textarea>
         <div class="note">One row per round: Round | Rally | Flag | Dates | Winner | Car. The flag comes from the rally's name. Fill in the winner as the season goes; the highlighted row (the next round) turns gold. Up to 20 rounds, and the cards arrange themselves.</div>
       </div>
       <div data-pro="entry">
@@ -2442,7 +2450,7 @@ const PRO_DEFAULT={
   schedule:{head:'',dayStyle:'gold',size:100,fade:60},
   bars:{barCol:'team'},
   live:{stage:'SS7 · Forest 2',kicker:'Stage winner',leader:'Rally leader: Elfyn Evans +4.2',pos:'left',vpos:'bottom',size:100,fade:65},
-  calendar:{head:'',winners:true,fade:55},
+  calendar:{head:'',winners:true,fade:55,c1:'#8a1c1c',c2:'#1c4f8a',c3:'#6b4a1c',c4:'#2d6b2d',c5:'#5a2d6b',r1:'',r2:'',r3:'',r4:'',r5:'',n1:'',n2:'',n3:'',n4:'',n5:'',notes:''},
   entry:{head:'',numStyle:'team',fade:55},
   fight:{head:'Who can still win?',left:'60',note:'',barCol:'team',zoom:true,fade:55},
   form:{kicker:'WRC Rally Chile',head:'Last three results by driver',cols:'',legend:'WRC2',tagCol:'#1f3cff',medals:'medal',plate:'team',caps:true,align:'center',side:'right',vpos:'bottom',size:100,fade:30},
@@ -3342,7 +3350,12 @@ function drawCalendar(ctx,st,T){
     xfB(ctx,'calHead','Heading',X0,top,twOf(ht,hz,700,hl),Math.round(hz*.8));proText(ctx,ht,X0,top+Math.round(hz*.8),hz,{ls:hl,blur:18*k});xfE(ctx);
     top+=Math.round(hz*.8)+Math.round(26*k);}
   if(!rows.length)return;
-  const n=rows.length,AW=XR-X0,AH=p1-m-top,g=Math.round(14*k);
+  // box colours: groups of rounds, each with an optional key name; footnotes under the grid
+  const grp=[];for(let i=1;i<=5;i++){const set=calRounds(cl['r'+i]);if(set.size)grp.push({col:cl['c'+i]||'#8a1c1c',name:(cl['n'+i]||'').trim(),set});}
+  const colOf=(r,j)=>{const lab=((r.pos||'').trim()||('R'+(j+1))).toUpperCase().replace(/^R/,'');const g0=grp.find(G=>G.set.has(lab)||G.set.has(String(j+1)));return g0?g0.col:'';};
+  const keys=grp.filter(G=>G.name),notes=String(cl.notes||'').split(/\n/).map(t=>t.trim()).filter(Boolean);
+  const fz=Math.round(22*k),flh=Math.round(fz*1.35),footH=(keys.length?flh:0)+notes.length*flh+(keys.length||notes.length?Math.round(12*k):0);
+  const n=rows.length,AW=XR-X0,AH=p1-m-top-footH,g=Math.round(14*k);
   let best=null;
   for(let c=1;c<=7;c++){const r=Math.ceil(n/c),cw=(AW-(c-1)*g)/c,ch=(AH-(r-1)*g)/r;if(ch<30||cw<60)continue;const sc=Math.min(cw,ch*1.6);if(!best||sc>best.sc)best={c,r,cw,ch,sc};}
   if(!best)return;
@@ -3350,12 +3363,13 @@ function drawCalendar(ctx,st,T){
   xfB(ctx,'calGrid','Calendar',X0,top,AW,gridH);
   rows.forEach((o,j)=>{
     const r=o.r,x=Math.round(X0+(j%cols)*(cw+g)),y=Math.round(top+Math.floor(j/cols)*(ch+g)),w=Math.round(cw),h=Math.round(ch),hl=st.hl===o.i;
-    const P=hl?{fill:vgrad(ctx,y,y+h,tk(T,'hl')),ink:tk(T,'inkHl')}:{fill:T.dark,ink:'#ffffff'};cell(ctx,x,y,w,h,P.fill,T);
+    const bc=colOf(r,j);
+    const P=hl?{fill:vgrad(ctx,y,y+h,tk(T,'hl')),ink:tk(T,'inkHl')}:bc?{fill:bc,ink:calInk(bc)}:{fill:T.dark,ink:'#ffffff'};cell(ctx,x,y,w,h,P.fill,T);
     const pad=Math.round(Math.min(w,h)*.08),th=Math.round(h*.24),tw=Math.round(th*TILE_W/62);
     const fl=show.flag!==false?resolveFlag({name:r.name||'',flag:r.flag||'',pos:''}):'';
     if(fl)drawFlagTile(ctx,x+pad,y+pad,tw,th,fl,T);
     const rl=((r.pos||'').trim()||('R'+(j+1))).toLocaleUpperCase(),rz=Math.round(th*.6);
-    proText(ctx,rl,x+w-pad,y+pad+th/2+2*k,rz,{ink:hl?P.ink:hlC,base:'middle',align:'right',shadow:false});
+    proText(ctx,rl,x+w-pad,y+pad+th/2+2*k,rz,{ink:hl||bc?P.ink:hlC,base:'middle',align:'right',shadow:false});
     // the name (up to two lines) and the dates share the room between the flag row and the winner strip
     const name=(r.name||'').trim(),dt=(r.a||'').trim().toLocaleUpperCase(),win=(r.b||'').trim(),bh=win&&cl.winners?Math.round(h*.22):0;
     const tTop=y+pad+th+Math.round(h*.05),tBot=y+h-(bh||0)-Math.round(pad*.8);let nz=Math.round(h*.15),ls=[],dz=0;
@@ -3364,14 +3378,28 @@ function drawCalendar(ctx,st,T){
       if((ls.length<=2&&ls.every(l=>measureCtx.measureText(l).width<=w-pad*2)&&tall<=tBot-tTop)||nz<=9)break;nz--;}
     ls=ls.slice(0,2);const lh=Math.round(nz*1.02);let ty=tTop+Math.round(nz*.8);
     ls.forEach((l,i)=>proText(ctx,l,x+pad,ty+i*lh,nz,{ink:P.ink,shadow:false}));ty+=(ls.length-1)*lh;
-    if(dz)proText(ctx,dt,x+pad,ty+Math.round(dz*.5)+Math.round(dz*.8),dz,{ink:hl?P.ink:'rgba(255,255,255,.72)',ls:Math.round(dz*.08),shadow:false});
+    if(dz)proText(ctx,dt,x+pad,ty+Math.round(dz*.5)+Math.round(dz*.8),dz,{ink:hl?P.ink:bc&&P.ink!=='#ffffff'?'rgba(0,0,0,.66)':'rgba(255,255,255,.72)',ls:Math.round(dz*.08),shadow:false});
     if(bh){const by=y+h-bh,bd=show.badge!==false&&BADGES[r.badge]?r.badge:'',Pw=paint(ctx,by,bh,hl?'dark':'strip',T);
       ctx.fillStyle=Pw.fill;ctx.fillRect(x,by,w,bh);let wx=x+pad;
       if(bd){const bt=Math.round(bh*TILE_W/62);drawTile(ctx,x,by,bt,bh,bd,T);wx=x+bt+Math.round(pad*.7);}
       let wz=Math.round(bh*.5);while(wz>9&&twOf(win,wz)>x+w-pad-wx)wz--;proText(ctx,win,wx,by+bh/2+2*k,wz,{ink:Pw.ink,base:'middle',shadow:false});}
   });
   xfE(ctx);
+  if(!footH)return;
+  let fy=top+gridH+Math.round(12*k)+5;
+  xfB(ctx,'calNotes','Key & footnotes',X0,fy,AW,footH);
+  if(keys.length){let kx=X0;const sw=Math.round(fz*.9);
+    keys.forEach(G=>{ctx.fillStyle=G.col;ctx.fillRect(kx,fy+Math.round((flh-sw)/2),sw,sw);ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=Math.max(1,k);ctx.strokeRect(kx+.5,fy+Math.round((flh-sw)/2)+.5,sw-1,sw-1);
+      kx+=sw+Math.round(fz*.4);proText(ctx,G.name,kx,fy+flh/2+2*k,fz,{base:'middle',blur:10*k});kx+=twOf(G.name,fz)+Math.round(fz*1.2);});
+    fy+=flh;}
+  notes.forEach(t=>{let z=fz;while(z>9&&twOf(t,z,500)>AW)z--;proText(ctx,t,X0,fy+flh/2+2*k,z,{base:'middle',w:500,ink:'rgba(255,255,255,.88)',blur:10*k});fy+=flh;});
+  xfE(ctx);
 }
+// "R4, R9 12-14" -> {"4","9","12","13","14"}; letters other than a leading R are kept as typed ("4A")
+function calRounds(s){const o=new Set();String(s||'').toUpperCase().split(/[\s,;]+/).forEach(t=>{t=t.replace(/^R/,'');if(!t)return;
+  const m=t.match(/^(\d+)-R?(\d+)$/);if(m){for(let i=+m[1];i<=+m[2]&&i-m[1]<60;i++)o.add(String(i));}else o.add(t);});return o;}
+// dark text on light box colours
+function calInk(c){const m=/^#?([0-9a-f]{6})$/i.exec(c||'');if(!m)return '#ffffff';const v=parseInt(m[1],16),l=(.299*(v>>16)+.587*(v>>8&255)+.114*(v&255))/255;return l>.62?'#0b1114':'#ffffff';}
 const $=id=>document.getElementById(id);
 const badgeOptions='<option value="">— none —</option>'+BADGE_KEYS.map(k=>`<option value="${k}">${BADGES[k].name}</option>`).join('');
 const flagOptions='<option value="">auto</option><option value="-">none</option>'+FLAG_KEYS.map(k=>`<option value="${k}">${k} · ${FLAGS[k][1]}</option>`).join('');

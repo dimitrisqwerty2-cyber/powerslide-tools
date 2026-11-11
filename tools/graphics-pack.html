@@ -3364,7 +3364,7 @@ function drawCalendar(ctx,st,T){
   rows.forEach((o,j)=>{
     const r=o.r,x=Math.round(X0+(j%cols)*(cw+g)),y=Math.round(top+Math.floor(j/cols)*(ch+g)),w=Math.round(cw),h=Math.round(ch),hl=st.hl===o.i;
     const bc=colOf(r,j);
-    const P=hl?{fill:vgrad(ctx,y,y+h,tk(T,'hl')),ink:tk(T,'inkHl')}:bc?{fill:bc,ink:calInk(bc)}:{fill:T.dark,ink:'#ffffff'};cell(ctx,x,y,w,h,P.fill,T);
+    const P=hl?{fill:vgrad(ctx,y,y+h,tk(T,'hl')),ink:tk(T,'inkHl')}:bc?{fill:calAlpha(bc,T.dark),ink:calInk(bc)}:{fill:T.dark,ink:'#ffffff'};cell(ctx,x,y,w,h,P.fill,T);
     const pad=Math.round(Math.min(w,h)*.08),th=Math.round(h*.24),tw=Math.round(th*TILE_W/62);
     const fl=show.flag!==false?resolveFlag({name:r.name||'',flag:r.flag||'',pos:''}):'';
     if(fl)drawFlagTile(ctx,x+pad,y+pad,tw,th,fl,T);
@@ -3398,6 +3398,9 @@ function drawCalendar(ctx,st,T){
 // "R4, R9 12-14" -> {"4","9","12","13","14"}; letters other than a leading R are kept as typed ("4A")
 function calRounds(s){const o=new Set();String(s||'').toUpperCase().split(/[\s,;]+/).forEach(t=>{t=t.replace(/^R/,'');if(!t)return;
   const m=t.match(/^(\d+)-R?(\d+)$/);if(m){for(let i=+m[1];i<=+m[2]&&i-m[1]<60;i++)o.add(String(i));}else o.add(t);});return o;}
+// a box colour at the same see-through level as the theme's own boxes
+function calAlpha(c,ref){const m=/^#?([0-9a-f]{6})$/i.exec(c||''),a=/rgba?\([^)]*,\s*([\d.]+)\s*\)/.exec(ref||'');if(!m||!a)return c;
+  const v=parseInt(m[1],16);return `rgba(${v>>16},${v>>8&255},${v&255},${a[1]})`;}
 // dark text on light box colours
 function calInk(c){const m=/^#?([0-9a-f]{6})$/i.exec(c||'');if(!m)return '#ffffff';const v=parseInt(m[1],16),l=(.299*(v>>16)+.587*(v>>8&255)+.114*(v&255))/255;return l>.62?'#0b1114':'#ffffff';}
 const $=id=>document.getElementById(id);

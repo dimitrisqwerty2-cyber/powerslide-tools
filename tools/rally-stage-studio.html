@@ -2202,6 +2202,21 @@ window.closeCallout=function(){
     el.addEventListener('mouseleave', calloutRelease);
   });
   e.line.addEventListener('click', function(ev){ ev.stopPropagation(); pcPinned=true; });
+  // A sector's leader line starts where the cursor met the road, and it lies above the pins. When that is
+  // right beside a point, the line covered the pin and the sector kept the hover. So while the cursor is
+  // on the line of a hovered (not pinned) sector, look for a pin underneath and hand the hover to it.
+  const pinUnder=function(ev){
+    if(pcPinned || !pcKey || pcKey.indexOf('sec')!==0) return;
+    const all=(window.poiMarkers||[]).concat(typeof stackMarkers!=='undefined'?stackMarkers:[]);
+    const els=document.elementsFromPoint(ev.clientX,ev.clientY);
+    for(let i=0;i<els.length;i++){
+      const ic=els[i].closest && els[i].closest('.leaflet-marker-icon'); if(!ic) continue;
+      const m=all.find(function(k){ return k.getElement && k.getElement()===ic; });
+      if(m){ m.fire('mouseover'); return; }
+    }
+  };
+  e.line.addEventListener('mouseenter', pinUnder);
+  e.line.addEventListener('mousemove', pinUnder);
 })();
 map.on('move zoom resize', placeCallout);
 map.on('zoomend resize', function(){ pcDir=null; placeCallout(); });   // the route has moved relative to the panel

@@ -399,9 +399,9 @@
       <div class="qTxt"><label style="display:block;margin-top:8px">Headline</label>
       <textarea id="qText" style="font-family:inherit;font-size:13px;min-height:70px"></textarea>
       <div class="qBold grid2" style="margin-top:8px"><div><label>Letter case (bold quote / announcement)</label><select id="qCase"><option value="upper">ALL CAPS</option><option value="asis">As typed</option><option value="title">Title Case</option><option value="lower">lower case</option></select></div><div><label>Quote text colour</label><input type="color" id="qInk" value="#ffffff" style="padding:0;height:28px"></div></div>
-      <div class="qBold"><label style="display:block;margin-top:8px">Name tag <small>(bold quote: who said it; announcement: line above)</small></label><input id="qWho" placeholder="Josh McErlean"></div>
+      <div class="qBold"><label style="display:block;margin-top:8px">Name tag <small>(bold quote: who said it; announcement: line above; Enter = new line)</small></label><textarea id="qWho" rows="2" placeholder="Josh McErlean" style="font-family:inherit;font-size:13px;min-height:44px"></textarea><div class="grid2" style="margin-top:6px"><div><label>Name tag size</label><input type="range" id="qWs" min="40" max="150" value="100"></div><div><label>Name lines <small>(Enter in the box also breaks)</small></label><select id="qWl"><option value="1">One line</option><option value="2">Two lines (first name / surname)</option></select></div></div></div>
       <label style="display:block;margin-top:8px">Text under the headline <small>(optional, smaller box; under the name tag in a bold quote)</small></label>
-      <textarea id="qSub" style="font-family:inherit;font-size:13px;min-height:70px"></textarea></div>
+      <textarea id="qSub" style="font-family:inherit;font-size:13px;min-height:70px"></textarea><div class="grid2" style="margin-top:6px"><div><label>Text under size</label><input type="range" id="qSs" min="40" max="160" value="100"></div><div><label>Text under lines</label><select id="qSl"><option value="1">As typed / wrap</option><option value="2">Split in two lines</option></select></div></div></div>
       <div class="note qTxt">You can also drop a picture on the preview, and drag the text box around on it. Footer = name or source (the logo replaces it when it's in the footer), footer right = rally or date; leave footer right empty to drop its darker cell. The picture takes the room of any band you turn off. Line breaks in the text are kept; long text shrinks to fit.</div>
     </div>
     <div id="headUI" hidden>
@@ -1495,7 +1495,7 @@ let QBOX=null;   // where the box group was last drawn, for dragging on the prev
 // lined up with the text cell; both shrink together until they fit the panel
 function drawQuoteBox(ctx,q,T){
   if(ctx.canvas.id==="cv")QBOX=null;   // exports draw on their own canvas
-  const text=(q.text||'').trim(),sub=(q.sub||'').trim();if(!text&&!sub)return;
+  const text=(q.text||'').trim(),sub=subText((q.sub||'').trim(),q.sl);if(!text&&!sub)return;
   if(q.style==='bold')return drawBoldQuote(ctx,q,T);
   if(q.style==='announce')return drawAnnounce(ctx,q,T);
   const [p0,p1]=L.panel,k=L.rowH/62,mark=q.style==='quote';
@@ -1507,7 +1507,7 @@ function drawQuoteBox(ctx,q,T){
   const boxH=b=>b.ls.length?b.ls.length*b.lh+pad*2:0;
   let size=Math.round((q.size||44)*k),hd,sb,bh,sh;
   for(;;){
-    hd=fit(text,size);sb=fit(sub,Math.max(14,Math.round(size*.6)));
+    hd=fit(text,size);sb=fit(sub,Math.max(10,Math.round(size*.6*(q.ss||100)/100)));
     bh=hd.ls.length?Math.max(boxH(hd),mark?markW:0):0;sh=boxH(sb);
     if((bh+(bh&&sh?gap:0)+sh<=maxH&&hd.ok&&sb.ok)||size<=16)break;
     size-=2;
@@ -1541,7 +1541,7 @@ function drawQuoteBox(ctx,q,T){
 function drawAnnounce(ctx,q,T){
   const [p0,p1]=L.panel,k=L.rowH/62,m=Math.round(40*k),full=XR-X0,maxH=(p1-p0)-m*2;
   const bw=Math.round(full*Math.min(100,Math.max(25,q.bw||100))/100);
-  const cs=q.tcase||'upper',text=caseOf((q.text||'').trim(),cs),above=(q.who||'').trim().toLocaleUpperCase(),below=(q.sub||'').trim(),INK=q.ink||'#ffffff';
+  const cs=q.tcase||'upper',text=caseOf((q.text||'').trim(),cs),aL=whoLines((q.who||'').toLocaleUpperCase(),q.wl),above=aL.join(' '),below=subText((q.sub||'').trim(),q.sl),INK=q.ink||'#ffffff';
   const col=q.boxColor||'light',plain=col==='light'||col==='white',gold=col==='gold';
   const al=q.align==='left'?'left':'center';
   const sp=(z,f)=>{try{ctx.letterSpacing=Math.round(z*f)+'px';}catch(e){}};
@@ -1550,9 +1550,9 @@ function drawAnnounce(ctx,q,T){
   for(;;){
     pad=plain||gold?0:Math.round(z*.22);lh=Math.round(z*.78)+(pad?pad*2+Math.round(8*k):Math.round(z*.2));
     ctx.font=`700 ${z}px "WRC Clean"`;ls=text?wrapLines(ctx,text,bw-pad*2):[];
-    aZ=Math.max(14,Math.round(z*.3));bZ=Math.max(16,Math.round(z*.42));gap=Math.round(z*.2);
+    aZ=Math.max(10,Math.round(z*.3*(q.ws||100)/100));bZ=Math.max(10,Math.round(z*.42*(q.ss||100)/100));gap=Math.round(z*.2);
     ctx.font=`700 ${bZ}px "WRC Clean"`;bl=below?wrapLines(ctx,below,bw*.94):[];
-    aH=above?Math.round(aZ*1.2):0;tH=ls.length?ls.length*lh-(pad?Math.round(8*k):Math.round(z*.2)):0;bH=bl.length*Math.round(bZ*1.22);
+    aH=aL.length?Math.round(aZ*1.2)*aL.length:0;tH=ls.length?ls.length*lh-(pad?Math.round(8*k):Math.round(z*.2)):0;bH=bl.length*Math.round(bZ*1.22);
     const parts=[aH,tH,bH].filter(Boolean);tot=parts.reduce((x,y)=>x+y,0)+gap*(parts.length-1);
     ctx.font=`700 ${z}px "WRC Clean"`;
     if((tot<=maxH&&ls.every(l=>ctx.measureText(l).width<=bw-pad*2))||z<=20)break;z-=2;
@@ -1577,7 +1577,7 @@ function drawAnnounce(ctx,q,T){
   xfB(ctx,'annBlock','Announcement',bx,by,bw,tot);
   let y=by;
   if(aH){const y0=y;ctx.save();ctx.font=`700 ${aZ}px "WRC Clean"`;sp(aZ,.18);
-    ctx.fillStyle=INK;ctx.textAlign=al;ctx.textBaseline='top';soft(8);ctx.fillText(above,cx,y0);ctx.restore();sp(0,0);y+=aH+gap;}
+    ctx.fillStyle=INK;ctx.textAlign=al;ctx.textBaseline='top';soft(8);aL.forEach((l,i)=>ctx.fillText(l,cx,y0+i*Math.round(aZ*1.2)));ctx.restore();sp(0,0);y+=aH+gap;}
   if(tH){const y0=y;ctx.save();ctx.font=`700 ${z}px "WRC Clean"`;ctx.textAlign=al;ctx.textBaseline='alphabetic';
     ls.forEach((l,i)=>{const ly=y0+i*lh,base=ly+pad+Math.round(z*.78);
       if(!plain&&!gold){const w=Math.round(ctx.measureText(l).width+pad*2),x=al==='left'?bx:Math.round(cx-w/2),hh=Math.round(z*.78)+pad*2;
@@ -1597,18 +1597,27 @@ function caseOf(t,c){
   if(c==='title')return t.toLocaleLowerCase().replace(/(^|[\s(\-“"'])(\p{L})/gu,(m,a,b)=>a+b.toLocaleUpperCase());
   return t;
 }
+// name tag lines: line breaks typed in the box are kept; "Two lines" splits a one-line name after the first word
+function splitTwo(t){const sp=[...t.matchAll(/ /g)].map(m=>m.index);if(!sp.length)return [t];
+  const mid=t.length/2,i=sp.reduce((a,b)=>Math.abs(b-mid)<Math.abs(a-mid)?b:a);return [t.slice(0,i),t.slice(i+1)];}
+function subText(t,mode){return String(mode)==='2'&&t&&!t.includes(String.fromCharCode(10))?splitTwo(t.replace(/\s+/g,' ').trim()).join(String.fromCharCode(10)):t;}
+function whoLines(who,mode){
+  let ls=who.split(String.fromCharCode(10)).map(l=>l.replace(/\s+/g,' ').trim()).filter(Boolean);
+  if(String(mode)==='2'&&ls.length===1){const i=ls[0].indexOf(' ');if(i>0)ls=[ls[0].slice(0,i),ls[0].slice(i+1)];}
+  return ls;
+}
 function drawBoldQuote(ctx,q,T){
   const [p0,p1]=L.panel,k=L.rowH/62,margin=Math.round(28*k),full=XR-X0,maxH=(p1-p0)-margin*2;
   const bw=Math.round(full*Math.min(100,Math.max(25,q.bw||50))/100);
-  const cs=q.tcase||'upper',text=caseOf((q.text||'').trim(),cs),who=caseOf((q.who||'').trim(),cs),sub=caseOf((q.sub||'').trim(),cs),INK=q.ink||'#ffffff';
+  const cs=q.tcase||'upper',text=caseOf((q.text||'').trim(),cs),who=caseOf((q.who||'').trim(),cs),sub=subText(caseOf((q.sub||'').trim(),cs),q.sl),INK=q.ink||'#ffffff';
   const sp=(z,f)=>{try{ctx.letterSpacing=Math.round(z*f)+'px';}catch(e){}};
   let z=Math.round((q.size||44)*k*1.7),ls,lh,mw,wz,sz,sl,th,wh,sh,gap,tot;
   for(;;){
     mw=Math.round(z*.62);lh=Math.round(z*1.04);
     ctx.font=`700 ${z}px "WRC Clean"`;sp(z,.01);ls=text?wrapLines(ctx,text,bw-mw*1.3):[];
-    wz=Math.round(z*.6);sz=Math.max(12,Math.round(z*.4));gap=Math.round(z*.42);
+    wz=Math.round(z*.6*(q.ws||100)/100);sz=Math.max(10,Math.round(z*.4*(q.ss||100)/100));gap=Math.round(z*.42);
     ctx.font=`700 ${sz}px "WRC Clean"`;sp(sz,.08);sl=sub?wrapLines(ctx,sub,bw):[];
-    th=ls.length*lh;wh=who?Math.round(wz*1.45):0;sh=sl.length*Math.round(sz*1.35);
+    th=ls.length*lh;const wl=whoLines(who,q.wl);wh=wl.length?Math.round(wz*1.45)*wl.length:0;sh=sl.length*Math.round(sz*1.35);
     tot=th+(who?gap+wh:0)+(sl.length?Math.round(gap*.6)+sh:0);
     if(tot<=maxH||z<=18)break;z-=2;
   }
@@ -1629,9 +1638,11 @@ function drawBoldQuote(ctx,q,T){
   });
   ctx.restore();sp(0,0);xfE(ctx);
   let y=by+th;
-  if(who){y+=gap;ctx.font=`700 ${wz}px "WRC Clean"`;sp(wz,.04);const pad=Math.round(wz*.3),ww=Math.round(ctx.measureText(who).width+pad*2);xfB(ctx,'who','Name tag',bx,y,ww,wh);
+  if(who){y+=gap;ctx.font=`700 ${wz}px "WRC Clean"`;sp(wz,.04);const pad=Math.round(wz*.3),rh=Math.round(wz*1.45),wl=whoLines(who,q.wl),
+      ws=wl.map(l=>Math.round(ctx.measureText(l).width+pad*2)),ww=Math.max(...ws);xfB(ctx,'who','Name tag',bx,y,ww,wh);
     const P=paint(ctx,y,wh,!q.boxColor||q.boxColor==='light'?'gold':q.boxColor,T,{color:q.boxCustom});
-    ctx.fillStyle=P.fill;ctx.fillRect(bx,y,ww,wh);ctx.fillStyle=P.ink;ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(who,bx+pad,y+wh/2+2*k);xfE(ctx);sp(0,0);y+=wh;}
+    wl.forEach((l,i)=>{const ry=y+i*rh;ctx.fillStyle=P.fill;ctx.fillRect(bx,ry,ws[i],rh);ctx.fillStyle=P.ink;ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(l,bx+pad,ry+rh/2+2*k);});
+    xfE(ctx);sp(0,0);y+=wh;}
   if(sl.length){y+=Math.round(gap*.6);const slh=Math.round(sz*1.35);xfB(ctx,'caption','Caption',bx,y,bw,sl.length*slh);ctx.save();ctx.font=`700 ${sz}px "WRC Clean"`;sp(sz,.08);
     ctx.fillStyle=INK;ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=8*k;ctx.textBaseline='top';ctx.textAlign='left';
     sl.forEach((l,i)=>ctx.fillText(l,bx,y+i*slh));ctx.restore();xfE(ctx);}
@@ -3665,7 +3676,7 @@ function readState(){
   return {mode:MODE,look:$('look').value,track:MODES[MODE].pro==='stagemap'?STAGE.track:undefined,xf:JSON.parse(JSON.stringify(XF)),title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,blend:$('themeBlend').checked,themeCol2:$('themeCol2').value,blendDir:$('blendDir').value,collage:MODES[MODE].collage?JSON.parse(JSON.stringify(COL)):undefined,tint:+$('pTint').value,
           logo:$('logo').value,valAlign:$('valAlign').value,hl:$('hl').value===''?-1:+$('hl').value,
           show:{flag:$('showFlag').checked,badge:$('showBadge').checked,move:$('showMove').checked},rows:readRows(),
-          quote:{text:$('qText').value,fade:+$('qFade').value,shade:$('qShade').value,sub:$('qSub').value,who:$('qWho').value,tcase:$('qCase').value,ink:$('qInk').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
+          quote:{text:$('qText').value,fade:+$('qFade').value,shade:$('qShade').value,sub:$('qSub').value,who:$('qWho').value,ws:+$('qWs').value,wl:$('qWl').value,ss:+$('qSs').value,sl:$('qSl').value,tcase:$('qCase').value,ink:$('qInk').value,style:$('qStyle').value,place:$('qPlace').value,size:+$('qSize').value,zoom:+$('qZoom').value,fx:+$('qFx').value,fy:+$('qFy').value,
                 bw:+$('qBw').value,bh:+$('qBh').value,px:+$('qPx').value,py:+$('qPy').value,
                 showHead:$('qHead').checked,showFoot:$('qFootOn').checked,logoPos:$('qLogoPos').value,logoSize:+$('qLogoSize').value,logoInk:$('qLogoInk').value,
                 credit:$('qCredit').value,creditPos:$('qCreditPos').value,boxColor:$('qColor').value,boxCustom:$('qCustom').value,align:$('qAlign').value},
@@ -3763,7 +3774,7 @@ function loadMode(m){
   if(M.collage){$('rowsUI').hidden=$('quoteUI').hidden=true;COL=JSON.parse(JSON.stringify((s&&s.collage)||(M.thumb?THUMB_DEFAULT:COL_DEFAULT)));if(!COL.bgMode)COL.bgMode='custom';if(!COL.accentMode)COL.accentMode='custom';COL_SEL=-1;COL_SLIDE=0;COL_HIST.length=0;colUI();if(ready)colLoadImgs();}
   if(M.strips){SS=normStrips(s&&s.strips,M.grid?GRID_DEFAULT:STRIPS_DEFAULT);STRIP_IMG.length=0;buildStripUI();if(ready)loadStripImgs();}
   const q={...QUOTE_DEFAULT,...((s&&s.quote)||{})};
-  $('qFade').value=q.fade??65;$('qShade').value=q.shade||'auto';$('qText').value=q.text;$('qSub').value=q.sub;$('qWho').value=q.who||'';$('qCase').value=q.tcase||'upper';$('qInk').value=q.ink||'#ffffff';$('qStyle').value=q.style;annUI();$('qPlace').value=q.place;
+  $('qFade').value=q.fade??65;$('qShade').value=q.shade||'auto';$('qText').value=q.text;$('qSub').value=q.sub;$('qWho').value=q.who||'';$('qWs').value=q.ws||100;$('qWl').value=q.wl||'1';$('qSs').value=q.ss||100;$('qSl').value=q.sl||'1';$('qCase').value=q.tcase||'upper';$('qInk').value=q.ink||'#ffffff';$('qStyle').value=q.style;annUI();$('qPlace').value=q.place;
   if(!(s&&s.quote&&'bw' in s.quote)&&BOX_PRESETS[q.place])[q.px,q.py,q.bw]=BOX_PRESETS[q.place];   // saved before box sliders existed
   $('qBw').value=q.bw;$('qBh').value=q.bh;$('qPx').value=q.px;$('qPy').value=q.py;
   $('qHead').checked=q.showHead;$('qFootOn').checked=q.showFoot;$('qLogoPos').value=q.logoPos;$('qLogoSize').value=q.logoSize;$('qLogoInk').value=q.logoInk;picLogoUI();$('qCredit').value=q.credit;$('qCreditPos').value=q.creditPos;
@@ -4551,7 +4562,7 @@ async function colExport(scale){
   document.addEventListener('dragover',e=>{if([...e.dataTransfer.items].some(i=>i.kind==='file'))e.preventDefault();});
   document.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&/\.(wrcproj|json)$/i.test(f.name)&&!(MODES[MODE].pro==='stagemap'&&/\.json$/i.test(f.name))){e.preventDefault();e.stopPropagation();openProject(f);}},true);
   $('qStyle').addEventListener('change',()=>{annUI();if($('qStyle').value==='bold'){$('qBw').value=50;$('qPx').value=0;$('qPy').value=.6;$('qPlace').value='free';}else if($('qStyle').value==='announce'){$('qBw').value=90;$('qPx').value=.5;$('qPy').value=1;$('qPlace').value='free';$('qColor').value='light';$('qAlign').value='center';}});
-  ['qFade','qShade','qText','qSub','qWho','qCase','qInk','qStyle','qPlace','qSize','qZoom','qFx','qFy','qLogoPos','qLogoSize','qLogoInk','qHead','qFootOn','qBw','qBh','qCredit','qCreditPos','qColor','qCustom','qAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
+  ['qFade','qShade','qText','qSub','qWho','qWs','qWl','qSs','qSl','qCase','qInk','qStyle','qPlace','qSize','qZoom','qFx','qFy','qLogoPos','qLogoSize','qLogoInk','qHead','qFootOn','qBw','qBh','qCredit','qCreditPos','qColor','qCustom','qAlign'].forEach(id=>$(id).addEventListener('input',()=>redraw()));
   $('qLogoPos').addEventListener('input',picLogoUI);
   $('qColor').addEventListener('input',()=>{$('qCustomBox').hidden=$('qColor').value!=='custom';});
   $('qPic').addEventListener('change',()=>{setPhoto($('qPic').files[0]);$('qPic').value='';});

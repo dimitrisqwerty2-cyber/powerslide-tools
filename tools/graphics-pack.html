@@ -821,7 +821,7 @@ const FLAG_KEYS = Object.keys(FLAGS).sort();
    tile edges, tilted, glossed, on the team colour.
    bg = top/bottom gradient, mode = orig | white, z = logo width / tile width,
    cx/cy = logo centre within the tile, rot = degrees. */
-const BADGES = {
+const BADGES_BASE = {
   toyota:      {name:'Toyota',     bg:['#e2252b','#a8121a'], mode:'white', z:1.45, cx:.56, cy:.56, rot:-8},
   gr:          {name:'Toyota GR',  bg:['#303036','#0c0c0f'], mode:'orig',  z:1.25, cx:.52, cy:.56, rot:-8, aka:['tgr','gazoo','gazoo racing','toyota gazoo racing','gr yaris']},
   ford:        {name:'Ford',       bg:['#f6f7f9','#bfc4cc'], mode:'orig',  z:1.55, cx:.50, cy:.52, rot:-10},
@@ -851,6 +851,12 @@ const BADGES = {
   rallyone:    {name:'Project Rally One', bg:['#f6f7f9','#bfc4cc'], mode:'orig',  z:1.62, cx:.25, cy:.52, rot:-8},
   msi:         {name:'MSi Motor & Sport Institute', bg:['#303036','#0c0c0f'], mode:'orig', z:0.84, cx:.53, cy:.54, rot:-8, aka:['msi motorsport','motor sport institute','motor and sport institute']},
 };
+// two brands in one tile: key "a+b" (e.g. "ford+alpine") resolves on demand to a hidden entry that
+// carries the first brand's colours, so team colours etc. keep working; drawTile splits it diagonally
+const BADGES=new Proxy(BADGES_BASE,{get(t,p){
+  if(typeof p==='string'&&p.includes('+')&&!Object.prototype.hasOwnProperty.call(t,p)){const [a,b]=p.split('+');
+    if(t[a]&&t[b])Object.defineProperty(t,p,{value:{...t[a],name:t[a].name+' / '+t[b].name,pair:[a,b]},enumerable:false,configurable:true});}
+  return t[p];}});
 const BADGE_KEYS = Object.keys(BADGES);
 
 /* ---------- images ---------- */
@@ -888,15 +894,24 @@ function gloss(ctx,x,y,w,h){
 function tileBorder(ctx,x,y,w,h,T){ctx.strokeStyle=tk(T,'tileEdge');ctx.lineWidth=Math.max(1.5,2*h/64);ctx.strokeRect(x+.5,y+.5,w-1,h-1);}
 function emptyTile(ctx,x,y,w,h,T){ctx.fillStyle=cellFill(ctx,y,h,false,.8,T);ctx.fillRect(x,y,w,h);}
 
-function drawTile(ctx,x,y,w,h,key,T){
+function drawTile(ctx,x,y,w,h,key,T,opt){
   const b = BADGES[key];
   if(!b){emptyTile(ctx,x,y,w,h,T||THEMES.warm);return;}
+  if(b.pair){   // first brand top-left, second bottom-right, split along the "/" diagonal
+    const tri=(pts)=>{ctx.save();ctx.beginPath();pts.forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py));ctx.closePath();ctx.clip();};
+    const o=w*.08;   // the line leans a little, like the tiles' own tilt
+    tri([[x,y],[x+w/2+w*.5+o,y],[x+w/2-w*.5-o,y+h]]);drawTile(ctx,x,y,w,h,b.pair[0],T,{cx:.3,cy:.38,s:.55,nb:1});ctx.restore();
+    tri([[x+w/2+w*.5+o,y],[x+w,y],[x+w,y+h],[x+w/2-w*.5-o,y+h]]);drawTile(ctx,x,y,w,h,b.pair[1],T,{cx:.72,cy:.68,s:.55,nb:1});ctx.restore();
+    ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();ctx.beginPath();ctx.moveTo(x+w+o,y);ctx.lineTo(x-o,y+h);
+    ctx.lineWidth=Math.max(2,3.2*h/64);ctx.strokeStyle='rgba(255,255,255,.9)';ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=4*h/64;ctx.stroke();ctx.restore();
+    tileBorder(ctx,x,y,w,h,T);return;
+  }
   ctx.save();
   ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
   ctx.fillStyle = vgrad(ctx,y,y+h,[[0,b.bg[0]],[1,b.bg[1]]]);
   ctx.fillRect(x,y,w,h);
   const im = IMG[key];
-  const lw = b.z*w, lh = lw*im.height/im.width;
+  const lw = b.z*w*((opt&&opt.s)||1), lh = lw*im.height/im.width;
   // logo layer (white mode recolours the emblem to a brushed-silver white)
   let src = im;
   if(b.mode==='white'){
@@ -906,14 +921,14 @@ function drawTile(ctx,x,y,w,h,key,T){
     src=o;
   }
   ctx.save();
-  ctx.translate(x+b.cx*w,y+b.cy*h);ctx.rotate(b.rot*Math.PI/180);
+  ctx.translate(x+((opt&&opt.cx)??b.cx)*w,y+((opt&&opt.cy)??b.cy)*h);ctx.rotate(b.rot*Math.PI/180);
   const k=h/64;
   ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=6*k;ctx.shadowOffsetX=2.5*k;ctx.shadowOffsetY=3*k;
   ctx.drawImage(src,-lw/2,-lh/2,lw,lh);
   ctx.restore();
   gloss(ctx,x,y,w,h);
   ctx.restore();
-  tileBorder(ctx,x,y,w,h,T);
+  if(!(opt&&opt.nb))tileBorder(ctx,x,y,w,h,T);
 }
 
 /* Flag tile: the flag overfills the tile, tilted like the badges, with soft fabric
@@ -3650,12 +3665,13 @@ function buildRows(rows){
     const r=rows[i]||{};
     const d=document.createElement('div');d.className='row'+(i>=FORMATS.ig.L.rows?' twoOnly':i>=FORMATS.screen.L.rows?' igOnly':'');
     d.innerHTML=`<span class="n"><button type="button" class="mv" data-d="-1" title="Move up">▲</button><button type="button" class="mv" data-d="1" title="Move down">▼</button>${i+1}</span>`+M.fields.map(([k])=>{
-      if(k==='badge')return `<select data-k="badge">${badgeOptions}</select>`;
+      if(k==='badge')return `<span class="bpair" data-pair style="display:flex;gap:2px;min-width:0"><select data-k="badge" style="min-width:0;flex:1">${badgeOptions}</select><select data-b2 title="Second brand (tile split diagonally)" style="min-width:0;flex:1">${badgeOptions.replace('— none —','+ 2nd brand')}</select></span>`;
       if(k==='flag')return `<select data-k="flag">${flagOptions}</select>`;
       if(k==='move')return `<select data-k="move">${moveOptions}</select>`;
       return `<input data-k="${k}"${k==='pos'?' placeholder="'+(i+1)+'"':''}>`;
     }).join('');
-    d.querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;el.value=k==='move'?normMove(r[k]):(r[k]||'');el.addEventListener('input',()=>redraw());});
+    d.querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;el.value=k==='move'?normMove(r[k]):k==='badge'?(r[k]||'').split('+')[0]:(r[k]||'');el.addEventListener('input',()=>redraw());});
+    {const b2=d.querySelector('[data-b2]');if(b2){b2.value=(r.badge||'').split('+')[1]||'';b2.addEventListener('input',()=>redraw());}}
     d.querySelectorAll('.mv').forEach(b=>b.onclick=()=>moveRow(i,+b.dataset.d));
     $('rows').appendChild(d);
   }
@@ -3668,10 +3684,10 @@ function refreshFieldVisibility(){
   [...$('rows').children].forEach(d=>{
     d.style.gridTemplateColumns=g;
     d.hidden=d.classList.contains('twoOnly')&&!$('twoCol').checked&&!MODES[MODE].allRows;
-    d.querySelectorAll('[data-k]').forEach(el=>el.hidden=!visibleField(el.dataset.k));
+    d.querySelectorAll('[data-k]').forEach(el=>{el.hidden=!visibleField(el.dataset.k);const pw=el.closest('[data-pair]');if(pw)pw.hidden=el.hidden;});
   });
 }
-function readRows(){return [...$('rows').children].map(d=>{const o={pos:'',name:'',flag:'',badge:'',move:'',a:'',b:''};d.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value.trim());return o;});}
+function readRows(){return [...$('rows').children].map(d=>{const o={pos:'',name:'',flag:'',badge:'',move:'',a:'',b:''};d.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value.trim());const b2=d.querySelector('[data-b2]');if(o.badge&&b2&&b2.value&&b2.value!==o.badge)o.badge+='+'+b2.value;return o;});}
 function readState(){
   return {mode:MODE,look:$('look').value,track:MODES[MODE].pro==='stagemap'?STAGE.track:undefined,xf:JSON.parse(JSON.stringify(XF)),title:$('title').value,foot:$('foot').value,rally:$('rally').value,start:$('start').value,theme:$('theme').value,themeCol:$('themeCol').value,blend:$('themeBlend').checked,themeCol2:$('themeCol2').value,blendDir:$('blendDir').value,collage:MODES[MODE].collage?JSON.parse(JSON.stringify(COL)):undefined,tint:+$('pTint').value,
           logo:$('logo').value,valAlign:$('valAlign').value,hl:$('hl').value===''?-1:+$('hl').value,
@@ -3833,7 +3849,7 @@ function parseBulk(text){
   const order=MODES[MODE].bulk||{points:['name','badge','a','b','move','flag'],results:['name','badge','move','b','flag'],custom:['pos','name','badge','a','b','move','flag'],stats:['name','b']}[MODE];
   return text.split(/\r?\n/).filter(l=>l.trim()).slice(0,MAX_ROWS).map(l=>{
     const p=l.split(/\s*[|\t;]\s*/);const o={pos:'',name:'',flag:'',badge:'',move:'',a:'',b:''};
-    order.forEach((k,i)=>{const v=(p[i]||'').trim();o[k]=k==='badge'?matchBadge(v):k==='flag'?matchFlag(v):k==='move'?normMove(v):v;});
+    order.forEach((k,i)=>{const v=(p[i]||'').trim();o[k]=k==='badge'?(v.split(/\s*[\/+]\s*/).length===2?v.split(/\s*[\/+]\s*/).map(matchBadge).filter(Boolean).join('+'):matchBadge(v)):k==='flag'?matchFlag(v):k==='move'?normMove(v):v;});
     return o;
   });
 }

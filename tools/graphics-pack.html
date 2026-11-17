@@ -293,6 +293,7 @@
     <div class="doctab on" id="tabScreen">Screen <small>1440×1080</small></div>
     <div class="doctab" id="tabIg">Instagram 4:5 <small>1080×1350</small></div>
     <div class="doctab" id="tabStory">Story 9:16 <small>1080×1920</small></div>
+    <div class="doctab" id="tabWide">Wide 16:9 <small>1920×1080</small></div>
     <div class="doctab" id="tabYt" hidden>YouTube 16:9 <small>1280×720</small></div>
   </div>
   <div class="sp"></div>
@@ -790,13 +791,17 @@
       <button class="primary" id="story1">Story 1080×1920</button>
       <button id="story2">Story 2160×3840</button>
     </div>
+    <div class="btns noCol" id="wideBtns">
+      <button class="primary" id="wide1">16:9 1920×1080</button>
+      <button id="wide2">16:9 3840×2160</button>
+    </div>
     <div class="grid2" style="margin-top:8px">
       <div><label>Glitch word</label><input id="gwText" placeholder="the title if empty"></div>
       <div><label>Colour</label><select id="gwCol"><option value="theme">Theme title colour</option><option value="#ffffff">White</option><option value="#303033">Dark grey</option></select></div>
       <div><label>Size</label><select id="gwSize"><option value="200">Normal (200 px letters)</option><option value="400">Big (400 px letters)</option></select></div>
       <div><label>&nbsp;</label><button id="gwPng" class="primary" style="width:100%">Glitch word PNG (transparent)</button></div>
     </div>
-    <div class="checks noCol"><label><input type="checkbox" id="previewIg">Preview Instagram 4:5 layout</label><label><input type="checkbox" id="previewStory">Preview Story 9:16 layout</label></div>
+    <div class="checks noCol"><label><input type="checkbox" id="previewIg">Preview Instagram 4:5 layout</label><label><input type="checkbox" id="previewStory">Preview Story 9:16 layout</label><label><input type="checkbox" id="previewWide">Preview Wide 16:9 layout</label></div>
     <div class="note" id="saveDirRow">Saving to: <b id="saveDirName"></b>
       <div class="btns" style="margin-top:6px"><button id="saveDirPick">Choose save folder…</button><button id="saveDirClear" hidden>Use Downloads again</button></div>
       <div id="saveMsg"></div>
@@ -990,6 +995,9 @@ FORMATS.thumb={H:810, L:{...FORMATS.screen.L, panel:[60,750]}};
 // Instagram / Facebook story 9:16 on the 1440 width (1440x2560, exported at 0.75 → 1080x1920). The logo and title sit
 // below the story's own header and the footer above its reply bar; 10 rows as in the 4:5 post
 FORMATS.story={H:2560, L:{topBot:600, strip1:[600,642], panel:[642,1889], strip2:[1889,1927], foot:[1927,2097], div:496, rowTop:650, pitch:125, rowH:106, txt:59, footTxt:54, hs:1.9, rows:10}};
+// Wide 16:9 for every mode (1440x810, exported at 4/3 → 1920x1080): the screen's 8 rows packed a little tighter
+FORMATS.wide={H:810, L:{topBot:140, strip1:[140,176], panel:[176,690], strip2:[690,722], foot:[722,804], div:496, rowTop:182, pitch:63, rowH:54, txt:31, footTxt:32, hs:1, rows:8}};
+QUOTE_L.wide={...FORMATS.wide.L, topBot:120, strip1:[120,156], panel:[156,694], strip2:[694,728], foot:[728,810]};
 QUOTE_L.story={...FORMATS.story.L, topBot:520, strip1:[520,562], panel:[562,1955], strip2:[1955,1993], foot:[1993,2107]};
 const tileW=()=>Math.round(TILE_W*Math.min(L.rowH,FMT==='story'?84:1e9)/62);   // Story: tiles don't widen past 4:5 size
 const MAX_ROWS=20;   // 10 per column; rows 11-20 only with Two columns
@@ -3797,7 +3805,7 @@ function loadMode(m){
   $('qSize').value=q.size;$('qZoom').value=q.zoom;$('qFx').value=q.fx;$('qFy').value=q.fy;
   $('qColor').value=q.boxColor;$('qCustom').value=q.boxCustom;$('qAlign').value=q.align;$('qCustomBox').hidden=q.boxColor!=='custom';
   {const lt=document.querySelector('.paneltabs [data-tab=layout]');if(lt){lt.hidden=!!M.collage;if(M.collage&&lt.classList.contains('on'))lt.parentElement.querySelector('[data-tab=content]').click();}}
-  $('proUI').hidden=!M.pro;$('tabStory').classList.toggle('colHide',!!M.collage);
+  $('proUI').hidden=!M.pro;$('tabStory').classList.toggle('colHide',!!M.collage);$('tabWide').classList.toggle('colHide',!!M.collage);$('wideBtns').classList.toggle('colHide',!!M.collage);
   if(M.pro){
     document.querySelectorAll('#proUI [data-pro]').forEach(e=>e.hidden=e.dataset.pro!==M.pro);$('proHead').textContent=M.proLabel;
     const p={...PRO_DEFAULT[M.pro],...((s&&s.pro)||{})};loadPro(M.pro,p);
@@ -3825,11 +3833,11 @@ function setPhoto(file){
 let ready=false;
 function redraw(fromImage){
   if(!ready)return;const st=readState(),cv=$('cv');
-  setFormat(MODES[MODE].thumb?'thumb':MODES[MODE].collage?'ig':$('previewStory').checked?'story':$('previewIg').checked?'ig':'screen');
+  setFormat(MODES[MODE].thumb?'thumb':MODES[MODE].collage?'ig':$('previewStory').checked?'story':$('previewWide').checked?'wide':$('previewIg').checked?'ig':'screen');
   if(cv.height!==H)cv.height=H;
-  $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');$('tabYt').classList.toggle('on',FMT==='thumb');$('tabStory').classList.toggle('on',FMT==='story');
+  $('tabScreen').classList.toggle('on',FMT==='screen');$('tabIg').classList.toggle('on',FMT==='ig');$('tabYt').classList.toggle('on',FMT==='thumb');$('tabStory').classList.toggle('on',FMT==='story');$('tabWide').classList.toggle('on',FMT==='wide');
   $('sbMode').textContent=MODES[MODE].label;$('sbSize').textContent=W+' × '+H;$('navInfo').textContent=MODES[MODE].label;
-  $('sbExp').textContent=FMT==='thumb'?'1280×720 · 1920×1080':FMT==='story'?'1080×1920 · 2160×3840':FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
+  $('sbExp').textContent=FMT==='thumb'?'1280×720 · 1920×1080':FMT==='story'?'1080×1920 · 2160×3840':FMT==='wide'?'1920×1080 · 3840×2160':FMT==='ig'?'1080×1350 · 2160×2700':'1440×1080 · 2880×2160';
   render(cv.getContext('2d'),st);if(!fromImage)save(st);teamColUI();colThumbs();if(!MODES[MODE].collage)xfPanel();
 }
 
@@ -3892,7 +3900,7 @@ async function exportPNG(scale,fmt='screen'){
   withFormat(fmt,()=>{
     const c=document.createElement('canvas');c.width=W*scale;c.height=H*scale;
     const x=c.getContext('2d');x.scale(scale,scale);render(x,readState());
-    download(c,`${MODES[MODE].file}${fmt==='ig'?'_ig':fmt==='story'?'_story':''}_${c.width}x${c.height}.png`);
+    download(c,`${MODES[MODE].file}${fmt==='ig'?'_ig':fmt==='story'?'_story':fmt==='wide'?'_16x9':''}_${c.width}x${c.height}.png`);
   });
 }
 // just the glitch word on a transparent background, cropped to the letters, for Canva / Photoshop
@@ -4046,7 +4054,7 @@ async function openProject(file){
   if(proj.state.brand)loadBrand(proj.state.brand);
   if(pics.collage)for(const [id,d] of Object.entries(pics.collage)){delete COL_IMG[id];if(d)await idb('readwrite',st=>st.put(d,colKey(id,m))).catch(()=>{});}
   if(proj.logo&&PS_LOGOS[proj.logo])$('logo').value=proj.logo;
-  $('previewIg').checked=proj.format==='ig';$('previewStory').checked=proj.format==='story';
+  $('previewIg').checked=proj.format==='ig';$('previewStory').checked=proj.format==='story';$('previewWide').checked=proj.format==='wide';
   loadMode(m);
   $('projName').value=file.name.replace(/\.(wrcproj|json)$/i,'');
   redraw();
@@ -4541,9 +4549,10 @@ async function colExport(scale){
   $('png1').onclick=()=>exportPNG(1);$('png2').onclick=()=>exportPNG(2);
   $('ig1').onclick=()=>exportPNG(.75,'ig');$('ig2').onclick=()=>exportPNG(1.5,'ig');
   $('story1').onclick=()=>exportPNG(.75,'story');$('story2').onclick=()=>exportPNG(1.5,'story');
-  $('previewIg').addEventListener('change',()=>{if($('previewIg').checked)$('previewStory').checked=false;redraw();});
-  $('previewStory').addEventListener('change',()=>{if($('previewStory').checked)$('previewIg').checked=false;redraw();});
-  [['tabScreen',''],['tabIg','ig'],['tabStory','story']].forEach(([id,f])=>$(id).addEventListener('click',()=>{$('previewIg').checked=f==='ig';$('previewStory').checked=f==='story';redraw();}));
+  $('wide1').onclick=()=>exportPNG(4/3,'wide');$('wide2').onclick=()=>exportPNG(8/3,'wide');
+  const PV=['previewIg','previewStory','previewWide'];   // one format preview at a time
+  PV.forEach(id=>$(id).addEventListener('change',()=>{if($(id).checked)PV.forEach(o=>{if(o!==id)$(o).checked=false;});redraw();}));
+  [['tabScreen',''],['tabIg','ig'],['tabStory','story'],['tabWide','wide']].forEach(([id,f])=>$(id).addEventListener('click',()=>{$('previewIg').checked=f==='ig';$('previewStory').checked=f==='story';$('previewWide').checked=f==='wide';redraw();}));
   buildPanelTabs();initFolds();
   // each section bar and what it folds become one rounded panel group (same boundaries as initFolds)
   document.querySelectorAll('.side h2').forEach(h=>{
